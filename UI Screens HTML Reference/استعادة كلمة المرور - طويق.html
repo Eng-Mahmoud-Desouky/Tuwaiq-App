@@ -1,0 +1,198 @@
+<!DOCTYPE html><html dir="rtl" lang="ar"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-fixed-dim": "#e6c364",
+                    "tertiary": "#000000",
+                    "on-primary-container": "#848484",
+                    "outline-variant": "#cfc4c5",
+                    "primary-fixed": "#e2e2e2",
+                    "primary-container": "#1b1b1b",
+                    "on-secondary-fixed": "#241a00",
+                    "on-primary-fixed": "#1b1b1b",
+                    "surface-container": "#eeeeee",
+                    "on-error": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "surface-dim": "#dadada",
+                    "outline": "#7e7576",
+                    "on-tertiary-container": "#848484",
+                    "surface-variant": "#e2e2e2",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-bright": "#f9f9f9",
+                    "primary": "#000000",
+                    "primary-fixed-dim": "#c6c6c6",
+                    "background": "#f9f9f9",
+                    "on-tertiary-fixed": "#1b1b1b",
+                    "on-primary": "#ffffff",
+                    "on-background": "#1a1c1c",
+                    "surface-container-highest": "#e2e2e2",
+                    "on-tertiary-fixed-variant": "#474747",
+                    "on-secondary-container": "#785d00",
+                    "inverse-primary": "#c6c6c6",
+                    "error": "#ba1a1a",
+                    "surface-tint": "#5e5e5e",
+                    "on-tertiary": "#ffffff",
+                    "inverse-on-surface": "#f1f1f1",
+                    "surface-container-low": "#f3f3f3",
+                    "secondary-container": "#fed977",
+                    "tertiary-fixed-dim": "#c6c6c6",
+                    "surface": "#f9f9f9",
+                    "tertiary-container": "#1b1b1b",
+                    "on-surface": "#1a1c1c",
+                    "tertiary-fixed": "#e2e2e2",
+                    "secondary-fixed": "#ffe08f",
+                    "inverse-surface": "#2f3131",
+                    "on-secondary": "#ffffff",
+                    "on-secondary-fixed-variant": "#584400",
+                    "on-surface-variant": "#4c4546",
+                    "on-primary-fixed-variant": "#474747",
+                    "surface-container-high": "#e8e8e8",
+                    "secondary": "#755b00",
+                    "error-container": "#ffdad6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-sm": "8px",
+                    "gutter": "16px",
+                    "stack-md": "16px",
+                    "stack-lg": "32px",
+                    "safe-area-bottom": "34px",
+                    "margin-main": "20px"
+            },
+            "fontFamily": {
+                    "headline-md": ["IBM Plex Sans Arabic"],
+                    "display-lg-mobile": ["IBM Plex Sans Arabic"],
+                    "body-sm": ["IBM Plex Sans Arabic"],
+                    "title-sm": ["IBM Plex Sans Arabic"],
+                    "label-caps": ["IBM Plex Sans Arabic"],
+                    "display-lg": ["IBM Plex Sans Arabic"],
+                    "body-lg": ["IBM Plex Sans Arabic"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "display-lg-mobile": ["28px", {"lineHeight": "34px", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "title-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "600"}],
+                    "display-lg": ["34px", {"lineHeight": "42px", "letterSpacing": "-0.5px", "fontWeight": "700"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #ffffff;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom subtle focus effect for inputs */
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body class="bg-surface-container-lowest min-h-screen flex flex-col">
+<!-- Top Navigation Bar (Custom implementation for specific screen needs) -->
+<header class="w-full top-0 sticky z-50 bg-surface-container-lowest h-16 flex items-center px-margin-main justify-between">
+<a aria-label="Go back" class="p-2 -mr-2 active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined text-primary text-2xl">arrow_forward</span>
+</a>
+<div class="flex-1"></div>
+</header>
+<main class="flex-1 px-margin-main pt-stack-lg flex flex-col">
+<!-- Content Header Section -->
+<section class="mb-10">
+<h1 class="font-display-lg-mobile text-display-lg-mobile text-primary mb-4">
+                استعادة كلمة المرور
+            </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-[280px]">
+                أدخل بريدك الإلكتروني وسنرسل لك رابط الاستعادة
+            </p>
+</section>
+<!-- Form Section -->
+<form class="flex flex-col gap-6" id="forgotPasswordForm" onsubmit="return false;">
+<div class="flex flex-col gap-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant pr-1" for="email">
+                    البريد الإلكتروني
+                </label>
+<input class="w-full bg-surface-container-low border-none rounded-xl h-[60px] px-4 font-body-lg text-body-lg text-primary placeholder:text-outline focus:ring-1 focus:ring-primary transition-all text-right" dir="ltr" id="email" placeholder="example@email.com" required="" type="email">
+</div>
+<!-- Decorative Image / Graphic Concept -->
+<div class="relative w-full aspect-video rounded-2xl overflow-hidden my-4 group">
+<img class="w-full h-full object-cover grayscale opacity-20 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" data-alt="A high-end, minimalist conceptual image of a mountain peak shrouded in morning mist, representing the Tuwaiq plateau. The composition is clean and vast, using a monochrome palette of deep blacks and soft whites to convey a sense of strength, prestige, and calm. The lighting is diffused and atmospheric, evoking a premium 'quiet luxury' aesthetic suitable for an exclusive social discovery platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHIUi2-bg_tKrUYLgG7nbgshGJeJ_ipCmmIhb4Pk-tGGjLYKN8lnl6wmEEeoM9ZJxhSbcd8nZ6AEs9cUQwF-126CO5gLa-2UecSzXNeGV5HGtEZxJ7HhmznvajqYAtBkp45DCbTolSUAbd5DW0Hs92oTHshs8I6j6zJ6L5iL5JFhLpoZg17KMFq_8-vTvKwXyNe_dtvzHff9myRpastEb2BCOEX4F9GwKGM6JhGL74ZQw2n1X1yK6fvG7efTycSe1sd7aqBWN59_c">
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest/80 to-transparent"></div>
+</div>
+<!-- Primary Action Button -->
+<button class="w-full h-14 bg-primary text-on-primary rounded-xl font-headline-md text-headline-md active:scale-[0.98] transition-transform shadow-sm hover:opacity-90 mt-auto sm:mt-0" type="submit">
+                إرسال رابط الاستعادة
+            </button>
+</form>
+<!-- Help Link -->
+<div class="mt-8 text-center">
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                هل تواجه مشكلة؟ 
+                <a class="text-primary font-bold border-b border-primary/20 pb-0.5 hover:border-primary transition-colors" href="#">
+                    تواصل مع الدعم
+                </a>
+</p>
+</div>
+</main>
+<!-- Visual Polish: Bottom Area -->
+<div class="h-safe-area-bottom"></div>
+<script>
+        // Micro-interaction for the button
+        const form = document.getElementById('forgotPasswordForm');
+        const submitBtn = form.querySelector('button');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const originalText = submitBtn.innerText;
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'جاري الإرسال...';
+            submitBtn.classList.add('opacity-80');
+            
+            // Simulating API call
+            setTimeout(() => {
+                submitBtn.innerText = 'تم الإرسال بنجاح';
+                submitBtn.classList.remove('bg-primary');
+                submitBtn.classList.add('bg-secondary-container', 'text-on-secondary-container');
+                
+                setTimeout(() => {
+                    submitBtn.innerText = originalText;
+                    submitBtn.disabled = false;
+                    submitBtn.classList.add('bg-primary');
+                    submitBtn.classList.remove('bg-secondary-container', 'text-on-secondary-container', 'opacity-80');
+                }, 3000);
+            }, 1500);
+        });
+
+        // Input active state styling
+        const emailInput = document.getElementById('email');
+        emailInput.addEventListener('focus', () => {
+            emailInput.parentElement.querySelector('label').classList.add('text-primary');
+        });
+        emailInput.addEventListener('blur', () => {
+            emailInput.parentElement.querySelector('label').classList.remove('text-primary');
+        });
+    </script>
+</body></html>
