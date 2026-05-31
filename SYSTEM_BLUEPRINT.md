@@ -36,7 +36,7 @@
 | **Mobile** | Flutter | Cross-platform (iOS + Android), single codebase, familiar stack |
 | **Backend / BaaS** | Supabase | PostgreSQL foundation, built-in Auth & RLS, clean exit strategy to custom backend if needed |
 | **Database** | PostgreSQL (via Supabase) | Relational structure, SQL familiarity, strong ecosystem |
-| **State Management** | TBD per feature | To be decided before each feature sprint |
+| **State Management** | flutter_bloc (Cubit) | Selected for reactive flow and strict state representation |
 | **Version Control** | Git / GitHub | Industry standard, supports CI/CD pipelines |
 
 > **Exit Strategy Note:** Supabase is built on top of standard PostgreSQL. If scaling requirements demand a custom backend in the future, migration is straightforward — no vendor lock-in on the data layer.
@@ -131,6 +131,7 @@ Stores all additional user data beyond authentication.
 | `bio` | `text` | NULLABLE | Short user biography |
 | `created_at` | `timestamptz` | DEFAULT now() | Account creation timestamp |
 | `updated_at` | `timestamptz` | DEFAULT now() | Last profile update |
+| `interests` | `text[]` | NULLABLE | User-selected event and cultural interests |
 
 **Relationship:** `profiles.id` → `auth.users.id` (1-to-1, Foreign Key)
 
@@ -285,7 +286,8 @@ class AppTextStyles {
 
 | Version | Date | Author | Changes |
 | :--- | :--- | :--- | :--- |
-| `1.0.0` | 2026-05-20 | Lead Developer | Initial Blueprint — Tech Stack, User Roles, DB Core (profiles), Clean Architecture, Theming System |
+| `1.1.0` | 2026-05-31 | Mahmoud Desouky | Implemented Auth & Onboarding feature. Added `interests` text[] to `profiles`, RLS security triggers, deep linking, bloc/Cubit state management, and 6 premium RTL UI screens. |
+| `1.0.0` | 2026-05-20 | Mahmoud Desouky | Initial Blueprint — Tech Stack, User Roles, DB Core (profiles), Clean Architecture, Theming System |
 
 ---
 
