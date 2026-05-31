@@ -1,8 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
-void main() async{
+// Core
+import 'core/constants/app_routes.dart';
+import 'shared/theme/app_theme.dart';
+import 'shared/theme/app_colors.dart';
+import 'shared/screens/home_screen.dart';
+
+// Data
+import 'features/auth/data/datasources/auth_remote_datasource.dart';
+import 'features/auth/data/repositories/auth_repository_impl.dart';
+
+// Domain
+import 'features/auth/domain/usecases/sign_up_usecase.dart';
+import 'features/auth/domain/usecases/sign_in_usecase.dart';
+import 'features/auth/domain/usecases/sign_out_usecase.dart';
+import 'features/auth/domain/usecases/forgot_password_usecase.dart';
+import 'features/auth/domain/usecases/update_password_usecase.dart';
+import 'features/auth/domain/usecases/get_current_user_usecase.dart';
+import 'features/auth/domain/usecases/save_user_interests_usecase.dart';
+
+// Presentation
+import 'features/auth/presentation/cubit/auth_cubit.dart';
+import 'features/auth/presentation/cubit/auth_state.dart';
+import 'features/auth/presentation/screens/sign_in_screen.dart';
+import 'features/auth/presentation/screens/sign_up_screen.dart';
+import 'features/auth/presentation/screens/forgot_password_screen.dart';
+import 'features/auth/presentation/screens/update_password_screen.dart';
+import 'features/auth/presentation/screens/email_confirmation_screen.dart';
+import 'features/auth/presentation/screens/interests_screen.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
   await dotenv.load(fileName: ".env");
 
   await Supabase.initialize(
@@ -10,122 +42,104 @@ void main() async{
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
 
-  runApp(const MyApp());
+  // Instantiation & Dependency Injection
+  final supabaseClient = Supabase.instance.client;
+  final authRemoteDataSource = AuthRemoteDataSourceImpl(supabaseClient);
+  final authRepository = AuthRepositoryImpl(remoteDataSource: authRemoteDataSource);
+
+  final signUpUseCase = SignUpUseCase(authRepository);
+  final signInUseCase = SignInUseCase(authRepository);
+  final signOutUseCase = SignOutUseCase(authRepository);
+  final forgotPasswordUseCase = ForgotPasswordUseCase(authRepository);
+  final updatePasswordUseCase = UpdatePasswordUseCase(authRepository);
+  final getCurrentUserUseCase = GetCurrentUserUseCase(authRepository);
+  final saveUserInterestsUseCase = SaveUserInterestsUseCase(authRepository);
+
+  runApp(
+    MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthCubit>(
+          create: (context) => AuthCubit(
+            signUpUseCase: signUpUseCase,
+            signInUseCase: signInUseCase,
+            signOutUseCase: signOutUseCase,
+            forgotPasswordUseCase: forgotPasswordUseCase,
+            updatePasswordUseCase: updatePasswordUseCase,
+            getCurrentUserUseCase: getCurrentUserUseCase,
+            saveUserInterestsUseCase: saveUserInterestsUseCase,
+          )..checkCurrentUser(),
+        ),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      title: 'Tuwaiq App',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      // Handle startup routing dynamically based on initial state
+      home: const AuthStartupGate(),
+      onGenerateRoute: (settings) {
+        switch (settings.name) {
+          case AppRoutes.signIn:
+            return MaterialPageRoute(builder: (_) => const SignInScreen());
+          case AppRoutes.signUp:
+            return MaterialPageRoute(builder: (_) => const SignUpScreen());
+          case AppRoutes.forgotPassword:
+            return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
+          case AppRoutes.updatePassword:
+            return MaterialPageRoute(builder: (_) => const UpdatePasswordScreen());
+          case AppRoutes.emailConfirmation:
+            final email = settings.arguments as String? ?? '';
+            return MaterialPageRoute(
+              builder: (_) => EmailConfirmationScreen(email: email),
+            );
+          case AppRoutes.interests:
+            return MaterialPageRoute(builder: (_) => const InterestsScreen());
+          case AppRoutes.home:
+            return MaterialPageRoute(builder: (_) => const HomeScreen());
+          default:
+            return MaterialPageRoute(builder: (_) => const SignInScreen());
+        }
+      },
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+class AuthStartupGate extends StatelessWidget {
+  const AuthStartupGate({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+    return BlocBuilder<AuthCubit, AuthState>(
+      builder: (context, state) {
+        if (state is AuthSuccess) {
+          // If interests are already selected, go to Home, otherwise go to interests selection
+          if (state.user.interests.length >= 3) {
+            return const HomeScreen();
+          } else {
+            return const InterestsScreen();
+          }
+        } else if (state is AuthEmailNotConfirmed) {
+          return EmailConfirmationScreen(email: state.email);
+        } else if (state is AuthLoading) {
+          return Scaffold(
+            backgroundColor: Colors.white,
+            body: Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
             ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
+          );
+        } else {
+          return const SignInScreen();
+        }
+      },
     );
   }
 }
