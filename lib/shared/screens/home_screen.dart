@@ -31,6 +31,14 @@ class HomeScreen extends StatelessWidget {
           style: AppTextStyles.titleSm,
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person, color: AppColors.primary),
+            onPressed: () {
+              Navigator.pushNamed(context, AppRoutes.profile);
+            },
+          ),
+        ],
       ),
       body: const Center(
         child: Text(

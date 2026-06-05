@@ -6,4 +6,7 @@ class AppRoutes {
   static const String emailConfirmation = '/email-confirmation';
   static const String interests = '/interests';
   static const String home = '/home';
+  static const String profile = '/profile';
+  static const String editProfile = '/edit-profile';
+  static const String connections = '/connections';
 }

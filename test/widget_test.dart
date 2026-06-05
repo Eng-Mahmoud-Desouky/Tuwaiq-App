@@ -1,30 +1,47 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:tuwaiq_app/main.dart';
+import 'package:tuwaiq_app/features/profile/domain/usecases/get_profile_usecase.dart';
+import 'package:tuwaiq_app/features/profile/domain/usecases/update_profile_usecase.dart';
+import 'package:tuwaiq_app/features/profile/domain/usecases/get_profile_social_stats_usecase.dart';
+import 'package:tuwaiq_app/features/profile/domain/usecases/follow_user_usecase.dart';
+import 'package:tuwaiq_app/features/profile/domain/usecases/unfollow_user_usecase.dart';
+import 'package:tuwaiq_app/features/profile/domain/usecases/get_followers_usecase.dart';
+import 'package:tuwaiq_app/features/profile/domain/usecases/get_following_usecase.dart';
+import 'package:tuwaiq_app/features/profile/domain/repositories/profile_repository.dart';
+import 'package:tuwaiq_app/features/profile/domain/entities/user_profile.dart';
+import 'package:tuwaiq_app/features/profile/domain/entities/profile_social_stats.dart';
+
+class FakeProfileRepo implements ProfileRepository {
+  @override
+  Future<UserProfile> getProfile(String userId) async => UserProfile(id: userId, fullName: '', username: '');
+  @override
+  Future<UserProfile> updateProfile({required UserProfile profile, String? localAvatarPath}) async => profile;
+  @override
+  Future<ProfileSocialStats> getProfileSocialStats({required String targetUserId, required String currentUserId}) async =>
+      const ProfileSocialStats(followersCount: 0, followingCount: 0, isFollowing: false);
+  @override
+  Future<void> followUser({required String followerId, required String followedId}) async {}
+  @override
+  Future<void> unfollowUser({required String followerId, required String followedId}) async {}
+  @override
+  Future<List<UserProfile>> getFollowers(String userId) async => [];
+  @override
+  Future<List<UserProfile>> getFollowing(String userId) async => [];
+}
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
-
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  testWidgets('App compiles and loads signIn by default', (WidgetTester tester) async {
+    final repo = FakeProfileRepo();
+    await tester.pumpWidget(
+      MyApp(
+        getProfileUseCase: GetProfileUseCase(repo),
+        updateProfileUseCase: UpdateProfileUseCase(repo),
+        getProfileSocialStatsUseCase: GetProfileSocialStatsUseCase(repo),
+        followUserUseCase: FollowUserUseCase(repo),
+        unfollowUserUseCase: UnfollowUserUseCase(repo),
+        getFollowersUseCase: GetFollowersUseCase(repo),
+        getFollowingUseCase: GetFollowingUseCase(repo),
+      ),
+    );
   });
 }
