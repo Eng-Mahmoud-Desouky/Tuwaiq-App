@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>$CRATCH - Edit Profile</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed-dim": "#dec723",
+                        "on-surface-variant": "#3a4a49",
+                        "surface-bright": "#f2fbfa",
+                        "background": "#f8f9fa",
+                        "tertiary-fixed": "#fce442",
+                        "surface-container-low": "#ecf5f4",
+                        "outline-variant": "#b9cac9",
+                        "surface-tint": "#006a6a",
+                        "surface-dim": "#d3dcdb",
+                        "on-tertiary-container": "#746700",
+                        "primary-fixed-dim": "#00dddd",
+                        "primary": "#006a6a",
+                        "surface-container-high": "#e1eae9",
+                        "inverse-primary": "#00dddd",
+                        "secondary": "#5d5e62",
+                        "secondary-fixed": "#e2e2e6",
+                        "primary-container": "#00ffff",
+                        "on-error-container": "#93000a",
+                        "surface": "#ffffff",
+                        "on-tertiary-fixed-variant": "#504700",
+                        "inverse-surface": "#293232",
+                        "on-secondary-container": "#616266",
+                        "on-primary-fixed": "#002020",
+                        "inverse-on-surface": "#eaf3f2",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#ffe745",
+                        "surface-variant": "#f1f3f5",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed": "#201c00",
+                        "tertiary": "#6b5f00",
+                        "surface-container": "#e7f0ef",
+                        "on-tertiary": "#ffffff",
+                        "secondary-container": "#dfdfe3",
+                        "on-surface": "#151d1d",
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed-dim": "#c6c6ca",
+                        "on-primary-container": "#007272",
+                        "on-secondary-fixed": "#1a1c1f",
+                        "on-primary-fixed-variant": "#004f4f",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#00fbfb",
+                        "on-secondary-fixed-variant": "#45474a",
+                        "on-secondary": "#ffffff",
+                        "surface-container-highest": "#dbe4e3",
+                        "outline": "#6a7a7a",
+                        "on-background": "#151d1d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "8px",
+                        "gutter": "24px",
+                        "base": "4px",
+                        "xl": "64px",
+                        "lg": "40px",
+                        "md": "24px",
+                        "margin-desktop": "48px",
+                        "margin-mobile": "16px",
+                        "sm": "16px"
+                    },
+                    "fontFamily": {
+                        "label-lg": ["Plus Jakarta Sans"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "title-md": ["Plus Jakarta Sans"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "display-lg": ["Plus Jakarta Sans"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "title-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        input:focus, textarea:focus {
+            box-shadow: 0 0 0 2px #00ffff !important;
+            outline: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body-md antialiased min-h-screen flex flex-col items-center">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky bg-surface dark:bg-surface-dim shadow-sm flex items-center justify-between px-margin-mobile md:px-margin-desktop h-16 z-50 shadow-[0px_4px_12px_rgba(0,0,0,0.03)]">
+<button aria-label="Cancel" class="text-on-surface-variant hover:opacity-80 transition-opacity active:scale-95 transition-transform p-2 -ml-2">
+<span class="font-label-lg text-label-lg">Cancel</span>
+</button>
+<h1 class="font-title-md text-title-md text-on-surface">Edit Profile</h1>
+<button aria-label="Save" class="text-[#00ffff] font-label-lg text-label-lg font-bold hover:opacity-80 transition-opacity active:scale-95 transition-transform p-2 -mr-2">
+            Save
+        </button>
+</header>
+<!-- Main Content -->
+<main class="w-full max-w-2xl px-margin-mobile md:px-margin-desktop py-lg flex-1 flex flex-col gap-lg">
+<!-- Avatar Section -->
+<section class="flex flex-col items-center gap-sm">
+<div class="relative group cursor-pointer active:scale-95 transition-transform">
+<img alt="Profile Avatar" class="w-32 h-32 rounded-full object-cover shadow-[0px_8px_24px_rgba(0,0,0,0.06)]" data-alt="A close-up portrait of a young person smiling softly. The lighting is bright and modern, creating a clean, welcoming aesthetic suitable for a tech or social app profile picture. The background is slightly blurred to keep focus on the subject." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGQFfnDvuoC7vSw6SNlbOvdTWddQ19RoMPPfSNH947QzJKJDKSMTPX9ql4eq9yIZf0MlopZ1_Z_hrcKuC-Z0ktE71tDwRxxpUI4WYqPpcs5bnROxW7USBnF0PwmxW7JVQIrZzugvQIeoWxZ1meRD1bimdzfcgCLpbONLEdx0B9v9WUNYc1k-8Dj2Mv_98pFeeQlGnNuv4tyLQNP5dprYFQG1ItVN7m7m4NUO-mkDyzyuy4vsnHqXve4GIfcLXsX1KvBx1SNO9h7aE"/>
+<div class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined filled text-white text-3xl" data-icon="photo_camera">photo_camera</span>
+</div>
+</div>
+<button class="text-primary font-label-sm text-label-sm hover:underline active:scale-95 transition-transform">Change Photo</button>
+</section>
+<!-- Form Section -->
+<section class="flex flex-col gap-md bg-surface p-6 rounded-2xl shadow-[0px_8px_24px_rgba(0,0,0,0.06)]">
+<div class="flex flex-col gap-xs">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider" for="fullName">Full Name</label>
+<input class="w-full bg-surface-variant border-none rounded-xl px-4 py-3 font-body-md text-on-surface placeholder:text-outline-variant transition-all" id="fullName" type="text" value="Alex Morgan"/>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider" for="username">Username</label>
+<div class="relative">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 text-outline-variant">@</span>
+<input class="w-full bg-surface-variant border-none rounded-xl pl-8 pr-4 py-3 font-body-md text-on-surface placeholder:text-outline-variant transition-all" id="username" type="text" value="alexm_creates"/>
+</div>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider" for="bio">Bio</label>
+<textarea class="w-full bg-surface-variant border-none rounded-xl px-4 py-3 font-body-md text-on-surface placeholder:text-outline-variant transition-all resize-none" id="bio" rows="4">Digital creator &amp; tech enthusiast. Building the future, one pixel at a time. ⚡️</textarea>
+<div class="text-right text-xs text-outline-variant mt-1">82 / 160</div>
+</div>
+</section>
+<!-- Interests Section -->
+<section class="flex flex-col gap-sm bg-surface p-6 rounded-2xl shadow-[0px_8px_24px_rgba(0,0,0,0.06)] mb-xl md:mb-0">
+<h2 class="font-title-md text-title-md text-on-surface">Interests</h2>
+<div class="flex flex-wrap gap-2 mt-2">
+<!-- Existing Interests -->
+<div class="flex items-center gap-1 bg-primary-container/20 text-on-primary-container px-3 py-1.5 rounded-full font-label-sm text-label-sm">
+                    Design
+                    <button aria-label="Remove Design" class="hover:text-error transition-colors"><span class="material-symbols-outlined text-[16px]" data-icon="close">close</span></button>
+</div>
+<div class="flex items-center gap-1 bg-primary-container/20 text-on-primary-container px-3 py-1.5 rounded-full font-label-sm text-label-sm">
+                    Technology
+                    <button aria-label="Remove Technology" class="hover:text-error transition-colors"><span class="material-symbols-outlined text-[16px]" data-icon="close">close</span></button>
+</div>
+<div class="flex items-center gap-1 bg-primary-container/20 text-on-primary-container px-3 py-1.5 rounded-full font-label-sm text-label-sm">
+                    Fintech
+                    <button aria-label="Remove Fintech" class="hover:text-error transition-colors"><span class="material-symbols-outlined text-[16px]" data-icon="close">close</span></button>
+</div>
+<!-- Add Interest -->
+<button class="flex items-center gap-1 border border-dashed border-outline-variant text-on-surface-variant hover:border-primary hover:text-primary px-3 py-1.5 rounded-full font-label-sm text-label-sm transition-colors active:scale-95">
+<span class="material-symbols-outlined text-[16px]" data-icon="add">add</span>
+                    Add Interest
+                </button>
+</div>
+</section>
+</main>
+<!-- Navigation shell suppressed for modal/edit view as per guidelines -->
+</body></html>

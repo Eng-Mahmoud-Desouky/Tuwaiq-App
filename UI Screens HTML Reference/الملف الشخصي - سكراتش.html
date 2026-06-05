@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>$CRATCH - Profile</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400&amp;family=Plus+Jakarta+Sans:ital,wght@0,600;0,700;0,800;1,800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary-fixed-dim": "#dec723",
+                      "on-surface-variant": "#3a4a49",
+                      "surface-bright": "#f2fbfa",
+                      "background": "#f2fbfa",
+                      "tertiary-fixed": "#fce442",
+                      "surface-container-low": "#ecf5f4",
+                      "outline-variant": "#b9cac9",
+                      "surface-tint": "#006a6a",
+                      "surface-dim": "#d3dcdb",
+                      "on-tertiary-container": "#746700",
+                      "primary-fixed-dim": "#00dddd",
+                      "primary": "#006a6a",
+                      "surface-container-high": "#e1eae9",
+                      "inverse-primary": "#00dddd",
+                      "secondary": "#5d5e62",
+                      "secondary-fixed": "#e2e2e6",
+                      "primary-container": "#00ffff",
+                      "on-error-container": "#93000a",
+                      "surface": "#f2fbfa",
+                      "on-tertiary-fixed-variant": "#504700",
+                      "inverse-surface": "#293232",
+                      "on-secondary-container": "#616266",
+                      "on-primary-fixed": "#002020",
+                      "inverse-on-surface": "#eaf3f2",
+                      "on-primary": "#ffffff",
+                      "tertiary-container": "#ffe745",
+                      "surface-variant": "#dbe4e3",
+                      "error": "#ba1a1a",
+                      "on-tertiary-fixed": "#201c00",
+                      "tertiary": "#6b5f00",
+                      "surface-container": "#e7f0ef",
+                      "on-tertiary": "#ffffff",
+                      "secondary-container": "#dfdfe3",
+                      "on-surface": "#151d1d",
+                      "on-error": "#ffffff",
+                      "error-container": "#ffdad6",
+                      "secondary-fixed-dim": "#c6c6ca",
+                      "on-primary-container": "#007272",
+                      "on-secondary-fixed": "#1a1c1f",
+                      "on-primary-fixed-variant": "#004f4f",
+                      "surface-container-lowest": "#ffffff",
+                      "primary-fixed": "#00fbfb",
+                      "on-secondary-fixed-variant": "#45474a",
+                      "on-secondary": "#ffffff",
+                      "surface-container-highest": "#dbe4e3",
+                      "outline": "#6a7a7a",
+                      "on-background": "#151d1d"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xs": "8px",
+                      "gutter": "24px",
+                      "base": "4px",
+                      "xl": "64px",
+                      "lg": "40px",
+                      "md": "24px",
+                      "margin-desktop": "48px",
+                      "margin-mobile": "16px",
+                      "sm": "16px"
+              },
+              "fontFamily": {
+                      "label-lg": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "headline-lg-mobile": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "title-md": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "label-sm": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "headline-lg": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "display-lg": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "label-lg": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "title-md": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "800"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky bg-surface dark:bg-surface-dim shadow-sm shadow-[0px_4px_12px_rgba(0,0,0,0.03)] z-40">
+<div class="flex items-center justify-between px-margin-mobile md:px-margin-desktop h-16 w-full">
+<button aria-label="Menu" class="text-on-surface-variant dark:text-outline-variant hover:opacity-80 transition-opacity active:scale-95 transition-transform">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="font-display-lg text-display-lg font-black text-primary dark:text-primary-fixed italic tracking-tighter">$CRATCH</h1>
+<button aria-label="Search" class="text-on-surface-variant dark:text-outline-variant hover:opacity-80 transition-opacity active:scale-95 transition-transform">
+<span class="material-symbols-outlined">search</span>
+</button>
+</div>
+</header>
+<main class="px-margin-mobile md:px-margin-desktop pt-md md:pt-lg max-w-4xl mx-auto space-y-lg">
+<!-- Profile Header -->
+<section class="flex flex-col items-center text-center space-y-md">
+<div class="relative">
+<div class="w-32 h-32 rounded-full overflow-hidden border-4 border-surface shadow-[0px_8px_24px_rgba(0,0,0,0.06)] bg-surface-variant">
+<img alt="Alex Rivera Profile Picture" class="w-full h-full object-cover" data-alt="A close-up portrait of a young person with a bright, energetic expression, lit by soft, natural light in a modern urban setting. The overall mood is vibrant and approachable, fitting a clean, high-energy social profile aesthetic. Background is slightly blurred, emphasizing the subject. Colors are vivid yet natural, complementing a bright modern interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPGtQUlEu5X4DRIQ-_XP5ncHWnIFmBvWcL4BnX8ehUpNQwWSfm4IebzGAyd2onicgEhK-WsBalEqTEgtO9xL-zRyxv44F1Q1FeR0kKNhk2dVXGHQm3a1Q860UdGtXodBLpHOWxc0NQ7vyVkIZK7HjlSfmN2vJ8vEwKglMEFkWzIExuc_6f-x-YxwuI_Dea0qth1XPaxkEk9goG-PrnhDjWGJ7v3Gf5fTT5u7XSwxOXQrhFzbtd37BZ_H9oAhwuj6wajxNjolYVYw4"/>
+</div>
+<button class="absolute bottom-0 right-0 bg-primary-container text-on-primary-container rounded-full p-2 shadow-md hover:bg-primary hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-sm">edit</span>
+</button>
+</div>
+<div>
+<h2 class="font-title-md text-title-md text-on-surface">Alex Rivera</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">@alex_scratch</p>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface max-w-md mx-auto">
+                Discovering the best local underground events. ⚡️
+            </p>
+<button class="border border-outline text-on-surface rounded-[12px] px-6 py-2 font-label-lg text-label-lg hover:bg-surface-variant transition-colors active:scale-95">
+                Edit Profile
+            </button>
+</section>
+<!-- Social Stats Card -->
+<section class="bg-surface-container-lowest rounded-[16px] shadow-[0px_8px_24px_rgba(0,0,0,0.06)] p-md flex justify-around items-center">
+<div class="text-center">
+<p class="font-headline-lg-mobile text-headline-lg-mobile text-primary">1.2k</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Followers</p>
+</div>
+<div class="w-px h-12 bg-outline-variant/30"></div>
+<div class="text-center">
+<p class="font-headline-lg-mobile text-headline-lg-mobile text-primary">850</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Following</p>
+</div>
+</section>
+<!-- Interests Chips -->
+<section>
+<h3 class="font-label-lg text-label-lg text-on-surface-variant mb-sm uppercase tracking-wide">Interests</h3>
+<div class="flex overflow-x-auto pb-4 -mx-margin-mobile px-margin-mobile md:mx-0 md:px-0 gap-sm hide-scrollbar">
+<span class="whitespace-nowrap px-4 py-2 rounded-full bg-primary/10 text-primary font-label-lg text-label-lg">Music</span>
+<span class="whitespace-nowrap px-4 py-2 rounded-full bg-primary/10 text-primary font-label-lg text-label-lg">Tech</span>
+<span class="whitespace-nowrap px-4 py-2 rounded-full bg-primary/10 text-primary font-label-lg text-label-lg">Art</span>
+<span class="whitespace-nowrap px-4 py-2 rounded-full bg-primary/10 text-primary font-label-lg text-label-lg">Sports</span>
+<span class="whitespace-nowrap px-4 py-2 rounded-full bg-surface-variant text-on-surface-variant font-label-lg text-label-lg">Food</span>
+<span class="whitespace-nowrap px-4 py-2 rounded-full bg-surface-variant text-on-surface-variant font-label-lg text-label-lg">Travel</span>
+</div>
+</section>
+<!-- Content Tabs -->
+<section class="mt-xl">
+<div class="flex border-b border-outline-variant/30 mb-md">
+<button class="flex-1 pb-sm font-title-md text-title-md text-primary border-b-2 border-primary">
+                    Posts
+                </button>
+<button class="flex-1 pb-sm font-title-md text-title-md text-on-surface-variant hover:text-primary transition-colors">
+                    Events
+                </button>
+</div>
+<!-- Bento Grid Placeholder -->
+<div class="grid grid-cols-2 md:grid-cols-3 gap-sm md:gap-md">
+<div class="col-span-2 row-span-2 bg-surface-container rounded-[16px] overflow-hidden aspect-square relative shadow-[0px_4px_12px_rgba(0,0,0,0.03)] group">
+<img alt="Concert crowd" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A dynamic, high-energy photo of a concert crowd viewed from behind, with colorful stage lights illuminating the smoke in the air. The mood is electric and vibrant, perfectly capturing the essence of local underground music events. The visual style is modern, with rich colors contrasting against the darker silhouettes of the crowd, fitting a clean tech aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYnqF7_r3ia8jvreX3lzkWpaQFzPaQw9a9ybiApRYiEJirxmvvYJz-y68EIAv5EliuOY1JKewZMUjbq7pUF_f7DHFhckU89l3IWFCU4SXSvQR943YoC4ehP7vncsmsBwM78BHPtT2KYS6Gm-jDmNeaX9q_3qw-urBJYn87IbpCUQZo7hLrNUeAsOb9ig9qEvgLf7UIOq9RwpuAfmcD2n8xH-98upk70OHRCYz6rpoXkgy5ASokd6Ckhu_EuAsXQkyRbnkf2pvY33E"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-md">
+<h4 class="text-white font-title-md text-title-md">Underground Indie Fest</h4>
+<p class="text-white/80 font-body-sm text-body-sm flex items-center gap-1 mt-1"><span class="material-symbols-outlined text-sm">location_on</span> The Warehouse</p>
+</div>
+</div>
+<div class="bg-surface-container rounded-[16px] overflow-hidden aspect-square shadow-[0px_4px_12px_rgba(0,0,0,0.03)]">
+<img alt="Abstract Art" class="w-full h-full object-cover" data-alt="A close-up shot of a vibrant, abstract painting with thick brushstrokes of blue, yellow, and red. The textures are rich and detailed, conveying a sense of artistic energy. The lighting is bright and even, highlighting the colors in a way that aligns with a clean, modern visual identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCL7tx9RVOTN9MMelJc7xmiC6nks8fJF3inI0X_PTGhayjrIG0SdzGSUEOLKKVME8go1UTVJ_UG-MD_jU-nkuBq9WTFjBMBlAq5lyBraEiZfYkQ3ZKLM1_KW-Dcfq9JLMpYq0bLg7Tnwt5hR51EzR6sVrqKf1us91Q_lU23nuq7g88fktoFfzAsQ4n0JS5W70VUbiYre-Y7XnVs-b7hIgdsBYXTaV-ve5HYSDCnRCKbTb93c9rcrrp9U1KANbLl6fr3ixL_B81mZX8"/>
+</div>
+<div class="bg-surface-container rounded-[16px] overflow-hidden aspect-square shadow-[0px_4px_12px_rgba(0,0,0,0.03)] flex items-center justify-center p-4 text-center">
+<div>
+<span class="material-symbols-outlined text-4xl text-primary mb-2 block">format_quote</span>
+<p class="font-body-md text-body-md text-on-surface-variant italic">"Music is the space between the notes."</p>
+</div>
+</div>
+<div class="bg-surface-container rounded-[16px] overflow-hidden aspect-square shadow-[0px_4px_12px_rgba(0,0,0,0.03)]">
+<img alt="Gaming Setup" class="w-full h-full object-cover" data-alt="A high-tech gaming or workstation setup bathed in neon blue and purple ambient lighting. The scene features multiple monitors, a mechanical keyboard, and modern peripherals, emphasizing a sleek, clean tech aesthetic. The overall atmosphere is focused and immersive, suitable for a tech enthusiast's profile." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXGvn3ifsOWvzqRmk4az_0U9E70GF2S_xMWZcWw0abOIeEaV9vAT77avAHBYtxrrKB-Q2yDBMnpyGqntMZ5Pdbgo1AsnLmN2ZbqzDcUqStKh7bliEwsssDqLLElEuJgizTbTK8gdjwNnfWGE_AwmFtGdzwEdEPgiG93wSTqK0332Zq2e3woMogwTrxfnaj8UKQfLkE8B3p1Dui-UeVe-hmkS0zilP0eeYkkAKXPsfBUrQIOWxWW9DIrQ9fIeHG1xhSq4RHAlWWXpI"/>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-4 pt-2 bg-surface-container-lowest dark:bg-inverse-surface shadow-[0px_-8px_24px_rgba(0,0,0,0.06)] rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-4 py-1 hover:bg-surface-variant/50 dark:hover:bg-surface-variant/20 transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">home</span>
+<span class="font-label-sm text-label-sm mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-4 py-1 hover:bg-surface-variant/50 dark:hover:bg-surface-variant/20 transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">explore</span>
+<span class="font-label-sm text-label-sm mt-1">Explore</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-4 py-1 hover:bg-surface-variant/50 dark:hover:bg-surface-variant/20 transition-colors active:scale-90 duration-200 relative -top-4" href="#">
+<div class="bg-primary text-on-primary rounded-full p-3 shadow-[0px_8px_24px_rgba(0,0,0,0.10)]">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+</div>
+<span class="font-label-sm text-label-sm mt-1 sr-only">Create</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-4 py-1 hover:bg-surface-variant/50 dark:hover:bg-surface-variant/20 transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+<span class="font-label-sm text-label-sm mt-1">Alerts</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container dark:bg-on-primary-fixed-variant text-on-primary-container dark:text-primary-fixed rounded-xl px-4 py-1 hover:bg-surface-variant/50 dark:hover:bg-surface-variant/20 transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-label-sm text-label-sm mt-1">Profile</span>
+</a>
+</nav>
+<style>
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</body></html>
