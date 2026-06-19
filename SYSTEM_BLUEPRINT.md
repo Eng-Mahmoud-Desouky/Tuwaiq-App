@@ -37,6 +37,7 @@
 | **Backend / BaaS** | Supabase | PostgreSQL foundation, built-in Auth & RLS, clean exit strategy to custom backend if needed |
 | **Database** | PostgreSQL (via Supabase) | Relational structure, SQL familiarity, strong ecosystem |
 | **State Management** | flutter_bloc (Cubit) | Selected for reactive flow and strict state representation |
+| **Routing** | GoRouter | Declarative routing, deep linking support, and nested shell routes (`StatefulShellRoute`) for persistent bottom navigation |
 | **Version Control** | Git / GitHub | Industry standard, supports CI/CD pipelines |
 
 > **Exit Strategy Note:** Supabase is built on top of standard PostgreSQL. If scaling requirements demand a custom backend in the future, migration is straightforward — no vendor lock-in on the data layer.
@@ -85,6 +86,8 @@ lib/
 │   ├── constants/
 │   ├── errors/
 │   ├── network/
+│   ├── router/                  # Centralized app routing (GoRouter)
+│   │   └── app_router.dart
 │   └── utils/
 ├── shared/                      # Reusable widgets, theming, extensions
 │   ├── theme/
@@ -104,11 +107,52 @@ lib/
     │       ├── screens/
     │       ├── widgets/
     │       └── bloc/ (or cubit/)
-    ├── profile/
-    ├── events/
-    ├── social/
-    └── notifications/
+    ├── main/                    # Persistent bottom navigation shell
+    │   └── presentation/
+    │       └── screens/
+    │           └── main_screen.dart
+    ├── home/                    # Home page feature (Presentation only)
+    │   └── presentation/
+    │       └── screens/
+    │           └── home_screen.dart
+    ├── explore/                 # Explore page stub
+    │   └── presentation/
+    │       └── screens/
+    │           └── explore_screen.dart
+    ├── create_content/          # Content creation stub
+    │   └── presentation/
+    │       └── screens/
+    │           └── create_content_screen.dart
+    ├── alerts/                  # Notifications & Alerts stub
+    │   └── presentation/
+    │       └── screens/
+    │           └── alerts_screen.dart
+    └── profile/                 # Profile management and social connections
+        ├── data/
+        │   ├── datasources/
+        │   ├── models/
+        │   └── repositories/
+        ├── domain/
+        │   ├── entities/
+        │   ├── repositories/
+        │   └── usecases/
+        └── presentation/
+            ├── screens/
+            ├── widgets/
+            └── cubit/
 ```
+
+### 4.3 Routing & Navigation (GoRouter)
+
+The application uses **GoRouter** for declarative routing, nested navigation, and authentication-based redirection.
+
+- **Centralized Router:** Defined in [app_router.dart](file:///c:/Users/IT/StudioProjects/tuwaiq_app/lib/core/router/app_router.dart).
+- **Stateful Bottom Navigation:** Implemented using `StatefulShellRoute.indexedStack`. This allows each navigation branch (Home, Explore, Create Content, Alerts, Profile) to maintain its own navigation stack and state when switching between tabs.
+- **Auth Guard & Redirection:** The router is configured with a `redirect` handler that listens to the `AuthCubit` stream (via `AppRouterRefreshStream`). It dynamically redirects users:
+  - If unauthenticated: redirects to the Sign-In screen.
+  - If authenticated but has selected fewer than 3 interests: redirects to the Interests Selection screen.
+  - If authenticated with complete interests and attempts to access authentication screens (like Sign-In/Sign-Up): redirects to the Home screen.
+- **Manual Dependency Injection:** Since there is no service locator (like `GetIt`) in Sprint 1, dependency injection is performed manually in `main.dart` and the required use cases are passed down to `AppRouter.router()`.
 
 ---
 
@@ -268,6 +312,7 @@ class AppTextStyles {
 | `core/constants/` | App-wide constants (routes, keys, timeouts) |
 | `core/errors/` | Failure classes, Exception handling |
 | `core/network/` | Network info, connectivity checks |
+| `core/router/` | Centralized router setup ([app_router.dart](file:///c:/Users/IT/StudioProjects/tuwaiq_app/lib/core/router/app_router.dart)) using GoRouter and navigation state management |
 | `core/utils/` | Pure utility functions (formatters, validators) |
 
 ### 8.2 `shared/` — Reusable UI Components
@@ -286,6 +331,7 @@ class AppTextStyles {
 
 | Version | Date | Author | Changes |
 | :--- | :--- | :--- | :--- |
+| `1.2.0` | 2026-06-19 | Antigravity AI | Migrated application routing to `go_router` with declarative routing and nested branch navigation (`StatefulShellRoute`). Moved `HomeScreen` to `features/home` and created main navigation bar shell (`MainScreen`). Created stub features (`explore`, `create_content`, `alerts`) and set up centralized redirection gates for authentication status and user interests checklist. |
 | `1.1.0` | 2026-05-31 | Mahmoud Desouky | Implemented Auth & Onboarding feature. Added `interests` text[] to `profiles`, RLS security triggers, deep linking, bloc/Cubit state management, and 6 premium RTL UI screens. |
 | `1.0.0` | 2026-05-20 | Mahmoud Desouky | Initial Blueprint — Tech Stack, User Roles, DB Core (profiles), Clean Architecture, Theming System |
 
