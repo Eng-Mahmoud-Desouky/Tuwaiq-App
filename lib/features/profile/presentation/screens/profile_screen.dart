@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/theme/app_text_styles.dart';
@@ -59,11 +60,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                         label: 'نعم',
                         onPressed: () {
                           context.read<AuthCubit>().signOut();
-                          Navigator.pushNamedAndRemoveUntil(
-                            context,
-                            AppRoutes.signIn,
-                            (route) => false,
-                          );
+                          context.go(AppRoutes.signIn);
                         },
                       ),
                     ),
@@ -72,7 +69,13 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
               )
             : IconButton(
                 icon: const Icon(Icons.arrow_back, color: AppColors.onSurfaceVariant),
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go(AppRoutes.home);
+                  }
+                },
               ),
         title: Text(
           isOwnProfile ? '\$CRATCH' : 'الملف الشخصي',
@@ -143,7 +146,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           },
         ),
       ),
-      bottomNavigationBar: isOwnProfile ? _buildBottomNavBar(context) : null,
     );
   }
 
@@ -646,11 +648,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   }
 
   void _navigateToEditProfile(BuildContext context, UserProfile profile) {
-    Navigator.pushNamed(
-      context,
-      AppRoutes.editProfile,
-      arguments: profile,
-    ).then((_) {
+    context.push('/profile/${AppRoutes.editProfile}', extra: profile).then((_) {
       // Reload on pop back
       final authState = context.read<AuthCubit>().state;
       final currentUserId = (authState is AuthSuccess) ? authState.user.id : '';
@@ -660,15 +658,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   }
 
   void _navigateToConnections(BuildContext context, UserProfile profile, int initialIndex) {
-    Navigator.pushNamed(
-      context,
-      AppRoutes.connections,
-      arguments: {
-        'userId': widget.userId,
-        'userName': profile.fullName,
-        'initialIndex': initialIndex,
-      },
-    ).then((_) {
+    context.push('/profile/${AppRoutes.connections}', extra: {
+      'userId': widget.userId,
+      'userName': profile.fullName,
+      'initialIndex': initialIndex,
+    }).then((_) {
       // Reload stats on pop back
       final authState = context.read<AuthCubit>().state;
       final currentUserId = (authState is AuthSuccess) ? authState.user.id : '';
@@ -676,74 +670,4 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     });
   }
 
-  Widget _buildBottomNavBar(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(16),
-          topRight: Radius.circular(16),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x0F000000),
-            blurRadius: 24,
-            offset: Offset(0, -8),
-          )
-        ],
-      ),
-      padding: const EdgeInsets.only(bottom: 16, top: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavBarItem(Icons.home_outlined, 'Home', false, () {
-            Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (route) => false);
-          }),
-          _buildNavBarItem(Icons.explore_outlined, 'Explore', false, () {}),
-          GestureDetector(
-            onTap: () {},
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Color(0x1F000000),
-                    blurRadius: 12,
-                    offset: Offset(0, 4),
-                  )
-                ],
-              ),
-              child: const Icon(Icons.add, size: 28, color: Colors.white),
-            ),
-          ),
-          _buildNavBarItem(Icons.notifications_outlined, 'Alerts', false, () {}),
-          _buildNavBarItem(Icons.person, 'Profile', true, () {}),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavBarItem(IconData icon, String label, bool isActive, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isActive ? AppColors.primary : AppColors.onSurfaceVariant,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: AppTextStyles.labelSm.copyWith(
-              color: isActive ? AppColors.primary : AppColors.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

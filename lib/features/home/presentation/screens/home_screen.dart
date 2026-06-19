@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../features/auth/presentation/cubit/auth_cubit.dart';
-import '../../core/constants/app_routes.dart';
-import '../theme/app_colors.dart';
-import '../theme/app_text_styles.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/constants/app_routes.dart';
+import '../../../../shared/theme/app_colors.dart';
+import '../../../../shared/theme/app_text_styles.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -19,11 +20,7 @@ class HomeScreen extends StatelessWidget {
           icon: const Icon(Icons.logout, color: AppColors.primary),
           onPressed: () {
             context.read<AuthCubit>().signOut();
-            Navigator.pushNamedAndRemoveUntil(
-              context,
-              AppRoutes.signIn,
-              (route) => false,
-            );
+            context.go(AppRoutes.signIn);
           },
         ),
         title: const Text(
@@ -35,7 +32,7 @@ class HomeScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.person, color: AppColors.primary),
             onPressed: () {
-              Navigator.pushNamed(context, AppRoutes.profile);
+              context.push(AppRoutes.profile);
             },
           ),
         ],

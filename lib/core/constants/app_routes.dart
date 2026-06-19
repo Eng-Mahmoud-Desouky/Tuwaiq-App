@@ -7,6 +7,9 @@ class AppRoutes {
   static const String interests = '/interests';
   static const String home = '/home';
   static const String profile = '/profile';
-  static const String editProfile = '/edit-profile';
-  static const String connections = '/connections';
+  static const String editProfile = 'edit-profile'; // sub-route
+  static const String connections = 'connections'; // sub-route
+  static const String explore = '/explore';
+  static const String create = '/create';
+  static const String alerts = '/alerts';
 }
