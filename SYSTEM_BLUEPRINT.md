@@ -1,5 +1,5 @@
 # 📐 System Blueprint — Tuwaiq App
-**Version:** 1.0.0 | **Status:** Active | **Last Updated:** 2026-05-20
+**Version:** 1.3.0 | **Status:** Active | **Last Updated:** 2026-06-20
 
 ---
 
@@ -12,7 +12,8 @@
 6. [Flutter ↔ Supabase Connection](#6-flutter--supabase-connection)
 7. [Theming System](#7-theming-system)
 8. [Core & Shared Structure](#8-core--shared-structure)
-9. [Change Log](#9-change-log)
+9. [Event Management Feature & Engineering Decisions](#9-event-management-feature--engineering-decisions)
+10. [Change Log](#10-change-log)
 
 ---
 
@@ -107,6 +108,19 @@ lib/
     │       ├── screens/
     │       ├── widgets/
     │       └── bloc/ (or cubit/)
+    ├── events/                  # Event management feature module
+    │   ├── data/
+    │   │   ├── datasources/     # EventRemoteDataSource
+    │   │   ├── models/          # EventModel
+    │   │   └── repositories/    # EventRepositoryImpl
+    │   ├── domain/
+    │   │   ├── entities/        # EventEntity (Composite with UserProfile)
+    │   │   ├── repositories/    # EventRepository interface
+    │   │   └── usecases/        # CreateEventUseCase, GetEventUseCase, GetAllEventsUseCase
+    │   └── presentation/
+    │       ├── cubit/           # CreateEventCubit, EventDetailsCubit
+    │       ├── screens/         # CreateEventScreen, EventDetailsScreen
+    │       └── widgets/         # EventCardWidget (Reusable)
     ├── main/                    # Persistent bottom navigation shell
     │   └── presentation/
     │       └── screens/
@@ -179,7 +193,30 @@ Stores all additional user data beyond authentication.
 
 **Relationship:** `profiles.id` → `auth.users.id` (1-to-1, Foreign Key)
 
-### 5.2 ERD — Sprint 1 Scope
+#### `events`
+Stores all user-created events.
+
+| Column | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | PK, DEFAULT gen_random_uuid() | Unique event ID |
+| `creator_id` | `uuid` | FK → `profiles.id` | Reference to the event creator profile |
+| `title` | `text` | NOT NULL | Title of the event |
+| `description` | `text` | NOT NULL | Multi-line description of the event |
+| `cover_url` | `text` | NULLABLE | URL path to the cover image in storage |
+| `category` | `text` | NOT NULL | Category name |
+| `region` | `text` | NOT NULL | Saudi Arabia Region |
+| `city` | `text` | NOT NULL | Saudi Arabia City |
+| `location_name` | `text` | NOT NULL | Venue or location name |
+| `google_maps_url` | `text` | NULLABLE | Google Maps location URL link |
+| `start_date` | `timestamptz` | NOT NULL | Event start date and time |
+| `end_date` | `timestamptz` | NOT NULL | Event end date and time |
+| `status` | `text` | DEFAULT 'published' | Event publication status |
+| `created_at` | `timestamptz` | DEFAULT now() | Event row creation timestamp |
+| `updated_at` | `timestamptz` | DEFAULT now() | Event row last update timestamp |
+
+**Relationship:** `events.creator_id` → `profiles.id` (Many-to-One, Foreign Key)
+
+### 5.2 ERD — Event Management Feature Scope
 
 ```
 auth.users (Supabase Managed)
@@ -194,9 +231,27 @@ profiles
   - bio
   - created_at
   - updated_at
+  - interests
+    │
+    │ 1:N
+    ▼
+events
+  - id (PK)
+  - creator_id (FK → profiles.id)
+  - title
+  - description
+  - cover_url
+  - category
+  - region
+  - city
+  - location_name
+  - google_maps_url
+  - start_date
+  - end_date
+  - status
+  - created_at
+  - updated_at
 ```
-
-> **Note:** Full ERD including `events`, `posts`, `follows`, `notifications` will be added incrementally before each feature sprint.
 
 ### 5.3 RLS Policies — Sprint 1
 
@@ -224,6 +279,54 @@ USING (auth.uid() = id);
 ```
 
 > **Note:** Public profile READ policy (for viewing other users' profiles) will be added in the Profile feature sprint.
+
+```sql
+-- Enable RLS on events
+ALTER TABLE events ENABLE ROW LEVEL SECURITY;
+
+-- SELECT: authenticated users can read all events
+CREATE POLICY "authenticated users can read events"
+ON events FOR SELECT
+TO authenticated
+USING (true);
+
+-- INSERT: users can only create their own events
+CREATE POLICY "users can insert own events"
+ON events FOR INSERT
+TO authenticated
+WITH CHECK (auth.uid() = creator_id);
+
+-- UPDATE: users can only update their own events
+CREATE POLICY "users can update own events"
+ON events FOR UPDATE
+TO authenticated
+USING (auth.uid() = creator_id);
+
+-- DELETE: users can only delete their own events
+CREATE POLICY "users can delete own events"
+ON events FOR DELETE
+TO authenticated
+USING (auth.uid() = creator_id);
+
+-- Storage Policies for 'events' Bucket (storage.objects table)
+-- SELECT: allow public read access
+CREATE POLICY "Allow public read access to events"
+ON storage.objects FOR SELECT
+TO public
+USING (bucket_id = 'events'::text);
+
+-- INSERT: allow authenticated users to upload covers
+CREATE POLICY "Allow authenticated users to upload events"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (bucket_id = 'events'::text);
+
+-- UPDATE: allow authenticated users to update covers
+CREATE POLICY "Allow authenticated users to update their own events"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING (bucket_id = 'events'::text);
+```
 
 ---
 
@@ -264,6 +367,21 @@ Supabase Datasource (Data/Remote)
     ↓ HTTP / Realtime
 Supabase Backend
 ```
+
+### 6.4 Key Query Patterns
+1. **Avoiding N+1 Queries (FK Joins):**
+   When fetching events, the creator's profile information must be fetched in the same query using PostgREST foreign key joins:
+   ```dart
+   final response = await client
+       .from('events')
+       .select('*, profiles(*)')
+       .order('start_date', ascending: true);
+   ```
+2. **Separated Storage & Database Upload Flow:**
+   To handle errors gracefully, cover images are uploaded to storage first. The generated public URL is then supplied to the database insert statement. If the database insert fails, the image URL remains cached in the presentation state to avoid redundant uploads.
+
+### 6.5 Localizations
+The application uses `flutter_localizations` configured in `main.dart` with support for `ar` (Arabic) and `en` (English) locales, defaulting to `ar` (Arabic) to support standard RTL layout and system widgets (like pickers and calendar dialogs) natively.
 
 ---
 
@@ -327,10 +445,58 @@ class AppTextStyles {
 
 ---
 
-## 9. Change Log
+## 9. Event Management Feature & Engineering Decisions
+
+### 9.1 Feature Overview
+The **Event Management** module (`features/events`) allows authenticated users to create, search, and view detailed information for events within Saudi Arabia. Key pages include:
+- **`CreateEventScreen`**: A multi-step form to input event title, description, category, region, city, location name, Google Maps link, and date/time range, along with an optional cover image.
+- **`EventDetailsScreen`**: A screen displaying full details about the event, its creator (user profile), timings, location, and description, including action buttons to navigate via Google Maps.
+- **`EventCardWidget`**: A reusable card conforming to the "Light Industrial Tech" design style to display event previews across different features (e.g., Home, Explore).
+
+### 9.2 Engineering Decisions
+1. **N+1 Query Prevention (Composite Entities)**:
+   Instead of fetching events and then executing a separate database query for each creator's profile (which causes a performance bottleneck), a composite `EventEntity` was designed to include a nested `UserProfile` object. The remote data source queries the database using PostgREST foreign key joins:
+   ```dart
+   final response = await client
+       .from('events')
+       .select('*, profiles(*)')
+       .order('start_date', ascending: true);
+   ```
+   This ensures that all event and creator details are retrieved in a single network round-trip.
+
+2. **Decoupled File Storage & Database Insertion**:
+   In `CreateEventCubit`, the process of uploading the cover image to Supabase Storage and inserting the event metadata into the database are separated into two distinct stages:
+   - **Image Upload**: The image is uploaded to the `events` storage bucket first. The returned public URL is cached within the cubit state.
+   - **Metadata Database Insert**: The event metadata row (including the uploaded `cover_url`) is inserted into the `events` table.
+   - **Error Recovery State-Caching**: If the database insertion fails (e.g., network timeout, database validation error), the uploaded image URL remains stored in the Cubit's state (`coverUrl` parameter). When the user clicks the save button again to retry, the cubit skips the image upload step and proceeds directly to the database insertion, saving bandwidth and preventing duplicate files in storage.
+
+3. **Locale-Aware RTL Calendar Dialogs**:
+   Operating in an Arabic context, native widgets like `showDatePicker` and `showTimePicker` crashed because the application was missing required locale configuration delegates. This was resolved by adding `flutter_localizations` from the Flutter SDK to `pubspec.yaml` and registering the delegates inside `MaterialApp.router` in `main.dart` with a default locale of `Locale('ar')`.
+
+4. **Nested Shell Router Safety Checks**:
+   Because `CreateEventScreen` resides on a persistent branch of a `StatefulShellRoute` (tab 2), calling a standard `Navigator.pop(context)` caused a black screen or navigation crash. The navigation flow was hardened to:
+   ```dart
+   if (Navigator.of(context).canPop()) {
+     Navigator.of(context).pop();
+   } else {
+     context.go(AppRoutes.home);
+   }
+   ```
+   This safely pops context-bound dialogs or sub-routes, while correctly resetting the active tab branch to the home route when attempting to pop the root page of the tab.
+
+5. **Ancestor Widget Lookup Guarding (`mounted` checks)**:
+   To prevent the animation exception `Looking up a deactivated widget's ancestor is unsafe`, safety guards were implemented in components that handle navigation or state checks after asynchronous calls (e.g., `PrimaryButton` and the screens' submit functions). We check `if (!mounted) return;` or `if (context.mounted)` before executing any context-dependent actions (like `Navigator.pop` or `context.read`).
+
+6. **System Back Dispatcher Integration**:
+   To resolve the Android log warning `OnBackInvokedCallback is not enabled for the application`, the app manifest `android/app/src/main/AndroidManifest.xml` was updated to enable the new back gesture API via `android:enableOnBackInvokedCallback="true"`.
+
+---
+
+## 10. Change Log
 
 | Version | Date | Author | Changes |
 | :--- | :--- | :--- | :--- |
+| `1.3.0` | 2026-06-20 | Antigravity AI | Implemented Event Management Feature (`features/events`). Designed database schema, storage bucket, and RLS policies for `events`. Created composite `EventEntity` (embedding `UserProfile`) to resolve creator profile data in a single request. Developed `CreateEventCubit` with strictly defined states (Initial, UploadingImage, SavingData, Success, Error) separating storage upload from database insert. Added `CreateEventScreen` and `EventDetailsScreen` with Arabic RTL localizations support (`flutter_localizations`), form validation, maps redirection, and `mounted` guards for transitions. |
 | `1.2.0` | 2026-06-19 | Antigravity AI | Migrated application routing to `go_router` with declarative routing and nested branch navigation (`StatefulShellRoute`). Moved `HomeScreen` to `features/home` and created main navigation bar shell (`MainScreen`). Created stub features (`explore`, `create_content`, `alerts`) and set up centralized redirection gates for authentication status and user interests checklist. |
 | `1.1.0` | 2026-05-31 | Mahmoud Desouky | Implemented Auth & Onboarding feature. Added `interests` text[] to `profiles`, RLS security triggers, deep linking, bloc/Cubit state management, and 6 premium RTL UI screens. |
 | `1.0.0` | 2026-05-20 | Mahmoud Desouky | Initial Blueprint — Tech Stack, User Roles, DB Core (profiles), Clean Architecture, Theming System |
