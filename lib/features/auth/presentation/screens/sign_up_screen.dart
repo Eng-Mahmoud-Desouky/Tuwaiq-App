@@ -60,11 +60,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
   void _onSignUpPressed() {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<AuthCubit>().signUp(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-            username: _usernameController.text.trim().replaceAll('@', ''),
-            fullName: _fullNameController.text.trim(),
-          );
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        username: _usernameController.text.trim().replaceAll('@', ''),
+        fullName: _fullNameController.text.trim(),
+      );
     }
   }
 
@@ -98,12 +98,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 32),
                 Text(
                   'تم إنشاء الحساب!',
-                  style: AppTextStyles.headlineMd.copyWith(color: AppColors.primary),
+                  style: AppTextStyles.headlineMd.copyWith(
+                    color: AppColors.primary,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'مرحباً بك في عالم طويق الحصري',
-                  style: AppTextStyles.bodyLg.copyWith(color: AppColors.onSurfaceVariant),
+                  style: AppTextStyles.bodyLg.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -146,7 +150,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
             'https://lh3.googleusercontent.com/aida-public/AB6AXuA19htGz-3Us5OscjrB29ogEmjcJjfsqzOxZHgkscv3auDe3g0zZajjl2WKcFvmqsg_FPQ3LzUEvTs4dMvQx7iEoZnzQ2AmNzh8l8B37xbXvpah8bZqUS4ySPHzty4ROmxqbcItUTHSq77XFulJq-tuGDO-c71JXAbdqdvHh49cZ0D8zAB-Su4ui7nExAlrlfZe-t2kbAtpAT3NL1EGiA_Oab1cjpNc_4zBviATGKbJ9-vMrPgL80BjMiKxyKPnqQko5XGsOUlG-KI',
             height: 32,
             fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => const Text('طويق', style: AppTextStyles.titleSm),
+            errorBuilder: (_, __, ___) =>
+                const Text('طويق', style: AppTextStyles.titleSm),
           ),
         ),
         leading: const SizedBox(width: 48), // Match balance
@@ -236,9 +241,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             alignment: Alignment.centerRight,
                             child: FractionallySizedBox(
                               widthFactor: _passwordStrength,
-                              child: Container(
-                                color: _passwordStrengthColor,
-                              ),
+                              child: Container(color: _passwordStrengthColor),
                             ),
                           ),
                         ),
@@ -271,7 +274,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       Center(
                         child: TextButton(
                           onPressed: () {
-                            Navigator.pushReplacementNamed(context, AppRoutes.signIn);
+                            Navigator.pushReplacementNamed(
+                              context,
+                              AppRoutes.signIn,
+                            );
                           },
                           child: RichText(
                             text: TextSpan(

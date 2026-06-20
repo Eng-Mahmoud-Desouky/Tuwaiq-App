@@ -9,10 +9,7 @@ abstract class AuthRemoteDataSource {
     required String fullName,
   });
 
-  Future<UserModel> signIn({
-    required String email,
-    required String password,
-  });
+  Future<UserModel> signIn({required String email, required String password});
 
   Future<void> signOut();
 
@@ -44,10 +41,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     final response = await _client.auth.signUp(
       email: email,
       password: password,
-      data: {
-        'username': username,
-        'full_name': fullName,
-      },
+      data: {'username': username, 'full_name': fullName},
     );
 
     final user = response.user;
@@ -115,9 +109,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<void> updatePassword({required String newPassword}) async {
-    await _client.auth.updateUser(
-      UserAttributes(password: newPassword),
-    );
+    await _client.auth.updateUser(UserAttributes(password: newPassword));
   }
 
   @override
@@ -159,9 +151,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String userId,
     required List<String> interests,
   }) async {
-    await _client.from('profiles').update({
-      'interests': interests,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', userId);
+    await _client
+        .from('profiles')
+        .update({
+          'interests': interests,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', userId);
   }
 }

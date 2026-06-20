@@ -5,10 +5,7 @@ class FollowUserUseCase {
 
   const FollowUserUseCase(this.repository);
 
-  Future<void> call({
-    required String followerId,
-    required String followedId,
-  }) {
+  Future<void> call({required String followerId, required String followedId}) {
     return repository.followUser(
       followerId: followerId,
       followedId: followedId,

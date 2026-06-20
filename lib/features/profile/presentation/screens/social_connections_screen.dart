@@ -22,10 +22,12 @@ class SocialConnectionsScreen extends StatefulWidget {
   });
 
   @override
-  State<SocialConnectionsScreen> createState() => _SocialConnectionsScreenState();
+  State<SocialConnectionsScreen> createState() =>
+      _SocialConnectionsScreenState();
 }
 
-class _SocialConnectionsScreenState extends State<SocialConnectionsScreen> with SingleTickerProviderStateMixin {
+class _SocialConnectionsScreenState extends State<SocialConnectionsScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -77,13 +79,23 @@ class _SocialConnectionsScreenState extends State<SocialConnectionsScreen> with 
       body: BlocBuilder<ConnectionsCubit, ConnectionsState>(
         builder: (context, state) {
           if (state is ConnectionsLoading) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            );
           } else if (state is ConnectionsLoaded) {
             return TabBarView(
               controller: _tabController,
               children: [
-                _buildUserList(state.followers, state.followedUserIds, currentUserId),
-                _buildUserList(state.following, state.followedUserIds, currentUserId),
+                _buildUserList(
+                  state.followers,
+                  state.followedUserIds,
+                  currentUserId,
+                ),
+                _buildUserList(
+                  state.following,
+                  state.followedUserIds,
+                  currentUserId,
+                ),
               ],
             );
           } else if (state is ConnectionsError) {
@@ -107,10 +119,7 @@ class _SocialConnectionsScreenState extends State<SocialConnectionsScreen> with 
   ) {
     if (users.isEmpty) {
       return const Center(
-        child: Text(
-          'لا يوجد مستخدمون حالياً',
-          style: AppTextStyles.bodyMd,
-        ),
+        child: Text('لا يوجد مستخدمون حالياً', style: AppTextStyles.bodyMd),
       );
     }
 
@@ -124,7 +133,9 @@ class _SocialConnectionsScreenState extends State<SocialConnectionsScreen> with 
 
         return Card(
           color: AppColors.surfaceContainerLowest,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           elevation: 0,
           margin: const EdgeInsets.only(bottom: 12),
           child: Padding(
@@ -143,11 +154,13 @@ class _SocialConnectionsScreenState extends State<SocialConnectionsScreen> with 
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(999),
-                      child: user.avatarUrl != null && user.avatarUrl!.isNotEmpty
+                      child:
+                          user.avatarUrl != null && user.avatarUrl!.isNotEmpty
                           ? Image.network(
                               user.avatarUrl!,
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => _buildDefaultAvatar(user.fullName),
+                              errorBuilder: (context, error, stackTrace) =>
+                                  _buildDefaultAvatar(user.fullName),
                             )
                           : _buildDefaultAvatar(user.fullName),
                     ),
@@ -189,21 +202,30 @@ class _SocialConnectionsScreenState extends State<SocialConnectionsScreen> with 
                 if (!isMe)
                   isFollowing
                       ? OutlinedButton(
-                          onPressed: () => _toggleFollow(context, user.id, currentUserId),
+                          onPressed: () =>
+                              _toggleFollow(context, user.id, currentUserId),
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: AppColors.outlineVariant),
+                            side: const BorderSide(
+                              color: AppColors.outlineVariant,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(999),
                             ),
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 8,
+                            ),
                           ),
                           child: Text(
                             'Following',
-                            style: AppTextStyles.labelSm.copyWith(color: AppColors.onSurfaceVariant),
+                            style: AppTextStyles.labelSm.copyWith(
+                              color: AppColors.onSurfaceVariant,
+                            ),
                           ),
                         )
                       : ElevatedButton(
-                          onPressed: () => _toggleFollow(context, user.id, currentUserId),
+                          onPressed: () =>
+                              _toggleFollow(context, user.id, currentUserId),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primaryContainer,
                             foregroundColor: AppColors.onPrimaryContainer,
@@ -211,11 +233,16 @@ class _SocialConnectionsScreenState extends State<SocialConnectionsScreen> with 
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(999),
                             ),
-                            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 22,
+                              vertical: 8,
+                            ),
                           ),
                           child: Text(
                             'Follow',
-                            style: AppTextStyles.labelSm.copyWith(fontWeight: FontWeight.bold),
+                            style: AppTextStyles.labelSm.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
               ],
@@ -237,17 +264,17 @@ class _SocialConnectionsScreenState extends State<SocialConnectionsScreen> with 
   }
 
   void _navigateToProfile(BuildContext context, String userId) {
-    Navigator.pushNamed(
-      context,
-      AppRoutes.profile,
-      arguments: userId,
-    );
+    Navigator.pushNamed(context, AppRoutes.profile, arguments: userId);
   }
 
-  void _toggleFollow(BuildContext context, String targetUserId, String currentUserId) {
+  void _toggleFollow(
+    BuildContext context,
+    String targetUserId,
+    String currentUserId,
+  ) {
     context.read<ConnectionsCubit>().toggleFollowUser(
-          targetUserId: targetUserId,
-          currentUserId: currentUserId,
-        );
+      targetUserId: targetUserId,
+      currentUserId: currentUserId,
+    );
   }
 }

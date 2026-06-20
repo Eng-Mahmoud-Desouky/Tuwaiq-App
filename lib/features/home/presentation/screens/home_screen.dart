@@ -23,10 +23,7 @@ class HomeScreen extends StatelessWidget {
             context.go(AppRoutes.signIn);
           },
         ),
-        title: const Text(
-          'الرئيسية',
-          style: AppTextStyles.titleSm,
-        ),
+        title: const Text('الرئيسية', style: AppTextStyles.titleSm),
         centerTitle: true,
         actions: [
           IconButton(
@@ -38,10 +35,7 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
       body: const Center(
-        child: Text(
-          'مرحباً بك في طويق',
-          style: AppTextStyles.headlineMd,
-        ),
+        child: Text('مرحباً بك في طويق', style: AppTextStyles.headlineMd),
       ),
     );
   }

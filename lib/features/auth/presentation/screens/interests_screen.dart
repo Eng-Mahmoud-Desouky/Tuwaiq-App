@@ -32,8 +32,8 @@ class _InterestsScreenState extends State<InterestsScreen> {
   void _onExplorePressed() {
     if (_selectedInterestIds.length >= 3) {
       context.read<AuthCubit>().saveUserInterests(
-            interests: _selectedInterestIds.toList(),
-          );
+        interests: _selectedInterestIds.toList(),
+      );
     }
   }
 
@@ -79,7 +79,11 @@ class _InterestsScreenState extends State<InterestsScreen> {
         listener: (context, state) {
           if (state is AuthSuccess) {
             context.showSnackBar('تم حفظ اهتماماتك بنجاح! مرحباً بك في طويق.');
-            Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (route) => false);
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              AppRoutes.home,
+              (route) => false,
+            );
           } else if (state is AuthError) {
             context.showSnackBar(state.message, isError: true);
           }
@@ -125,7 +129,10 @@ class _InterestsScreenState extends State<InterestsScreen> {
               ),
               // Header Content
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -150,7 +157,10 @@ class _InterestsScreenState extends State<InterestsScreen> {
               // Interests Grid
               Expanded(
                 child: GridView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     crossAxisSpacing: 16,
@@ -169,10 +179,14 @@ class _InterestsScreenState extends State<InterestsScreen> {
                         curve: Curves.easeInOut,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: isSelected ? Colors.white : AppColors.surfaceContainerLow,
+                          color: isSelected
+                              ? Colors.white
+                              : AppColors.surfaceContainerLow,
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: isSelected ? AppColors.primary : Colors.transparent,
+                            color: isSelected
+                                ? AppColors.primary
+                                : Colors.transparent,
                             width: 2.0,
                           ),
                           boxShadow: isSelected
@@ -212,12 +226,19 @@ class _InterestsScreenState extends State<InterestsScreen> {
               ),
               // Hint Text
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 child: Text(
-                  canProceed ? 'رائع! يمكنك الآن الاستمرار' : 'اختر ${3 - selectedCount} إضافية على الأقل',
+                  canProceed
+                      ? 'رائع! يمكنك الآن الاستمرار'
+                      : 'اختر ${3 - selectedCount} إضافية على الأقل',
                   textAlign: TextAlign.center,
                   style: AppTextStyles.bodySm.copyWith(
-                    color: canProceed ? AppColors.secondary : AppColors.onSurfaceVariant,
+                    color: canProceed
+                        ? AppColors.secondary
+                        : AppColors.onSurfaceVariant,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -229,7 +250,8 @@ class _InterestsScreenState extends State<InterestsScreen> {
                   builder: (context, state) {
                     return PrimaryButton(
                       text: 'ابدأ الاستكشاف',
-                      icon: Icons.arrow_back, // arrow_forward rotated 180 for RTL is left-facing arrow
+                      icon: Icons
+                          .arrow_back, // arrow_forward rotated 180 for RTL is left-facing arrow
                       isLoading: state is AuthLoading,
                       onPressed: canProceed ? _onExplorePressed : null,
                     );

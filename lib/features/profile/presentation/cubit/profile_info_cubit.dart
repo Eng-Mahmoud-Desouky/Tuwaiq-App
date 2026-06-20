@@ -19,7 +19,16 @@ class ProfileInfoCubit extends Cubit<ProfileInfoState> {
       final profile = await getProfileUseCase(userId);
       emit(ProfileInfoLoaded(profile));
     } catch (e) {
-      emit(ProfileInfoError(e.toString().replaceAll('Failure:', '').replaceAll('ServerFailure:', '').replaceAll('Exception:', '').trim()));
+      emit(
+        ProfileInfoError(
+          e
+              .toString()
+              .replaceAll('Failure:', '')
+              .replaceAll('ServerFailure:', '')
+              .replaceAll('Exception:', '')
+              .trim(),
+        ),
+      );
     }
   }
 
@@ -48,7 +57,12 @@ class ProfileInfoCubit extends Cubit<ProfileInfoState> {
       emit(ProfileInfoUpdateSuccess(updatedProfile));
       emit(ProfileInfoLoaded(updatedProfile));
     } catch (e) {
-      final errorMsg = e.toString().replaceAll('Failure:', '').replaceAll('ServerFailure:', '').replaceAll('Exception:', '').trim();
+      final errorMsg = e
+          .toString()
+          .replaceAll('Failure:', '')
+          .replaceAll('ServerFailure:', '')
+          .replaceAll('Exception:', '')
+          .trim();
       emit(ProfileInfoError(errorMsg));
       if (fallbackProfile != null) {
         emit(ProfileInfoLoaded(fallbackProfile));

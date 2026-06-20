@@ -5,10 +5,7 @@ class UnfollowUserUseCase {
 
   const UnfollowUserUseCase(this.repository);
 
-  Future<void> call({
-    required String followerId,
-    required String followedId,
-  }) {
+  Future<void> call({required String followerId, required String followedId}) {
     return repository.unfollowUser(
       followerId: followerId,
       followedId: followedId,

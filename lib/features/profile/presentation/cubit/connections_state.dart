@@ -15,7 +15,8 @@ class ConnectionsLoading extends ConnectionsState {}
 class ConnectionsLoaded extends ConnectionsState {
   final List<UserProfile> followers;
   final List<UserProfile> following;
-  final Set<String> followedUserIds; // Set of user IDs that the current logged-in user follows
+  final Set<String>
+  followedUserIds; // Set of user IDs that the current logged-in user follows
 
   const ConnectionsLoaded({
     required this.followers,

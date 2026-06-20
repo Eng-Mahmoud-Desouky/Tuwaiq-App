@@ -11,6 +11,13 @@ import 'package:tuwaiq_app/features/profile/domain/repositories/profile_reposito
 import 'package:tuwaiq_app/features/profile/domain/entities/user_profile.dart';
 import 'package:tuwaiq_app/features/profile/domain/entities/profile_social_stats.dart';
 
+// Events imports
+import 'package:tuwaiq_app/features/events/domain/repositories/event_repository.dart';
+import 'package:tuwaiq_app/features/events/domain/entities/event_entity.dart';
+import 'package:tuwaiq_app/features/events/domain/usecases/create_event_usecase.dart';
+import 'package:tuwaiq_app/features/events/domain/usecases/get_event_usecase.dart';
+import 'package:tuwaiq_app/features/events/domain/usecases/get_all_events_usecase.dart';
+
 class FakeProfileRepo implements ProfileRepository {
   @override
   Future<UserProfile> getProfile(String userId) async => UserProfile(id: userId, fullName: '', username: '');
@@ -29,18 +36,33 @@ class FakeProfileRepo implements ProfileRepository {
   Future<List<UserProfile>> getFollowing(String userId) async => [];
 }
 
+class FakeEventRepo implements EventRepository {
+  @override
+  Future<EventEntity> createEvent({required EventEntity event, String? localImagePath}) async => event;
+  @override
+  Future<EventEntity> getEventById(String id) async => throw UnimplementedError();
+  @override
+  Future<List<EventEntity>> getAllEvents() async => [];
+  @override
+  Future<String> uploadEventCover({required String eventId, required String localFilePath}) async => '';
+}
+
 void main() {
   testWidgets('App compiles and loads signIn by default', (WidgetTester tester) async {
-    final repo = FakeProfileRepo();
+    final profileRepo = FakeProfileRepo();
+    final eventRepo = FakeEventRepo();
     await tester.pumpWidget(
       MyApp(
-        getProfileUseCase: GetProfileUseCase(repo),
-        updateProfileUseCase: UpdateProfileUseCase(repo),
-        getProfileSocialStatsUseCase: GetProfileSocialStatsUseCase(repo),
-        followUserUseCase: FollowUserUseCase(repo),
-        unfollowUserUseCase: UnfollowUserUseCase(repo),
-        getFollowersUseCase: GetFollowersUseCase(repo),
-        getFollowingUseCase: GetFollowingUseCase(repo),
+        getProfileUseCase: GetProfileUseCase(profileRepo),
+        updateProfileUseCase: UpdateProfileUseCase(profileRepo),
+        getProfileSocialStatsUseCase: GetProfileSocialStatsUseCase(profileRepo),
+        followUserUseCase: FollowUserUseCase(profileRepo),
+        unfollowUserUseCase: UnfollowUserUseCase(profileRepo),
+        getFollowersUseCase: GetFollowersUseCase(profileRepo),
+        getFollowingUseCase: GetFollowingUseCase(profileRepo),
+        createEventUseCase: CreateEventUseCase(eventRepo),
+        getEventUseCase: GetEventUseCase(eventRepo),
+        getAllEventsUseCase: GetAllEventsUseCase(eventRepo),
       ),
     );
   });

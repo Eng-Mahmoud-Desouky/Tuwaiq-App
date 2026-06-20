@@ -26,7 +26,8 @@ class PrimaryButton extends StatefulWidget {
   State<PrimaryButton> createState() => _PrimaryButtonState();
 }
 
-class _PrimaryButtonState extends State<PrimaryButton> with SingleTickerProviderStateMixin {
+class _PrimaryButtonState extends State<PrimaryButton>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
@@ -37,9 +38,10 @@ class _PrimaryButtonState extends State<PrimaryButton> with SingleTickerProvider
       vsync: this,
       duration: const Duration(milliseconds: 100),
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.96).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.96,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -55,13 +57,15 @@ class _PrimaryButtonState extends State<PrimaryButton> with SingleTickerProvider
   }
 
   void _handleTapUp(TapUpDetails details) {
-    if (widget.onPressed != null && !widget.isLoading) {
+    if (mounted && widget.onPressed != null && !widget.isLoading) {
       _controller.reverse();
     }
   }
 
   void _handleTapCancel() {
-    _controller.reverse();
+    if (mounted) {
+      _controller.reverse();
+    }
   }
 
   @override
@@ -74,7 +78,9 @@ class _PrimaryButtonState extends State<PrimaryButton> with SingleTickerProvider
             height: 24,
             child: CircularProgressIndicator(
               strokeWidth: 2.5,
-              color: widget.isOutlined ? AppColors.primary : AppColors.onPrimary,
+              color: widget.isOutlined
+                  ? AppColors.primary
+                  : AppColors.onPrimary,
             ),
           )
         : Row(
@@ -85,14 +91,18 @@ class _PrimaryButtonState extends State<PrimaryButton> with SingleTickerProvider
                 Icon(
                   widget.icon,
                   size: 20,
-                  color: widget.isOutlined ? AppColors.primary : AppColors.onPrimary,
+                  color: widget.isOutlined
+                      ? AppColors.primary
+                      : AppColors.onPrimary,
                 ),
                 const SizedBox(width: 8),
               ],
               Text(
                 widget.text,
                 style: AppTextStyles.titleSm.copyWith(
-                  color: widget.isOutlined ? AppColors.primary : AppColors.onPrimary,
+                  color: widget.isOutlined
+                      ? AppColors.primary
+                      : AppColors.onPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -115,7 +125,9 @@ class _PrimaryButtonState extends State<PrimaryButton> with SingleTickerProvider
             decoration: BoxDecoration(
               color: widget.isOutlined
                   ? Colors.transparent
-                  : (isEnabled ? AppColors.primary : AppColors.primary.withOpacity(0.5)),
+                  : (isEnabled
+                        ? AppColors.primary
+                        : AppColors.primary.withOpacity(0.5)),
               borderRadius: BorderRadius.circular(12),
               border: widget.isOutlined
                   ? Border.all(color: AppColors.primary, width: 1.5)

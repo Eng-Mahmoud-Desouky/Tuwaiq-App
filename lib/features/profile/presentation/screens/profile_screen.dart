@@ -21,7 +21,8 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProviderStateMixin {
+class _ProfileScreenState extends State<ProfileScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -68,7 +69,10 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                 },
               )
             : IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.onSurfaceVariant),
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: AppColors.onSurfaceVariant,
+                ),
                 onPressed: () {
                   if (context.canPop()) {
                     context.pop();
@@ -108,14 +112,19 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         child: BlocBuilder<ProfileInfoCubit, ProfileInfoState>(
           builder: (context, infoState) {
             if (infoState is ProfileInfoLoading) {
-              return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+              return const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              );
             } else if (infoState is ProfileInfoLoaded) {
               final profile = infoState.profile;
               return RefreshIndicator(
                 color: AppColors.primary,
                 onRefresh: () async {
                   context.read<ProfileInfoCubit>().loadProfile(widget.userId);
-                  context.read<ProfileSocialCubit>().loadSocialStats(widget.userId, currentUserId);
+                  context.read<ProfileSocialCubit>().loadSocialStats(
+                    widget.userId,
+                    currentUserId,
+                  );
                 },
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -125,7 +134,12 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                     children: [
                       const SizedBox(height: 24),
                       // Profile Header Info
-                      _buildProfileHeader(context, profile, isOwnProfile, currentUserId),
+                      _buildProfileHeader(
+                        context,
+                        profile,
+                        isOwnProfile,
+                        currentUserId,
+                      ),
                       const SizedBox(height: 24),
                       // Social Stats Card
                       _buildSocialStatsCard(context, profile),
@@ -140,7 +154,12 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                 ),
               );
             } else if (infoState is ProfileInfoError) {
-              return Center(child: Text(infoState.message, style: AppTextStyles.bodyLg.copyWith(color: AppColors.error)));
+              return Center(
+                child: Text(
+                  infoState.message,
+                  style: AppTextStyles.bodyLg.copyWith(color: AppColors.error),
+                ),
+              );
             }
             return const SizedBox.shrink();
           },
@@ -149,7 +168,12 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     );
   }
 
-  Widget _buildProfileHeader(BuildContext context, UserProfile profile, bool isOwnProfile, String currentUserId) {
+  Widget _buildProfileHeader(
+    BuildContext context,
+    UserProfile profile,
+    bool isOwnProfile,
+    String currentUserId,
+  ) {
     return Column(
       children: [
         Stack(
@@ -160,22 +184,27 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
               height: 128,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.surfaceContainerLowest, width: 4),
+                border: Border.all(
+                  color: AppColors.surfaceContainerLowest,
+                  width: 4,
+                ),
                 boxShadow: const [
                   BoxShadow(
                     color: Color(0x0F000000),
                     blurRadius: 24,
                     offset: Offset(0, 8),
-                  )
+                  ),
                 ],
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(999),
-                child: profile.avatarUrl != null && profile.avatarUrl!.isNotEmpty
+                child:
+                    profile.avatarUrl != null && profile.avatarUrl!.isNotEmpty
                     ? Image.network(
                         profile.avatarUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => _buildDefaultAvatar(profile.fullName),
+                        errorBuilder: (context, error, stackTrace) =>
+                            _buildDefaultAvatar(profile.fullName),
                       )
                     : _buildDefaultAvatar(profile.fullName),
               ),
@@ -196,7 +225,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                           color: Color(0x1F000000),
                           blurRadius: 6,
                           offset: Offset(0, 2),
-                        )
+                        ),
                       ],
                     ),
                     child: const Icon(
@@ -216,7 +245,9 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         ),
         Text(
           '@${profile.username}',
-          style: AppTextStyles.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+          style: AppTextStyles.bodyMd.copyWith(
+            color: AppColors.onSurfaceVariant,
+          ),
         ),
         if (profile.bio != null && profile.bio!.isNotEmpty) ...[
           const SizedBox(height: 12),
@@ -252,7 +283,8 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                 final stats = socialState.stats;
                 if (stats.isFollowing) {
                   return OutlinedButton(
-                    onPressed: () => context.read<ProfileSocialCubit>().toggleFollow(
+                    onPressed: () =>
+                        context.read<ProfileSocialCubit>().toggleFollow(
                           targetUserId: widget.userId,
                           currentUserId: currentUserId,
                         ),
@@ -261,16 +293,22 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(999),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 10,
+                      ),
                     ),
                     child: Text(
                       'Following',
-                      style: AppTextStyles.labelLg.copyWith(color: AppColors.onSurfaceVariant),
+                      style: AppTextStyles.labelLg.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
                     ),
                   );
                 } else {
                   return ElevatedButton(
-                    onPressed: () => context.read<ProfileSocialCubit>().toggleFollow(
+                    onPressed: () =>
+                        context.read<ProfileSocialCubit>().toggleFollow(
                           targetUserId: widget.userId,
                           currentUserId: currentUserId,
                         ),
@@ -281,11 +319,16 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(999),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 10,
+                      ),
                     ),
                     child: Text(
                       'Follow',
-                      style: AppTextStyles.labelLg.copyWith(fontWeight: FontWeight.bold),
+                      style: AppTextStyles.labelLg.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   );
                 }
@@ -293,7 +336,16 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
               return const SizedBox(
                 height: 38,
                 width: 100,
-                child: Center(child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary))),
+                child: Center(
+                  child: SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
               );
             },
           ),
@@ -326,7 +378,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
               color: Color(0x0F000000),
               blurRadius: 24,
               offset: Offset(0, 8),
-            )
+            ),
           ],
         ),
         padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -350,12 +402,16 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                     children: [
                       Text(
                         _formatNumber(followersCount),
-                        style: AppTextStyles.headlineLgMobile.copyWith(color: AppColors.primary),
+                        style: AppTextStyles.headlineLgMobile.copyWith(
+                          color: AppColors.primary,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Followers',
-                        style: AppTextStyles.labelSm.copyWith(color: AppColors.onSurfaceVariant),
+                        style: AppTextStyles.labelSm.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -372,12 +428,16 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                     children: [
                       Text(
                         _formatNumber(followingCount),
-                        style: AppTextStyles.headlineLgMobile.copyWith(color: AppColors.primary),
+                        style: AppTextStyles.headlineLgMobile.copyWith(
+                          color: AppColors.primary,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Following',
-                        style: AppTextStyles.labelSm.copyWith(color: AppColors.onSurfaceVariant),
+                        style: AppTextStyles.labelSm.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -398,7 +458,10 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Text(
             'INTERESTS',
-            style: AppTextStyles.labelLg.copyWith(color: AppColors.onSurfaceVariant, letterSpacing: 1.2),
+            style: AppTextStyles.labelLg.copyWith(
+              color: AppColors.onSurfaceVariant,
+              letterSpacing: 1.2,
+            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -410,19 +473,27 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
             itemCount: interests.length,
             itemBuilder: (context, index) {
               final interest = interests[index];
-              final isActive = index < 4; // Mock first few as active matching HTML
+              final isActive =
+                  index < 4; // Mock first few as active matching HTML
               return Padding(
                 padding: const EdgeInsets.only(right: 8.0),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
-                    color: isActive ? AppColors.primary.withOpacity(0.1) : AppColors.surfaceContainerHighest,
+                    color: isActive
+                        ? AppColors.primary.withOpacity(0.1)
+                        : AppColors.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
                     interest,
                     style: AppTextStyles.labelLg.copyWith(
-                      color: isActive ? AppColors.primary : AppColors.onSurfaceVariant,
+                      color: isActive
+                          ? AppColors.primary
+                          : AppColors.onSurfaceVariant,
                     ),
                   ),
                 ),
@@ -469,8 +540,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     );
   }
 
-
-
   // Replacing posts grid with custom Bento layout widget
   Widget _buildBentoLayout() {
     return Padding(
@@ -494,7 +563,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                           color: Color(0x08000000),
                           blurRadius: 12,
                           offset: Offset(0, 4),
-                        )
+                        ),
                       ],
                     ),
                     child: ClipRRect(
@@ -523,16 +592,25 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                               children: [
                                 Text(
                                   'Underground Indie Fest',
-                                  style: AppTextStyles.titleMd.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                                  style: AppTextStyles.titleMd.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
-                                    const Icon(Icons.location_on, size: 14, color: Colors.white70),
+                                    const Icon(
+                                      Icons.location_on,
+                                      size: 14,
+                                      color: Colors.white70,
+                                    ),
                                     const SizedBox(width: 4),
                                     Text(
                                       'The Warehouse',
-                                      style: AppTextStyles.labelLg.copyWith(color: Colors.white70),
+                                      style: AppTextStyles.labelLg.copyWith(
+                                        color: Colors.white70,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -560,7 +638,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                           color: Color(0x08000000),
                           blurRadius: 12,
                           offset: Offset(0, 4),
-                        )
+                        ),
                       ],
                     ),
                     child: ClipRRect(
@@ -592,7 +670,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.format_quote, size: 28, color: AppColors.primary),
+                        const Icon(
+                          Icons.format_quote,
+                          size: 28,
+                          color: AppColors.primary,
+                        ),
                         const SizedBox(height: 4),
                         Text(
                           '"Music is the space between the notes."',
@@ -653,21 +735,37 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       final authState = context.read<AuthCubit>().state;
       final currentUserId = (authState is AuthSuccess) ? authState.user.id : '';
       context.read<ProfileInfoCubit>().loadProfile(widget.userId);
-      context.read<ProfileSocialCubit>().loadSocialStats(widget.userId, currentUserId);
+      context.read<ProfileSocialCubit>().loadSocialStats(
+        widget.userId,
+        currentUserId,
+      );
     });
   }
 
-  void _navigateToConnections(BuildContext context, UserProfile profile, int initialIndex) {
-    context.push('/profile/${AppRoutes.connections}', extra: {
-      'userId': widget.userId,
-      'userName': profile.fullName,
-      'initialIndex': initialIndex,
-    }).then((_) {
-      // Reload stats on pop back
-      final authState = context.read<AuthCubit>().state;
-      final currentUserId = (authState is AuthSuccess) ? authState.user.id : '';
-      context.read<ProfileSocialCubit>().loadSocialStats(widget.userId, currentUserId);
-    });
+  void _navigateToConnections(
+    BuildContext context,
+    UserProfile profile,
+    int initialIndex,
+  ) {
+    context
+        .push(
+          '/profile/${AppRoutes.connections}',
+          extra: {
+            'userId': widget.userId,
+            'userName': profile.fullName,
+            'initialIndex': initialIndex,
+          },
+        )
+        .then((_) {
+          // Reload stats on pop back
+          final authState = context.read<AuthCubit>().state;
+          final currentUserId = (authState is AuthSuccess)
+              ? authState.user.id
+              : '';
+          context.read<ProfileSocialCubit>().loadSocialStats(
+            widget.userId,
+            currentUserId,
+          );
+        });
   }
-
 }

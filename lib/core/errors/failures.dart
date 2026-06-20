@@ -18,5 +18,7 @@ class AuthFailure extends Failure {
 }
 
 class NetworkFailure extends Failure {
-  const NetworkFailure([super.message = 'لا يوجد اتصال بالإنترنت. يرجى التحقق من الشبكة.']);
+  const NetworkFailure([
+    super.message = 'لا يوجد اتصال بالإنترنت. يرجى التحقق من الشبكة.',
+  ]);
 }

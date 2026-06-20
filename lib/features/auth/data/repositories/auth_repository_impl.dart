@@ -78,7 +78,9 @@ class AuthRepositoryImpl implements AuthRepository {
     } on SocketException {
       throw const NetworkFailure();
     } catch (e) {
-      throw ServerFailure('حدث خطأ غير متوقع أثناء إرسال طلب استعادة كلمة المرور: $e');
+      throw ServerFailure(
+        'حدث خطأ غير متوقع أثناء إرسال طلب استعادة كلمة المرور: $e',
+      );
     }
   }
 
@@ -126,22 +128,29 @@ class AuthRepositoryImpl implements AuthRepository {
 
   String _mapAuthErrorMessage(String message, String? statusCode) {
     final msg = message.toLowerCase();
-    if (msg.contains('invalid login credentials') || msg.contains('invalid credentials')) {
+    if (msg.contains('invalid login credentials') ||
+        msg.contains('invalid credentials')) {
       return 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
     }
-    if (msg.contains('email already registered') || msg.contains('user already exists') || msg.contains('already has an account')) {
+    if (msg.contains('email already registered') ||
+        msg.contains('user already exists') ||
+        msg.contains('already has an account')) {
       return 'البريد الإلكتروني مسجل بالفعل. يرجى تسجيل الدخول.';
     }
-    if (msg.contains('email not confirmed') || msg.contains('confirm your email') || msg.contains('email_not_confirmed')) {
+    if (msg.contains('email not confirmed') ||
+        msg.contains('confirm your email') ||
+        msg.contains('email_not_confirmed')) {
       return 'البريد الإلكتروني لم يتم تأكيده بعد. يرجى تفعيل حسابك من خلال الرابط المرسل.';
     }
-    if (msg.contains('weak password') || msg.contains('should be at least') || msg.contains('password should contain')) {
+    if (msg.contains('weak password') ||
+        msg.contains('should be at least') ||
+        msg.contains('password should contain')) {
       return 'كلمة المرور ضعيفة جداً. يجب أن تحتوي على 8 خانات على الأقل.';
     }
     if (msg.contains('network') || msg.contains('connection')) {
       return 'لا يوجد اتصال بالإنترنت. يرجى التحقق من الشبكة.';
     }
-    
+
     // Arabic fallback mapping if Supabase already returns Arabic or other custom cases
     return message;
   }

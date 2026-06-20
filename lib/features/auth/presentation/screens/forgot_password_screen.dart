@@ -37,8 +37,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
       try {
         await context.read<AuthCubit>().forgotPassword(
-              email: _emailController.text.trim(),
-            );
+          email: _emailController.text.trim(),
+        );
         if (mounted) {
           setState(() {
             _isLoading = false;
@@ -154,7 +154,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     const SizedBox(height: 32),
                     // Primary Action Button
                     PrimaryButton(
-                      text: _isSuccess ? 'تم الإرسال بنجاح' : 'إرسال رابط الاستعادة',
+                      text: _isSuccess
+                          ? 'تم الإرسال بنجاح'
+                          : 'إرسال رابط الاستعادة',
                       isLoading: _isLoading,
                       onPressed: _isSuccess ? null : _onSubmitPressed,
                     ),

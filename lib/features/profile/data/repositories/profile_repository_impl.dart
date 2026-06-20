@@ -35,7 +35,10 @@ class ProfileRepositoryImpl implements ProfileRepository {
       String? avatarUrl = profile.avatarUrl;
 
       if (localAvatarPath != null) {
-        avatarUrl = await remoteDataSource.uploadAvatar(profile.id, localAvatarPath);
+        avatarUrl = await remoteDataSource.uploadAvatar(
+          profile.id,
+          localAvatarPath,
+        );
       }
 
       final model = UserProfileModel(

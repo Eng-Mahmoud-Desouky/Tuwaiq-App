@@ -16,7 +16,10 @@ class ProfileSocialCubit extends Cubit<ProfileSocialState> {
     required this.unfollowUserUseCase,
   }) : super(ProfileSocialInitial());
 
-  Future<void> loadSocialStats(String targetUserId, String currentUserId) async {
+  Future<void> loadSocialStats(
+    String targetUserId,
+    String currentUserId,
+  ) async {
     emit(ProfileSocialLoading());
     try {
       final stats = await getProfileSocialStatsUseCase(
@@ -25,10 +28,21 @@ class ProfileSocialCubit extends Cubit<ProfileSocialState> {
       );
       emit(ProfileSocialLoaded(stats));
     } catch (e) {
-      emit(ProfileSocialError(
-        message: e.toString().replaceAll('Failure:', '').replaceAll('ServerFailure:', '').replaceAll('Exception:', '').trim(),
-        rollbackStats: const ProfileSocialStats(followersCount: 0, followingCount: 0, isFollowing: false),
-      ));
+      emit(
+        ProfileSocialError(
+          message: e
+              .toString()
+              .replaceAll('Failure:', '')
+              .replaceAll('ServerFailure:', '')
+              .replaceAll('Exception:', '')
+              .trim(),
+          rollbackStats: const ProfileSocialStats(
+            followersCount: 0,
+            followingCount: 0,
+            isFollowing: false,
+          ),
+        ),
+      );
     }
   }
 
@@ -67,13 +81,15 @@ class ProfileSocialCubit extends Cubit<ProfileSocialState> {
         );
       }
     } catch (e) {
-      final errorMsg = e.toString().replaceAll('Failure:', '').replaceAll('ServerFailure:', '').replaceAll('Exception:', '').trim();
-      
+      final errorMsg = e
+          .toString()
+          .replaceAll('Failure:', '')
+          .replaceAll('ServerFailure:', '')
+          .replaceAll('Exception:', '')
+          .trim();
+
       // Emit error then immediately rollback
-      emit(ProfileSocialError(
-        message: errorMsg,
-        rollbackStats: rollbackStats,
-      ));
+      emit(ProfileSocialError(message: errorMsg, rollbackStats: rollbackStats));
       emit(ProfileSocialLoaded(rollbackStats));
     }
   }

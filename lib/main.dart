@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
 // Core
@@ -27,6 +28,15 @@ import 'features/auth/domain/usecases/save_user_interests_usecase.dart';
 import 'features/profile/domain/usecases/get_profile_usecase.dart';
 import 'features/profile/domain/usecases/update_profile_usecase.dart';
 import 'features/profile/domain/usecases/get_profile_social_stats_usecase.dart';
+
+// Events Feature Imports
+// Domain
+import 'features/events/domain/usecases/create_event_usecase.dart';
+import 'features/events/domain/usecases/get_event_usecase.dart';
+import 'features/events/domain/usecases/get_all_events_usecase.dart';
+// Data
+import 'features/events/data/datasources/event_remote_datasource.dart';
+import 'features/events/data/repositories/event_repository_impl.dart';
 import 'features/profile/domain/usecases/follow_user_usecase.dart';
 import 'features/profile/domain/usecases/unfollow_user_usecase.dart';
 import 'features/profile/domain/usecases/get_followers_usecase.dart';
@@ -36,10 +46,9 @@ import 'features/profile/domain/usecases/get_following_usecase.dart';
 import 'features/profile/data/datasources/profile_remote_datasource.dart';
 import 'features/profile/data/repositories/profile_repository_impl.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   await dotenv.load(fileName: ".env");
 
   await Supabase.initialize(
@@ -49,10 +58,12 @@ void main() async {
 
   // Instantiation & Dependency Injection
   final supabaseClient = Supabase.instance.client;
-  
+
   // Auth
   final authRemoteDataSource = AuthRemoteDataSourceImpl(supabaseClient);
-  final authRepository = AuthRepositoryImpl(remoteDataSource: authRemoteDataSource);
+  final authRepository = AuthRepositoryImpl(
+    remoteDataSource: authRemoteDataSource,
+  );
 
   final signUpUseCase = SignUpUseCase(authRepository);
   final signInUseCase = SignInUseCase(authRepository);
@@ -64,15 +75,28 @@ void main() async {
 
   // Profile
   final profileRemoteDataSource = ProfileRemoteDataSourceImpl(supabaseClient);
-  final profileRepository = ProfileRepositoryImpl(remoteDataSource: profileRemoteDataSource);
+  final profileRepository = ProfileRepositoryImpl(
+    remoteDataSource: profileRemoteDataSource,
+  );
 
   final getProfileUseCase = GetProfileUseCase(profileRepository);
   final updateProfileUseCase = UpdateProfileUseCase(profileRepository);
-  final getProfileSocialStatsUseCase = GetProfileSocialStatsUseCase(profileRepository);
+  final getProfileSocialStatsUseCase = GetProfileSocialStatsUseCase(
+    profileRepository,
+  );
   final followUserUseCase = FollowUserUseCase(profileRepository);
   final unfollowUserUseCase = UnfollowUserUseCase(profileRepository);
   final getFollowersUseCase = GetFollowersUseCase(profileRepository);
   final getFollowingUseCase = GetFollowingUseCase(profileRepository);
+
+  // Events
+  final eventRemoteDataSource = EventRemoteDataSourceImpl(supabaseClient);
+  final eventRepository = EventRepositoryImpl(
+    remoteDataSource: eventRemoteDataSource,
+  );
+  final createEventUseCase = CreateEventUseCase(eventRepository);
+  final getEventUseCase = GetEventUseCase(eventRepository);
+  final getAllEventsUseCase = GetAllEventsUseCase(eventRepository);
 
   runApp(
     MultiBlocProvider(
@@ -97,6 +121,9 @@ void main() async {
         unfollowUserUseCase: unfollowUserUseCase,
         getFollowersUseCase: getFollowersUseCase,
         getFollowingUseCase: getFollowingUseCase,
+        createEventUseCase: createEventUseCase,
+        getEventUseCase: getEventUseCase,
+        getAllEventsUseCase: getAllEventsUseCase,
       ),
     ),
   );
@@ -110,6 +137,9 @@ class MyApp extends StatelessWidget {
   final UnfollowUserUseCase unfollowUserUseCase;
   final GetFollowersUseCase getFollowersUseCase;
   final GetFollowingUseCase getFollowingUseCase;
+  final CreateEventUseCase createEventUseCase;
+  final GetEventUseCase getEventUseCase;
+  final GetAllEventsUseCase getAllEventsUseCase;
 
   const MyApp({
     super.key,
@@ -120,6 +150,9 @@ class MyApp extends StatelessWidget {
     required this.unfollowUserUseCase,
     required this.getFollowersUseCase,
     required this.getFollowingUseCase,
+    required this.createEventUseCase,
+    required this.getEventUseCase,
+    required this.getAllEventsUseCase,
   });
 
   @override
@@ -133,6 +166,8 @@ class MyApp extends StatelessWidget {
       unfollowUserUseCase: unfollowUserUseCase,
       getFollowersUseCase: getFollowersUseCase,
       getFollowingUseCase: getFollowingUseCase,
+      createEventUseCase: createEventUseCase,
+      getEventUseCase: getEventUseCase,
     );
 
     return MaterialApp.router(
@@ -140,6 +175,13 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       routerConfig: router,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('ar', 'AE'), Locale('en', 'US')],
+      locale: const Locale('ar'),
     );
   }
 }

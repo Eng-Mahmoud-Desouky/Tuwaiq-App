@@ -5,13 +5,7 @@ class SaveUserInterestsUseCase {
 
   const SaveUserInterestsUseCase(this.repository);
 
-  Future<void> call({
-    required String userId,
-    required List<String> interests,
-  }) {
-    return repository.saveUserInterests(
-      userId: userId,
-      interests: interests,
-    );
+  Future<void> call({required String userId, required List<String> interests}) {
+    return repository.saveUserInterests(userId: userId, interests: interests);
   }
 }

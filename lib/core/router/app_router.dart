@@ -28,8 +28,14 @@ import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/profile/presentation/screens/social_connections_screen.dart';
 import '../../features/main/presentation/screens/main_screen.dart';
 import '../../features/explore/presentation/screens/explore_screen.dart';
-import '../../features/create_content/presentation/screens/create_content_screen.dart';
+import '../../features/events/presentation/screens/create_event.dart';
 import '../../features/alerts/presentation/screens/alerts_screen.dart';
+import '../../features/events/domain/entities/event_entity.dart';
+import '../../features/events/domain/usecases/create_event_usecase.dart';
+import '../../features/events/domain/usecases/get_event_usecase.dart';
+import '../../features/events/presentation/cubit/create_event_cubit.dart';
+import '../../features/events/presentation/cubit/event_details_cubit.dart';
+import '../../features/events/presentation/screens/event_details.dart';
 
 class AppRouterRefreshStream extends ChangeNotifier {
   late final StreamSubscription<dynamic> _subscription;
@@ -49,7 +55,8 @@ class AppRouterRefreshStream extends ChangeNotifier {
 }
 
 class AppRouter {
-  static final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
+  static final GlobalKey<NavigatorState> _rootNavigatorKey =
+      GlobalKey<NavigatorState>();
 
   static GoRouter router(
     AuthCubit authCubit, {
@@ -60,6 +67,8 @@ class AppRouter {
     required UnfollowUserUseCase unfollowUserUseCase,
     required GetFollowersUseCase getFollowersUseCase,
     required GetFollowingUseCase getFollowingUseCase,
+    required CreateEventUseCase createEventUseCase,
+    required GetEventUseCase getEventUseCase,
   }) {
     return GoRouter(
       navigatorKey: _rootNavigatorKey,
@@ -67,10 +76,11 @@ class AppRouter {
       refreshListenable: AppRouterRefreshStream(authCubit.stream),
       redirect: (context, state) {
         final authState = authCubit.state;
-        final isAuthScreen = state.matchedLocation.startsWith('/sign') || 
-                             state.matchedLocation.startsWith('/forgot') || 
-                             state.matchedLocation.startsWith('/update');
-        
+        final isAuthScreen =
+            state.matchedLocation.startsWith('/sign') ||
+            state.matchedLocation.startsWith('/forgot') ||
+            state.matchedLocation.startsWith('/update');
+
         if (authState is AuthLoading) {
           // Wait for loading to finish, no redirect yet
           return null;
@@ -85,7 +95,8 @@ class AppRouter {
         }
 
         if (authState is AuthSuccess) {
-          if (authState.user.interests.length < 3 && state.matchedLocation != AppRoutes.interests) {
+          if (authState.user.interests.length < 3 &&
+              state.matchedLocation != AppRoutes.interests) {
             return AppRoutes.interests;
           }
           if (authState.user.interests.length >= 3 && isAuthScreen) {
@@ -122,7 +133,19 @@ class AppRouter {
           path: AppRoutes.interests,
           builder: (context, state) => const InterestsScreen(),
         ),
-        
+        GoRoute(
+          path: AppRoutes.eventDetails,
+          builder: (context, state) {
+            final eventId = state.pathParameters['id']!;
+            final event = state.extra as EventEntity?;
+            return BlocProvider(
+              create: (context) =>
+                  EventDetailsCubit(getEventUseCase: getEventUseCase),
+              child: EventDetailsScreen(eventId: eventId, initialEvent: event),
+            );
+          },
+        ),
+
         // Main Navigation (StatefulShellRoute)
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) {
@@ -152,7 +175,12 @@ class AppRouter {
               routes: [
                 GoRoute(
                   path: AppRoutes.create,
-                  builder: (context, state) => const CreateContentScreen(),
+                  builder: (context, state) => BlocProvider(
+                    create: (context) => CreateEventCubit(
+                      createEventUseCase: createEventUseCase,
+                    ),
+                    child: const CreateEventScreen(),
+                  ),
                 ),
               ],
             ),
@@ -173,9 +201,11 @@ class AppRouter {
                   builder: (context, state) {
                     final targetUserId = state.extra as String?;
                     final authState = context.read<AuthCubit>().state;
-                    final currentUserId = (authState is AuthSuccess) ? authState.user.id : '';
+                    final currentUserId = (authState is AuthSuccess)
+                        ? authState.user.id
+                        : '';
                     final finalUserId = targetUserId ?? currentUserId;
-                    
+
                     return MultiBlocProvider(
                       providers: [
                         BlocProvider(
@@ -186,7 +216,8 @@ class AppRouter {
                         ),
                         BlocProvider(
                           create: (context) => ProfileSocialCubit(
-                            getProfileSocialStatsUseCase: getProfileSocialStatsUseCase,
+                            getProfileSocialStatsUseCase:
+                                getProfileSocialStatsUseCase,
                             followUserUseCase: followUserUseCase,
                             unfollowUserUseCase: unfollowUserUseCase,
                           )..loadSocialStats(finalUserId, currentUserId),
@@ -216,20 +247,23 @@ class AppRouter {
                         final targetUserId = args['userId'] as String;
                         final targetUserName = args['userName'] as String;
                         final initialIndex = args['initialIndex'] as int? ?? 0;
-                        
+
                         final authState = context.read<AuthCubit>().state;
-                        final currentUserId = (authState is AuthSuccess) ? authState.user.id : '';
-                        
+                        final currentUserId = (authState is AuthSuccess)
+                            ? authState.user.id
+                            : '';
+
                         return BlocProvider(
-                          create: (context) => ConnectionsCubit(
-                            getFollowersUseCase: getFollowersUseCase,
-                            getFollowingUseCase: getFollowingUseCase,
-                            followUserUseCase: followUserUseCase,
-                            unfollowUserUseCase: unfollowUserUseCase,
-                          )..loadConnections(
-                              targetUserId: targetUserId,
-                              currentUserId: currentUserId,
-                            ),
+                          create: (context) =>
+                              ConnectionsCubit(
+                                getFollowersUseCase: getFollowersUseCase,
+                                getFollowingUseCase: getFollowingUseCase,
+                                followUserUseCase: followUserUseCase,
+                                unfollowUserUseCase: unfollowUserUseCase,
+                              )..loadConnections(
+                                targetUserId: targetUserId,
+                                currentUserId: currentUserId,
+                              ),
                           child: SocialConnectionsScreen(
                             targetUserId: targetUserId,
                             targetUserName: targetUserName,

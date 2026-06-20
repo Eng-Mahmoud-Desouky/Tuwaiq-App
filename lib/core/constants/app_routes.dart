@@ -12,4 +12,5 @@ class AppRoutes {
   static const String explore = '/explore';
   static const String create = '/create';
   static const String alerts = '/alerts';
+  static const String eventDetails = '/events/:id';
 }

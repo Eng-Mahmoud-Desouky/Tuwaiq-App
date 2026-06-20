@@ -26,21 +26,32 @@ class ConnectionsCubit extends Cubit<ConnectionsState> {
     try {
       final followers = await getFollowersUseCase(targetUserId);
       final following = await getFollowingUseCase(targetUserId);
-      
+
       // Fetch who the current user follows to toggle follow buttons correctly
       final currentUserFollowing = currentUserId == targetUserId
           ? following
           : await getFollowingUseCase(currentUserId);
-      
+
       final followedUserIds = currentUserFollowing.map((u) => u.id).toSet();
 
-      emit(ConnectionsLoaded(
-        followers: followers,
-        following: following,
-        followedUserIds: followedUserIds,
-      ));
+      emit(
+        ConnectionsLoaded(
+          followers: followers,
+          following: following,
+          followedUserIds: followedUserIds,
+        ),
+      );
     } catch (e) {
-      emit(ConnectionsError(e.toString().replaceAll('Failure:', '').replaceAll('ServerFailure:', '').replaceAll('Exception:', '').trim()));
+      emit(
+        ConnectionsError(
+          e
+              .toString()
+              .replaceAll('Failure:', '')
+              .replaceAll('ServerFailure:', '')
+              .replaceAll('Exception:', '')
+              .trim(),
+        ),
+      );
     }
   }
 
@@ -52,7 +63,9 @@ class ConnectionsCubit extends Cubit<ConnectionsState> {
     if (currentState is! ConnectionsLoaded) return;
 
     final wasFollowing = currentState.followedUserIds.contains(targetUserId);
-    final updatedFollowedUserIds = Set<String>.from(currentState.followedUserIds);
+    final updatedFollowedUserIds = Set<String>.from(
+      currentState.followedUserIds,
+    );
 
     // Optimistic Update
     if (wasFollowing) {
@@ -77,7 +90,9 @@ class ConnectionsCubit extends Cubit<ConnectionsState> {
       }
     } catch (_) {
       // Rollback on failure
-      final rollbackFollowedUserIds = Set<String>.from(currentState.followedUserIds);
+      final rollbackFollowedUserIds = Set<String>.from(
+        currentState.followedUserIds,
+      );
       emit(currentState.copyWith(followedUserIds: rollbackFollowedUserIds));
     }
   }

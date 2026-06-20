@@ -6,10 +6,7 @@ import '../../../../shared/theme/app_text_styles.dart';
 class MainScreen extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
-  const MainScreen({
-    super.key,
-    required this.navigationShell,
-  });
+  const MainScreen({super.key, required this.navigationShell});
 
   void _onTap(BuildContext context, int index) {
     if (index == 2) {
@@ -44,7 +41,7 @@ class MainScreen extends StatelessWidget {
               color: Color(0x0F000000),
               blurRadius: 24,
               offset: Offset(0, -8),
-            )
+            ),
           ],
         ),
         padding: const EdgeInsets.only(bottom: 16, top: 8),
@@ -75,7 +72,7 @@ class MainScreen extends StatelessWidget {
                       color: Color(0x1F000000),
                       blurRadius: 12,
                       offset: Offset(0, 4),
-                    )
+                    ),
                   ],
                 ),
                 child: const Icon(Icons.add, size: 28, color: Colors.white),

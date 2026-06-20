@@ -32,9 +32,9 @@ class _SignInScreenState extends State<SignInScreen> {
   void _onSignInPressed() {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<AuthCubit>().signIn(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-          );
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
     }
   }
 
@@ -46,9 +46,17 @@ class _SignInScreenState extends State<SignInScreen> {
           if (state is AuthSuccess) {
             context.showSnackBar('تم تسجيل الدخول بنجاح!');
             if (state.user.interests.length >= 3) {
-              Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (route) => false);
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                AppRoutes.home,
+                (route) => false,
+              );
             } else {
-              Navigator.pushNamedAndRemoveUntil(context, AppRoutes.interests, (route) => false);
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                AppRoutes.interests,
+                (route) => false,
+              );
             }
           } else if (state is AuthEmailNotConfirmed) {
             Navigator.pushNamed(
@@ -171,7 +179,10 @@ class _SignInScreenState extends State<SignInScreen> {
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
                               onPressed: () {
-                                Navigator.pushNamed(context, AppRoutes.forgotPassword);
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.forgotPassword,
+                                );
                               },
                               child: Text(
                                 'نسيت كلمة المرور؟',
@@ -204,7 +215,9 @@ class _SignInScreenState extends State<SignInScreen> {
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
                                 child: Text(
                                   'أو',
                                   style: AppTextStyles.bodySm.copyWith(

@@ -10,28 +10,26 @@ import '../cubit/auth_cubit.dart';
 class EmailConfirmationScreen extends StatefulWidget {
   final String email;
 
-  const EmailConfirmationScreen({
-    super.key,
-    required this.email,
-  });
+  const EmailConfirmationScreen({super.key, required this.email});
 
   @override
-  State<EmailConfirmationScreen> createState() => _EmailConfirmationScreenState();
+  State<EmailConfirmationScreen> createState() =>
+      _EmailConfirmationScreenState();
 }
 
 class _EmailConfirmationScreenState extends State<EmailConfirmationScreen> {
   bool _isResending = false;
 
   void _onOpenMailPressed() async {
-    final Uri emailLaunchUri = Uri(
-      scheme: 'mailto',
-    );
+    final Uri emailLaunchUri = Uri(scheme: 'mailto');
     try {
       if (await canLaunchUrl(emailLaunchUri)) {
         await launchUrl(emailLaunchUri);
       } else {
         // Fallback if no email client registered
-        context.showSnackBar('تعذر فتح تطبيق البريد تلقائياً. يرجى فتحه يدوياً.');
+        context.showSnackBar(
+          'تعذر فتح تطبيق البريد تلقائياً. يرجى فتحه يدوياً.',
+        );
       }
     } catch (_) {
       context.showSnackBar('يرجى فتح تطبيق البريد الإلكتروني يدوياً.');
@@ -248,7 +246,9 @@ class _EmailConfirmationScreenState extends State<EmailConfirmationScreen> {
                             child: Text(
                               'تغيير البريد الإلكتروني',
                               style: AppTextStyles.labelCaps.copyWith(
-                                color: AppColors.onSurfaceVariant.withOpacity(0.6),
+                                color: AppColors.onSurfaceVariant.withOpacity(
+                                  0.6,
+                                ),
                               ),
                             ),
                           ),

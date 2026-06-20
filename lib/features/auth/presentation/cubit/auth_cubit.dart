@@ -49,13 +49,15 @@ class AuthCubit extends Cubit<AuthState> {
     // Check if the deep link is tuwaiq://auth/callback
     if (uri.scheme == 'tuwaiq' && uri.host == 'auth') {
       emit(const AuthLoading());
-      
+
       // Check if it is a password reset callback or standard confirmation callback
       final fragment = uri.fragment;
       final queryParams = uri.queryParameters;
-      
+
       // In Supabase, tokens might be passed in query params or fragment
-      final isPasswordReset = fragment.contains('type=recovery') || queryParams['type'] == 'recovery';
+      final isPasswordReset =
+          fragment.contains('type=recovery') ||
+          queryParams['type'] == 'recovery';
 
       // Refresh current user session
       final user = await getCurrentUserUseCase();
@@ -91,29 +93,41 @@ class AuthCubit extends Cubit<AuthState> {
         username: username,
         fullName: fullName,
       );
-      
+
       // Bypassing email confirmation for development
       emit(AuthSuccess(user));
     } catch (e) {
-      emit(AuthError(e.toString().replaceAll('Failure:', '').replaceAll('AuthFailure:', '').replaceAll('Exception:', '').trim()));
+      emit(
+        AuthError(
+          e
+              .toString()
+              .replaceAll('Failure:', '')
+              .replaceAll('AuthFailure:', '')
+              .replaceAll('Exception:', '')
+              .trim(),
+        ),
+      );
     }
   }
 
-  Future<void> signIn({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> signIn({required String email, required String password}) async {
     emit(const AuthLoading());
     try {
-      final user = await signInUseCase(
-        email: email,
-        password: password,
-      );
+      final user = await signInUseCase(email: email, password: password);
 
       // Bypassing email confirmation for development
       emit(AuthSuccess(user));
     } catch (e) {
-      emit(AuthError(e.toString().replaceAll('Failure:', '').replaceAll('AuthFailure:', '').replaceAll('Exception:', '').trim()));
+      emit(
+        AuthError(
+          e
+              .toString()
+              .replaceAll('Failure:', '')
+              .replaceAll('AuthFailure:', '')
+              .replaceAll('Exception:', '')
+              .trim(),
+        ),
+      );
     }
   }
 
@@ -134,7 +148,15 @@ class AuthCubit extends Cubit<AuthState> {
       // We emit initial or custom state since they show success message on the same screen
       emit(const AuthInitial());
     } catch (e) {
-      emit(AuthError(e.toString().replaceAll('Failure:', '').replaceAll('AuthFailure:', '').trim()));
+      emit(
+        AuthError(
+          e
+              .toString()
+              .replaceAll('Failure:', '')
+              .replaceAll('AuthFailure:', '')
+              .trim(),
+        ),
+      );
     }
   }
 
@@ -144,7 +166,15 @@ class AuthCubit extends Cubit<AuthState> {
       await updatePasswordUseCase(newPassword: newPassword);
       emit(const AuthInitial()); // After update, user will login again
     } catch (e) {
-      emit(AuthError(e.toString().replaceAll('Failure:', '').replaceAll('AuthFailure:', '').trim()));
+      emit(
+        AuthError(
+          e
+              .toString()
+              .replaceAll('Failure:', '')
+              .replaceAll('AuthFailure:', '')
+              .trim(),
+        ),
+      );
     }
   }
 
@@ -174,7 +204,15 @@ class AuthCubit extends Cubit<AuthState> {
         final updatedUser = currentState.user.copyWith(interests: interests);
         emit(AuthSuccess(updatedUser));
       } catch (e) {
-        emit(AuthError(e.toString().replaceAll('Failure:', '').replaceAll('AuthFailure:', '').trim()));
+        emit(
+          AuthError(
+            e
+                .toString()
+                .replaceAll('Failure:', '')
+                .replaceAll('AuthFailure:', '')
+                .trim(),
+          ),
+        );
         // Re-emit previous success so they don't get locked out of the screen
         emit(currentState);
       }

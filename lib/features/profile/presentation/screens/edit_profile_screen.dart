@@ -64,9 +64,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('فشل اختيار الصورة: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('فشل اختيار الصورة: $e')));
     }
   }
 
@@ -80,15 +80,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         title: const Text('إضافة اهتمام', style: AppTextStyles.titleMd),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            hintText: 'مثال: موسيقى، تقنية...',
-          ),
+          decoration: const InputDecoration(hintText: 'مثال: موسيقى، تقنية...'),
           autofocus: true,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء', style: TextStyle(color: AppColors.onSurfaceVariant)),
+            child: const Text(
+              'إلغاء',
+              style: TextStyle(color: AppColors.onSurfaceVariant),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -127,9 +128,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       );
 
       context.read<ProfileInfoCubit>().updateProfileDetails(
-            profile: updatedProfile,
-            localAvatarPath: _localAvatarPath,
-          );
+        profile: updatedProfile,
+        localAvatarPath: _localAvatarPath,
+      );
     }
   }
 
@@ -164,7 +165,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
         if (currentProfile == null) {
           return const Scaffold(
-            body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+            body: Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            ),
           );
         }
 
@@ -177,7 +180,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               onPressed: isSaving ? null : () => Navigator.pop(context),
               child: Text(
                 'Cancel',
-                style: AppTextStyles.labelLg.copyWith(color: AppColors.onSurfaceVariant),
+                style: AppTextStyles.labelLg.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
               ),
             ),
             title: Text(
@@ -193,7 +198,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     child: SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
                     ),
                   ),
                 )
@@ -230,7 +238,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           color: Color(0x0F000000),
                           blurRadius: 24,
                           offset: Offset(0, 8),
-                        )
+                        ),
                       ],
                     ),
                     padding: const EdgeInsets.all(24.0),
@@ -261,7 +269,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           decoration: const InputDecoration(
                             hintText: 'username',
                             prefixText: '@',
-                            prefixStyle: TextStyle(color: AppColors.outlineVariant),
+                            prefixStyle: TextStyle(
+                              color: AppColors.outlineVariant,
+                            ),
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
@@ -285,7 +295,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                   enabled: !isSaving,
                                   maxLines: 4,
                                   maxLength: 160,
-                                  buildCounter: (context, {required currentLength, required isFocused, maxLength}) => null,
+                                  buildCounter:
+                                      (
+                                        context, {
+                                        required currentLength,
+                                        required isFocused,
+                                        maxLength,
+                                      }) => null,
                                   decoration: const InputDecoration(
                                     hintText: 'Bio description...',
                                   ),
@@ -294,7 +310,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 Text(
                                   '$count / 160',
                                   textAlign: TextAlign.right,
-                                  style: AppTextStyles.labelSm.copyWith(color: AppColors.outlineVariant),
+                                  style: AppTextStyles.labelSm.copyWith(
+                                    color: AppColors.outlineVariant,
+                                  ),
                                 ),
                               ],
                             );
@@ -336,13 +354,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 height: 128,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.surfaceContainerLowest, width: 4),
+                  border: Border.all(
+                    color: AppColors.surfaceContainerLowest,
+                    width: 4,
+                  ),
                   boxShadow: const [
                     BoxShadow(
                       color: Color(0x0F000000),
                       blurRadius: 24,
                       offset: Offset(0, 8),
-                    )
+                    ),
                   ],
                 ),
                 child: ClipRRect(
@@ -353,8 +374,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           color: AppColors.surfaceContainerHighest,
                           child: Center(
                             child: Text(
-                              profile.fullName.isNotEmpty ? profile.fullName.substring(0, 1).toUpperCase() : '?',
-                              style: AppTextStyles.headlineLg.copyWith(color: AppColors.primary),
+                              profile.fullName.isNotEmpty
+                                  ? profile.fullName
+                                        .substring(0, 1)
+                                        .toUpperCase()
+                                  : '?',
+                              style: AppTextStyles.headlineLg.copyWith(
+                                color: AppColors.primary,
+                              ),
                             ),
                           ),
                         ),
@@ -410,7 +437,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             color: Color(0x0F000000),
             blurRadius: 24,
             offset: Offset(0, 8),
-          )
+          ),
         ],
       ),
       padding: const EdgeInsets.all(24.0),
@@ -428,9 +455,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   label: Text(interest, style: AppTextStyles.labelSm),
                   backgroundColor: AppColors.primary.withOpacity(0.08),
                   labelStyle: const TextStyle(color: AppColors.primary),
-                  deleteIcon: const Icon(Icons.close, size: 14, color: AppColors.primary),
+                  deleteIcon: const Icon(
+                    Icons.close,
+                    size: 14,
+                    color: AppColors.primary,
+                  ),
                   onDeleted: () => _removeInterest(interest),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
                   side: BorderSide.none,
                 );
               }),
@@ -438,7 +471,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 label: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: const [
-                    Icon(Icons.add, size: 14, color: AppColors.onSurfaceVariant),
+                    Icon(
+                      Icons.add,
+                      size: 14,
+                      color: AppColors.onSurfaceVariant,
+                    ),
                     SizedBox(width: 4),
                     Text('Add Interest', style: AppTextStyles.labelSm),
                   ],
@@ -447,7 +484,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 onPressed: _addInterest,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(999),
-                  side: const BorderSide(color: AppColors.outlineVariant, style: BorderStyle.solid),
+                  side: const BorderSide(
+                    color: AppColors.outlineVariant,
+                    style: BorderStyle.solid,
+                  ),
                 ),
               ),
             ],

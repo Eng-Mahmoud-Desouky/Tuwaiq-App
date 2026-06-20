@@ -32,8 +32,8 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
   void _onSubmitPressed() {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<AuthCubit>().updatePassword(
-            newPassword: _passwordController.text,
-          );
+        newPassword: _passwordController.text,
+      );
     }
   }
 
@@ -55,7 +55,9 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
       body: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
           if (state is AuthInitial) {
-            context.showSnackBar('تم تحديث كلمة المرور بنجاح! يرجى تسجيل الدخول بكلمة المرور الجديدة.');
+            context.showSnackBar(
+              'تم تحديث كلمة المرور بنجاح! يرجى تسجيل الدخول بكلمة المرور الجديدة.',
+            );
             Navigator.pushNamedAndRemoveUntil(
               context,
               AppRoutes.signIn,
