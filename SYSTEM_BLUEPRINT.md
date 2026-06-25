@@ -1,5 +1,5 @@
 # 📐 System Blueprint — Tuwaiq App
-**Version:** 1.3.0 | **Status:** Active | **Last Updated:** 2026-06-20
+**Version:** 1.4.1 | **Status:** Active | **Last Updated:** 2026-06-25
 
 ---
 
@@ -133,10 +133,19 @@ lib/
     │   └── presentation/
     │       └── screens/
     │           └── explore_screen.dart
-    ├── create_content/          # Content creation stub
+    ├── posts/                   # Content sharing & posts interaction feature
+    │   ├── data/
+    │   │   ├── datasources/     # PostRemoteDataSource
+    │   │   ├── models/          # PostModel, CommentModel
+    │   │   └── repositories/    # PostRepositoryImpl
+    │   ├── domain/
+    │   │   ├── entities/        # PostEntity, CommentEntity
+    │   │   ├── repositories/    # PostRepository interface
+    │   │   └── usecases/        # GetPostsFeedUseCase, CreatePostUseCase, ToggleLikeUseCase, etc.
     │   └── presentation/
-    │       └── screens/
-    │           └── create_content_screen.dart
+    │       ├── cubits/          # CreatePostCubit, PostFeedCubit, PostCommentsCubit
+    │       ├── screens/         # CreatePostScreen, PostDetailsScreen
+    │       └── widgets/         # PostCard, CommentCard
     ├── alerts/                  # Notifications & Alerts stub
     │   └── presentation/
     │       └── screens/
@@ -216,7 +225,50 @@ Stores all user-created events.
 
 **Relationship:** `events.creator_id` → `profiles.id` (Many-to-One, Foreign Key)
 
-### 5.2 ERD — Event Management Feature Scope
+#### `posts`
+Stores all user-created content (text and optional image).
+
+| Column | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | PK, DEFAULT gen_random_uuid() | Unique post ID |
+| `creator_id` | `uuid` | FK → `profiles.id` | Reference to the post creator profile |
+| `content` | `text` | CHECK (char_length(content) <= 2000), NOT NULL | Post body text |
+| `image_url` | `text` | CHECK prefix, NULLABLE | Path to post image in storage |
+| `created_at` | `timestamptz` | DEFAULT now() | Post row creation timestamp |
+| `updated_at` | `timestamptz` | DEFAULT now() | Post row last update timestamp |
+
+**Relationship:** `posts.creator_id` → `profiles.id` (Many-to-One, Foreign Key, `posts_creator_id_fkey`)
+
+#### `post_likes`
+Stores likes for posts (M:N relationship join table).
+
+| Column | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `post_id` | `uuid` | PK, FK → `posts.id` ON DELETE CASCADE | Post referenced |
+| `user_id` | `uuid` | PK, FK → `profiles.id` ON DELETE CASCADE | User who liked the post |
+| `created_at` | `timestamptz` | DEFAULT now() | Timestamp when liked |
+
+**Relationships:**
+* `post_likes.post_id` → `posts.id` (Many-to-One, Foreign Key)
+* `post_likes.user_id` → `profiles.id` (Many-to-One, Foreign Key)
+
+#### `post_comments`
+Stores flat comments on user posts.
+
+| Column | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | PK, DEFAULT gen_random_uuid() | Unique comment ID |
+| `post_id` | `uuid` | FK → `posts.id` ON DELETE CASCADE | Reference to the commented post |
+| `creator_id` | `uuid` | FK → `profiles.id` ON DELETE CASCADE | Reference to the comment creator |
+| `content` | `text` | CHECK (char_length(content) <= 500), NOT NULL | Comment body text |
+| `created_at` | `timestamptz` | DEFAULT now() | Comment row creation timestamp |
+| `updated_at` | `timestamptz` | DEFAULT now() | Comment row last update timestamp |
+
+**Relationships:**
+* `post_comments.post_id` → `posts.id` (Many-to-One, Foreign Key)
+* `post_comments.creator_id` → `profiles.id` (Many-to-One, Foreign Key)
+
+### 5.2 ERD — Complete Database Schema Scope (Sprint 2)
 
 ```
 auth.users (Supabase Managed)
@@ -233,24 +285,26 @@ profiles
   - updated_at
   - interests
     │
-    │ 1:N
-    ▼
-events
-  - id (PK)
-  - creator_id (FK → profiles.id)
-  - title
-  - description
-  - cover_url
-  - category
-  - region
-  - city
-  - location_name
-  - google_maps_url
-  - start_date
-  - end_date
-  - status
-  - created_at
-  - updated_at
+    ├─ 1:N ────────┐
+    │              │
+    ▼              ▼
+events          posts
+  - id (PK)       - id (PK)
+  - creator_id    - creator_id (FK → profiles.id)
+  - ...           - content (CHECK <= 2000)
+                  - image_url
+                  - created_at
+                  - updated_at
+                    │
+                    ├─ 1:N ────────┐
+                    │              │
+                    ▼              ▼
+                post_likes      post_comments
+                  - post_id       - id (PK)
+                  - user_id       - post_id (FK → posts.id)
+                  - created_at    - creator_id (FK → profiles.id)
+                                  - content (CHECK <= 500)
+                                  - created_at
 ```
 
 ### 5.3 RLS Policies — Sprint 1
@@ -326,6 +380,70 @@ CREATE POLICY "Allow authenticated users to update their own events"
 ON storage.objects FOR UPDATE
 TO authenticated
 USING (bucket_id = 'events'::text);
+
+-- -----------------------------------------------------
+-- Posts & Interactions RLS Policies (Sprint 2)
+-- -----------------------------------------------------
+
+-- SELECT: authenticated users can read all posts
+CREATE POLICY "Anyone can view posts" ON public.posts
+    FOR SELECT TO authenticated USING (true);
+
+-- INSERT: users can only create posts for themselves
+CREATE POLICY "Users can create posts" ON public.posts
+    FOR INSERT TO authenticated WITH CHECK (auth.uid() = creator_id);
+
+-- UPDATE: users can only edit their own posts
+CREATE POLICY "Users can update own posts" ON public.posts
+    FOR UPDATE TO authenticated 
+    USING (auth.uid() = creator_id)
+    WITH CHECK (auth.uid() = creator_id); -- Prevent creator_id spoofing
+
+-- DELETE: users can only delete their own posts
+CREATE POLICY "Users can delete own posts" ON public.posts
+    FOR DELETE TO authenticated USING (auth.uid() = creator_id);
+
+-- SELECT: authenticated users can read all likes
+CREATE POLICY "Anyone can view likes" ON public.post_likes
+    FOR SELECT TO authenticated USING (true);
+
+-- INSERT: users can only like posts for themselves
+CREATE POLICY "Users can toggle own likes" ON public.post_likes
+    FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+
+-- DELETE: users can only remove their own likes
+CREATE POLICY "Users can delete own likes" ON public.post_likes
+    FOR DELETE TO authenticated USING (auth.uid() = user_id);
+
+-- SELECT: authenticated users can read all comments
+CREATE POLICY "Anyone can view comments" ON public.post_comments
+    FOR SELECT TO authenticated USING (true);
+
+-- INSERT: users can only comment under their own identity
+CREATE POLICY "Users can add comments" ON public.post_comments
+    FOR INSERT TO authenticated WITH CHECK (auth.uid() = creator_id);
+
+-- DELETE: users can only delete their own comments
+CREATE POLICY "Users can delete own comments" ON public.post_comments
+    FOR DELETE TO authenticated USING (auth.uid() = creator_id);
+
+-- Storage Policies for 'posts' Bucket (MIME-Type & size-limit config on Bucket level)
+CREATE POLICY "Allow public read access to posts storage"
+ON storage.objects FOR SELECT TO public USING (bucket_id = 'posts'::text);
+
+CREATE POLICY "Allow authenticated users to upload posts images to own folder"
+ON storage.objects FOR INSERT TO authenticated 
+WITH CHECK (
+    bucket_id = 'posts'::text AND 
+    (storage.foldername(name))[1] = auth.uid()::text -- Path ownership verification
+);
+
+CREATE POLICY "Allow authenticated users to delete own posts images"
+ON storage.objects FOR DELETE TO authenticated 
+USING (
+    bucket_id = 'posts'::text AND 
+    owner = auth.uid()
+);
 ```
 
 ---
@@ -446,7 +564,6 @@ class AppTextStyles {
 ---
 
 ## 9. Event Management Feature & Engineering Decisions
-
 ### 9.1 Feature Overview
 The **Event Management** module (`features/events`) allows authenticated users to create, search, and view detailed information for events within Saudi Arabia. Key pages include:
 - **`CreateEventScreen`**: A multi-step form to input event title, description, category, region, city, location name, Google Maps link, and date/time range, along with an optional cover image.
@@ -492,12 +609,59 @@ The **Event Management** module (`features/events`) allows authenticated users t
 
 ---
 
-## 10. Change Log
+## 10. Content Sharing & Interaction Feature & Engineering Decisions
+
+### 10.1 Feature Overview
+The **Content Sharing & Interaction** module (`features/posts`) allows users to write thoughts, upload images, like posts, and leave flat comment replies. Major user-facing elements:
+* **`HomeScreen`**: Feed list presenting posts with user profile overlays, cover images, like hearts, and comment counts. Supports swipe-to-refresh.
+* **`CreatePostScreen`**: A publishing screen with character count trackers (max 2000), media attachments via gallery, and upload loaders.
+* **`PostDetailsScreen`**: Details viewer combining the single post with a chronological listing of flat comments, and a bottom text input bar.
+
+### 10.2 Engineering Decisions
+1. **PostgREST Relationship Disambiguation (fkey joins)**:
+   When requesting profiles from posts (`posts -> profiles`), both `posts.creator_id` and the `post_likes` join table construct relationships to profiles. To prevent PostgREST ambiguity crash (PGRST201), the select syntax was explicitly configured to use the constraint identifier:
+   `profiles:profiles!posts_creator_id_fkey(*)`
+2. **Transaction Image Rollbacks & Leakage Prevention**:
+   * **Insert Rollback**: If an image is successfully uploaded to the storage bucket but the metadata database row fails to save (e.g. constraints violation), the client triggers an automatic rollback call to delete the orphaned object from the `posts` bucket.
+   * **Delete Rollback**: Deleting a post automatically triggers database cascading rules (for likes and comments), while the remote data source extracts the relative storage path from the deleted row's `image_url` and dispatches a storage deletion call to prevent storage leaks.
+3. **Optimistic Likes with 500ms Throttle Debouncing**:
+   To ensure smooth UX, liking a post updates UI elements and counts instantly in memory. To protect database resources from rapid double-tapping spam, a 500ms Timer maps requests. If a user toggles like status back-and-forth under 500ms, the previous timer cancels, sending zero requests if the state returns to default.
+4. **OOM Memory Optimization (Cache constraints)**:
+   Raw image rendering in list layouts leads to RAM exhaustion. The feed consumes `CachedNetworkImage` wrappers specifying strict `memCacheWidth: 400` and `memCacheHeight: 400` bounds to downscale large files in memory during rendering.
+5. **Database-Level Data & Timestamp Security**:
+   * Character constraints (`CHECK` constraints) limit input lengths (2000 for posts, 500 for comments) to prevent server-side buffer exhaustion.
+   * Triggers (`set_created_at_protection`) enforce `created_at` values to `now()` on inserts and prevent modifications during updates, overriding client parameters.
+   * RLS `WITH CHECK` clauses on update queries block ownership transfer attempts.
+6. **Cursor-Based Pagination Consistency**:
+   To prevent feed shifts (skipped or duplicated items) when new posts are created while browsing, queries utilize cursor pagination on `(created_at DESC, id DESC)` instead of offsets.
+7. **Global State Provider Registration**:
+   To prevent Routing scoping errors (`ProviderNotFoundException`) during pop redirects or cross-screen comment counts updating, `PostFeedCubit` is registered in `main.dart` at the global `MultiBlocProvider` level.
+
+### 10.3 Stabilization & Refinement Fixes (Session Updates)
+During the stabilization and testing phase of the Content Sharing & Interaction feature, several key issues were identified and resolved to ensure production readiness:
+1. **PostgREST Relationship Ambiguity (PGRST201)**:
+   - **Problem**: When fetching posts with profiles `posts.select('*, profiles(*)')`, Supabase returned a PostgREST error because both `posts.creator_id` and the `post_likes` table have relationships to the `profiles` table, making `profiles` ambiguous.
+   - **Solution**: Updated the query in [post_remote_data_source.dart](file:///c:/Users/IT/StudioProjects/tuwaiq_app/lib/features/posts/data/datasources/post_remote_data_source.dart) to explicitly use the foreign key constraint: `profiles:profiles!posts_creator_id_fkey(*)`.
+2. **Comment Creation UUID Mismatch (22P02)**:
+   - **Problem**: Adding a comment threw a Database Exception `invalid input syntax for type uuid: ""` because the client-side ID or user ID was not set, passing empty strings to the database instead of a valid UUID.
+   - **Solution**: Updated [post_repository_impl.dart](file:///c:/Users/IT/StudioProjects/tuwaiq_app/lib/features/posts/data/repositories/post_repository_impl.dart) to generate a new comment UUID on the fly using `Uuid().v4()` and retrieve the correct authenticated user ID directly from the active Supabase session.
+3. **Double Spacing & Layout Keyboard Insets**:
+   - **Problem**: In [post_details_screen.dart](file:///c:/Users/IT/StudioProjects/tuwaiq_app/lib/features/posts/presentation/screens/post_details_screen.dart), opening the keyboard caused a massive empty space at the bottom because the view padding used `MediaQuery.of(context).viewInsets.bottom` while `resizeToAvoidBottomInset` was enabled, causing double padding.
+   - **Solution**: Removed the manual view insets padding calculation and relied on Flutter's automatic keyboard resizing mechanism.
+4. **Create Post UI Lifecycle and Flow UX**:
+   - **Problem**: Upon successfully creating a post, the `CreatePostScreen` remained open, causing users to tap publish multiple times and create duplicate posts.
+   - **Solution**: Registered custom listener triggers in [create_post_screen.dart](file:///c:/Users/IT/StudioProjects/tuwaiq_app/lib/features/posts/presentation/screens/create_post_screen.dart) to pop the screen safely on success using `Navigator.of(context).pop()` (with fallback to `context.go(AppRoutes.home)`), returning the user to the refreshed feed.
+
+---
+
+## 11. Change Log
 
 | Version | Date | Author | Changes |
 | :--- | :--- | :--- | :--- |
-| `1.3.0` | 2026-06-20 | Antigravity AI | Implemented Event Management Feature (`features/events`). Designed database schema, storage bucket, and RLS policies for `events`. Created composite `EventEntity` (embedding `UserProfile`) to resolve creator profile data in a single request. Developed `CreateEventCubit` with strictly defined states (Initial, UploadingImage, SavingData, Success, Error) separating storage upload from database insert. Added `CreateEventScreen` and `EventDetailsScreen` with Arabic RTL localizations support (`flutter_localizations`), form validation, maps redirection, and `mounted` guards for transitions. |
-| `1.2.0` | 2026-06-19 | Antigravity AI | Migrated application routing to `go_router` with declarative routing and nested branch navigation (`StatefulShellRoute`). Moved `HomeScreen` to `features/home` and created main navigation bar shell (`MainScreen`). Created stub features (`explore`, `create_content`, `alerts`) and set up centralized redirection gates for authentication status and user interests checklist. |
+| `1.4.1` | 2026-06-26 | Mahmoud Desouky | Stabilization and bug fixes for Content Sharing feature: resolved PostgREST PGRST201 ambiguous relationship error by specifying fkey constraint; resolved comment insertion UUID mismatch; fixed double-padding UI keyboard issue; fixed Bloc scoping crash by registering PostFeedCubit globally; fixed CreatePostScreen navigation pop on success. |
+| `1.4.0` | 2026-06-25 | Mahmoud Desouky | Implemented Content Sharing & Posts Interaction feature (`features/posts`). Created SQL schema for `posts`, `post_likes`, and `post_comments` with triggers protecting timestamps and check constraints limiting length/MIME sizes. Designed image rollbacks on DB failures, leak cleanups on delete, optimistic debounced liking, memory-capped cached network image loaders, global state provider management, and cursor pagination. |
+| `1.3.0` | 2026-06-20 | Mahmoud Desouky | Implemented Event Management Feature (`features/events`). Designed database schema, storage bucket, and RLS policies for `events`. Created composite `EventEntity` (embedding `UserProfile`) to resolve creator profile data in a single request. Developed `CreateEventCubit` with strictly defined states (Initial, UploadingImage, SavingData, Success, Error) separating storage upload from database insert. Added `CreateEventScreen` and `EventDetailsScreen` with Arabic RTL localizations support (`flutter_localizations`), form validation, maps redirection, and `mounted` guards for transitions. |
+| `1.2.0` | 2026-06-19 | Mahmoud Desouky | Migrated application routing to `go_router` with declarative routing and nested branch navigation (`StatefulShellRoute`). Moved `HomeScreen` to `features/home` and created main navigation bar shell (`MainScreen`). Created stub features (`explore`, `create_content`, `alerts`) and set up centralized redirection gates for authentication status and user interests checklist. |
 | `1.1.0` | 2026-05-31 | Mahmoud Desouky | Implemented Auth & Onboarding feature. Added `interests` text[] to `profiles`, RLS security triggers, deep linking, bloc/Cubit state management, and 6 premium RTL UI screens. |
 | `1.0.0` | 2026-05-20 | Mahmoud Desouky | Initial Blueprint — Tech Stack, User Roles, DB Core (profiles), Clean Architecture, Theming System |
 
