@@ -36,6 +36,18 @@ import '../../features/events/domain/usecases/get_event_usecase.dart';
 import '../../features/events/presentation/cubit/create_event_cubit.dart';
 import '../../features/events/presentation/cubit/event_details_cubit.dart';
 import '../../features/events/presentation/screens/event_details.dart';
+import '../../features/posts/domain/entities/post_entity.dart';
+import '../../features/posts/domain/usecases/create_post_usecase.dart';
+import '../../features/posts/domain/usecases/get_posts_feed_usecase.dart';
+import '../../features/posts/domain/usecases/toggle_like_usecase.dart';
+import '../../features/posts/domain/usecases/get_comments_usecase.dart';
+import '../../features/posts/domain/usecases/add_comment_usecase.dart';
+import '../../features/posts/domain/usecases/delete_post_usecase.dart';
+import '../../features/posts/presentation/cubits/create_post/create_post_cubit.dart';
+import '../../features/posts/presentation/cubits/post_comments/post_comments_cubit.dart';
+import '../../features/posts/presentation/cubits/post_feed/post_feed_cubit.dart';
+import '../../features/posts/presentation/screens/create_post_screen.dart';
+import '../../features/posts/presentation/screens/post_details_screen.dart';
 
 class AppRouterRefreshStream extends ChangeNotifier {
   late final StreamSubscription<dynamic> _subscription;
@@ -69,6 +81,12 @@ class AppRouter {
     required GetFollowingUseCase getFollowingUseCase,
     required CreateEventUseCase createEventUseCase,
     required GetEventUseCase getEventUseCase,
+    required CreatePostUseCase createPostUseCase,
+    required GetPostsFeedUseCase getPostsFeedUseCase,
+    required ToggleLikeUseCase toggleLikeUseCase,
+    required GetCommentsUseCase getCommentsUseCase,
+    required AddCommentUseCase addCommentUseCase,
+    required DeletePostUseCase deletePostUseCase,
   }) {
     return GoRouter(
       navigatorKey: _rootNavigatorKey,
@@ -145,6 +163,34 @@ class AppRouter {
             );
           },
         ),
+        GoRoute(
+          path: AppRoutes.createPost,
+          parentNavigatorKey: _rootNavigatorKey,
+          builder: (context, state) => BlocProvider(
+            create: (context) => CreatePostCubit(
+              createPostUseCase: createPostUseCase,
+            ),
+            child: const CreatePostScreen(),
+          ),
+        ),
+        GoRoute(
+          path: AppRoutes.postDetails,
+          parentNavigatorKey: _rootNavigatorKey,
+          builder: (context, state) {
+            final postId = state.pathParameters['id']!;
+            final post = state.extra as PostEntity?;
+            return BlocProvider(
+              create: (context) => PostCommentsCubit(
+                getCommentsUseCase: getCommentsUseCase,
+                addCommentUseCase: addCommentUseCase,
+              ),
+              child: PostDetailsScreen(
+                eventId: postId,
+                initialPost: post,
+              ),
+            );
+          },
+        ),
 
         // Main Navigation (StatefulShellRoute)
         StatefulShellRoute.indexedStack(
@@ -152,7 +198,6 @@ class AppRouter {
             return MainScreen(navigationShell: navigationShell);
           },
           branches: [
-            // Home Branch (0)
             StatefulShellBranch(
               routes: [
                 GoRoute(

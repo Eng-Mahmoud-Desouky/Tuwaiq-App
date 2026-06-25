@@ -46,6 +46,17 @@ import 'features/profile/domain/usecases/get_following_usecase.dart';
 import 'features/profile/data/datasources/profile_remote_datasource.dart';
 import 'features/profile/data/repositories/profile_repository_impl.dart';
 
+// Posts Feature Imports
+import 'features/posts/data/datasources/post_remote_data_source.dart';
+import 'features/posts/data/repositories/post_repository_impl.dart';
+import 'features/posts/domain/usecases/create_post_usecase.dart';
+import 'features/posts/domain/usecases/get_posts_feed_usecase.dart';
+import 'features/posts/domain/usecases/toggle_like_usecase.dart';
+import 'features/posts/domain/usecases/get_comments_usecase.dart';
+import 'features/posts/domain/usecases/add_comment_usecase.dart';
+import 'features/posts/domain/usecases/delete_post_usecase.dart';
+import 'features/posts/presentation/cubits/post_feed/post_feed_cubit.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -98,6 +109,16 @@ void main() async {
   final getEventUseCase = GetEventUseCase(eventRepository);
   final getAllEventsUseCase = GetAllEventsUseCase(eventRepository);
 
+  // Posts
+  final postRemoteDataSource = PostRemoteDataSourceImpl(supabaseClient);
+  final postRepository = PostRepositoryImpl(remoteDataSource: postRemoteDataSource);
+  final createPostUseCase = CreatePostUseCase(postRepository);
+  final getPostsFeedUseCase = GetPostsFeedUseCase(postRepository);
+  final toggleLikeUseCase = ToggleLikeUseCase(postRepository);
+  final getCommentsUseCase = GetCommentsUseCase(postRepository);
+  final addCommentUseCase = AddCommentUseCase(postRepository);
+  final deletePostUseCase = DeletePostUseCase(postRepository);
+
   runApp(
     MultiBlocProvider(
       providers: [
@@ -112,6 +133,13 @@ void main() async {
             saveUserInterestsUseCase: saveUserInterestsUseCase,
           )..checkCurrentUser(),
         ),
+        BlocProvider<PostFeedCubit>(
+          create: (context) => PostFeedCubit(
+            getPostsFeedUseCase: getPostsFeedUseCase,
+            toggleLikeUseCase: toggleLikeUseCase,
+            deletePostUseCase: deletePostUseCase,
+          )..loadPosts(),
+        ),
       ],
       child: MyApp(
         getProfileUseCase: getProfileUseCase,
@@ -124,6 +152,12 @@ void main() async {
         createEventUseCase: createEventUseCase,
         getEventUseCase: getEventUseCase,
         getAllEventsUseCase: getAllEventsUseCase,
+        createPostUseCase: createPostUseCase,
+        getPostsFeedUseCase: getPostsFeedUseCase,
+        toggleLikeUseCase: toggleLikeUseCase,
+        getCommentsUseCase: getCommentsUseCase,
+        addCommentUseCase: addCommentUseCase,
+        deletePostUseCase: deletePostUseCase,
       ),
     ),
   );
@@ -140,6 +174,12 @@ class MyApp extends StatelessWidget {
   final CreateEventUseCase createEventUseCase;
   final GetEventUseCase getEventUseCase;
   final GetAllEventsUseCase getAllEventsUseCase;
+  final CreatePostUseCase createPostUseCase;
+  final GetPostsFeedUseCase getPostsFeedUseCase;
+  final ToggleLikeUseCase toggleLikeUseCase;
+  final GetCommentsUseCase getCommentsUseCase;
+  final AddCommentUseCase addCommentUseCase;
+  final DeletePostUseCase deletePostUseCase;
 
   const MyApp({
     super.key,
@@ -153,6 +193,12 @@ class MyApp extends StatelessWidget {
     required this.createEventUseCase,
     required this.getEventUseCase,
     required this.getAllEventsUseCase,
+    required this.createPostUseCase,
+    required this.getPostsFeedUseCase,
+    required this.toggleLikeUseCase,
+    required this.getCommentsUseCase,
+    required this.addCommentUseCase,
+    required this.deletePostUseCase,
   });
 
   @override
@@ -168,6 +214,12 @@ class MyApp extends StatelessWidget {
       getFollowingUseCase: getFollowingUseCase,
       createEventUseCase: createEventUseCase,
       getEventUseCase: getEventUseCase,
+      createPostUseCase: createPostUseCase,
+      getPostsFeedUseCase: getPostsFeedUseCase,
+      toggleLikeUseCase: toggleLikeUseCase,
+      getCommentsUseCase: getCommentsUseCase,
+      addCommentUseCase: addCommentUseCase,
+      deletePostUseCase: deletePostUseCase,
     );
 
     return MaterialApp.router(

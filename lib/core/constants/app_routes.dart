@@ -13,4 +13,6 @@ class AppRoutes {
   static const String create = '/create';
   static const String alerts = '/alerts';
   static const String eventDetails = '/events/:id';
+  static const String createPost = '/create-post';
+  static const String postDetails = '/posts/:id';
 }
