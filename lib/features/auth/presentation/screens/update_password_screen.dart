@@ -9,6 +9,7 @@ import '../../../../shared/theme/app_text_styles.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../cubit/update_password_cubit.dart';
 import '../cubit/update_password_state.dart';
+import '../cubit/auth_cubit.dart';
 import '../widgets/auth_text_field.dart';
 
 class UpdatePasswordScreen extends StatefulWidget {
@@ -49,7 +50,10 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.arrow_forward, color: AppColors.primary),
-            onPressed: () => context.pop(),
+            onPressed: () {
+              context.read<AuthCubit>().signOut();
+              context.go(AppRoutes.signIn);
+            },
           ),
         ],
       ),
@@ -59,6 +63,7 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
             context.showSnackBar(
               'تم تحديث كلمة المرور بنجاح! يرجى تسجيل الدخول بكلمة المرور الجديدة.',
             );
+            context.read<AuthCubit>().signOut();
             context.go(AppRoutes.signIn);
           } else if (state is UpdatePasswordError) {
             context.showSnackBar(state.message, isError: true);

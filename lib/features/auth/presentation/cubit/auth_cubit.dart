@@ -62,9 +62,13 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> handleDeepLink(Uri uri) async {
-    // Check if the deep link is tuwaiq://auth/callback or cratch://reset-callback
-    if ((uri.scheme == 'tuwaiq' && uri.host == 'auth') ||
-        (uri.scheme == 'cratch' && uri.host == 'reset-callback')) {
+    // Ignore password recovery links as they are handled by the native onAuthStateChange listener
+    if (uri.scheme == 'cratch' || uri.host == 'reset-callback') {
+      return;
+    }
+
+    // Check if the deep link is tuwaiq://auth/callback
+    if (uri.scheme == 'tuwaiq' && uri.host == 'auth') {
       emit(const AuthLoading());
 
       // Check if it is a password reset callback or standard confirmation callback
