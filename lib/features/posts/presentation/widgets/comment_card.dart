@@ -6,8 +6,17 @@ import '../../domain/entities/comment_entity.dart';
 
 class CommentCard extends StatelessWidget {
   final CommentEntity comment;
+  final String currentUserId;
+  final VoidCallback? onDelete;
+  final VoidCallback? onEdit;
 
-  const CommentCard({super.key, required this.comment});
+  const CommentCard({
+    super.key,
+    required this.comment,
+    required this.currentUserId,
+    this.onDelete,
+    this.onEdit,
+  });
 
   String _formatRelativeTime(DateTime dateTime) {
     final now = DateTime.now();
@@ -119,14 +128,59 @@ class CommentCard extends StatelessWidget {
                   ],
                 ),
               ),
-              // Timestamp
-              Text(
-                _formatRelativeTime(comment.createdAt),
-                style: AppTextStyles.labelSm.copyWith(
-                  fontSize: 11,
-                  color: AppColors.secondary,
-                  fontWeight: FontWeight.normal,
-                ),
+              // Timestamp and Action Menu
+              Row(
+                children: [
+                  Text(
+                    _formatRelativeTime(comment.createdAt),
+                    style: AppTextStyles.labelSm.copyWith(
+                      fontSize: 11,
+                      color: AppColors.secondary,
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
+                  if (comment.creatorId == currentUserId) ...[
+                    const SizedBox(width: 4),
+                    PopupMenuButton<String>(
+                      icon: const Icon(
+                        Icons.more_vert,
+                        size: 16,
+                        color: AppColors.secondary,
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 100),
+                      onSelected: (value) {
+                        if (value == 'edit') {
+                          onEdit?.call();
+                        } else if (value == 'delete') {
+                          onDelete?.call();
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              Icon(Icons.edit_outlined, size: 16, color: AppColors.onSurface),
+                              SizedBox(width: 8),
+                              Text('تعديل', style: TextStyle(fontSize: 13)),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete_outline, size: 16, color: AppColors.error),
+                              SizedBox(width: 8),
+                              Text('حذف', style: TextStyle(fontSize: 13, color: AppColors.error)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
               ),
             ],
           ),

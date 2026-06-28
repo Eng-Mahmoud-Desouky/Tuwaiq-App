@@ -8,6 +8,9 @@ import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../posts/presentation/cubits/post_feed/post_feed_cubit.dart';
 import '../../../posts/presentation/cubits/post_feed/post_feed_state.dart';
 import '../../../posts/presentation/widgets/post_card.dart';
+import '../../../posts/domain/entities/post_entity.dart';
+import '../../../events/domain/entities/event_entity.dart';
+import '../../../events/presentation/widgets/event_card_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -145,7 +148,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   }
 
-                  return PostCard(post: posts[index]);
+                  final item = posts[index];
+                  if (item is PostEntity) {
+                    return PostCard(post: item);
+                  } else if (item is EventEntity) {
+                    return EventCardWidget(event: item);
+                  }
+                  return const SizedBox.shrink();
                 },
               ),
             );

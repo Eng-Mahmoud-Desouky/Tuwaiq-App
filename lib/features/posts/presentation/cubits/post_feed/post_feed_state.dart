@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import '../../../domain/entities/post_entity.dart';
 
 abstract class PostFeedState extends Equatable {
   const PostFeedState();
@@ -17,7 +16,7 @@ class PostFeedLoading extends PostFeedState {
 }
 
 class PostFeedLoaded extends PostFeedState {
-  final List<PostEntity> posts;
+  final List<dynamic> posts;
   final bool hasReachedMax;
 
   const PostFeedLoaded({
@@ -26,7 +25,7 @@ class PostFeedLoaded extends PostFeedState {
   });
 
   PostFeedLoaded copyWith({
-    List<PostEntity>? posts,
+    List<dynamic>? posts,
     bool? hasReachedMax,
   }) {
     return PostFeedLoaded(

@@ -266,27 +266,28 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                                   ),
                                 ),
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.surfaceContainerHigh,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  event.region,
-                                  style: AppTextStyles.labelSm.copyWith(
-                                    color: AppColors.secondary,
-                                    fontWeight: FontWeight.bold,
+                              if (event.region.isNotEmpty)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surfaceContainerHigh,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    event.region,
+                                    style: AppTextStyles.labelSm.copyWith(
+                                      color: AppColors.secondary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
-                              ),
                             ],
                           ),
                           const SizedBox(height: 16),
-
+ 
                           // Event Title
                           Text(
                             event.title,
@@ -296,7 +297,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                             ),
                           ),
                           const SizedBox(height: 24),
-
+ 
                           // Date Card
                           _buildDetailCard(
                             icon: Icons.calendar_today_outlined,
@@ -317,7 +318,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                             ),
                           ),
                           const SizedBox(height: 16),
-
+ 
                           // Location Card
                           _buildDetailCard(
                             icon: Icons.location_on_outlined,
@@ -326,12 +327,23 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Text(
-                                  '${event.city}، ${event.locationName}',
+                                  event.city.isNotEmpty || event.region.isNotEmpty
+                                      ? '${event.city}${event.city.isNotEmpty && event.region.isNotEmpty ? '، ' : ''}${event.region}'
+                                      : 'فعالية أونلاين',
                                   style: AppTextStyles.bodyLg.copyWith(
                                     fontWeight: FontWeight.w600,
                                     color: AppColors.onSurface,
                                   ),
                                 ),
+                                if (event.locationName.isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    event.locationName,
+                                    style: AppTextStyles.bodyMd.copyWith(
+                                      color: AppColors.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
                                 if (event.googleMapsUrl != null &&
                                     event.googleMapsUrl!.isNotEmpty) ...[
                                   const SizedBox(height: 16),
@@ -348,20 +360,22 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                             ),
                           ),
                           const SizedBox(height: 16),
-
+ 
                           // Description
-                          _buildDetailCard(
-                            icon: Icons.description_outlined,
-                            title: 'حول الفعالية',
-                            child: Text(
-                              event.description,
-                              style: AppTextStyles.bodyMd.copyWith(
-                                height: 1.6,
-                                color: AppColors.onSurfaceVariant,
+                          if (event.description.isNotEmpty) ...[
+                            _buildDetailCard(
+                              icon: Icons.description_outlined,
+                              title: 'حول الفعالية',
+                              child: Text(
+                                event.description,
+                                style: AppTextStyles.bodyMd.copyWith(
+                                  height: 1.6,
+                                  color: AppColors.onSurfaceVariant,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 16),
+                            const SizedBox(height: 16),
+                          ],
 
                           // Creator Info
                           _buildDetailCard(

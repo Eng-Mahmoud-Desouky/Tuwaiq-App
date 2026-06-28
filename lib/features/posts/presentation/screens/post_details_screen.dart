@@ -5,6 +5,9 @@ import '../../../../core/constants/app_routes.dart';
 import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/theme/app_text_styles.dart';
 import '../../domain/entities/post_entity.dart';
+import '../../domain/entities/comment_entity.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
+import '../../../auth/presentation/cubit/auth_state.dart';
 import '../cubits/post_comments/post_comments_cubit.dart';
 import '../cubits/post_comments/post_comments_state.dart';
 import '../cubits/post_feed/post_feed_cubit.dart';
@@ -71,8 +74,73 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
     }
   }
 
+  void _showDeleteCommentDialog(CommentEntity comment) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('حذف التعليق', textAlign: TextAlign.right),
+        content: const Text('هل أنت متأكد من رغبتك في حذف هذا التعليق؟', textAlign: TextAlign.right),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () {
+              context.read<PostCommentsCubit>().deleteComment(comment.id);
+              context.read<PostFeedCubit>().onCommentDeleted(widget.eventId);
+              Navigator.pop(ctx);
+            },
+            child: const Text('حذف', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditCommentDialog(CommentEntity comment) {
+    final editController = TextEditingController(text: comment.content);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('تعديل التعليق', textAlign: TextAlign.right),
+        content: TextField(
+          controller: editController,
+          maxLength: _maxChars,
+          maxLines: 3,
+          textAlign: TextAlign.right,
+          decoration: const InputDecoration(
+            hintText: 'اكتب تعديلك...',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () {
+              final newContent = editController.text.trim();
+              if (newContent.isNotEmpty) {
+                context.read<PostCommentsCubit>().updateComment(
+                      commentId: comment.id,
+                      content: newContent,
+                    );
+              }
+              Navigator.pop(ctx);
+            },
+            child: const Text('حفظ'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final authState = context.watch<AuthCubit>().state;
+    final currentUserId = (authState is AuthSuccess) ? authState.user.id : '';
+
     // If initialPost is not passed via GoRouter extra, we can show a loader or simple back navigation
     final post = widget.initialPost;
     if (post == null) {
@@ -204,7 +272,13 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
                               physics: const NeverScrollableScrollPhysics(),
                               itemCount: comments.length,
                               itemBuilder: (context, index) {
-                                return CommentCard(comment: comments[index]);
+                                final comment = comments[index];
+                                return CommentCard(
+                                  comment: comment,
+                                  currentUserId: currentUserId,
+                                  onDelete: () => _showDeleteCommentDialog(comment),
+                                  onEdit: () => _showEditCommentDialog(comment),
+                                );
                               },
                             );
                           },
@@ -271,6 +345,11 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
                       decoration: const InputDecoration(
                         hintText: 'اكتب تعليقاً...',
                         border: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        errorBorder: InputBorder.none,
+                        disabledBorder: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(vertical: 10),
                       ),
                       textAlign: TextAlign.right,
                       textDirection: TextDirection.rtl,

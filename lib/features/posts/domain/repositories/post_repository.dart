@@ -33,6 +33,15 @@ abstract class PostRepository {
     required String content,
   });
 
+  /// Deletes a comment.
+  Future<void> deleteComment(String commentId);
+
+  /// Updates a comment.
+  Future<CommentEntity> updateComment({
+    required String commentId,
+    required String content,
+  });
+
   /// Deletes a post and cleans up associated image storage.
   Future<void> deletePost(String postId);
 }

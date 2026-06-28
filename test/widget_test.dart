@@ -33,6 +33,8 @@ import 'package:tuwaiq_app/features/posts/domain/usecases/toggle_like_usecase.da
 import 'package:tuwaiq_app/features/posts/domain/usecases/get_comments_usecase.dart';
 import 'package:tuwaiq_app/features/posts/domain/usecases/add_comment_usecase.dart';
 import 'package:tuwaiq_app/features/posts/domain/usecases/delete_post_usecase.dart';
+import 'package:tuwaiq_app/features/posts/domain/usecases/delete_comment_usecase.dart';
+import 'package:tuwaiq_app/features/posts/domain/usecases/update_comment_usecase.dart';
 
 import 'package:tuwaiq_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:tuwaiq_app/features/auth/domain/entities/user_entity.dart';
@@ -118,6 +120,10 @@ class FakePostRepo implements PostRepository {
   @override
   Future<CommentEntity> addComment({required String postId, required String content}) async => throw UnimplementedError();
   @override
+  Future<void> deleteComment(String commentId) async {}
+  @override
+  Future<CommentEntity> updateComment({required String commentId, required String content}) async => throw UnimplementedError();
+  @override
   Future<void> deletePost(String postId) async {}
 }
 
@@ -150,6 +156,8 @@ void main() {
         toggleLikeUseCase: ToggleLikeUseCase(postRepo),
         getCommentsUseCase: GetCommentsUseCase(postRepo),
         addCommentUseCase: AddCommentUseCase(postRepo),
+        deleteCommentUseCase: DeleteCommentUseCase(postRepo),
+        updateCommentUseCase: UpdateCommentUseCase(postRepo),
         deletePostUseCase: DeletePostUseCase(postRepo),
         updatePasswordUseCase: UpdatePasswordUseCase(authRepo),
       ),

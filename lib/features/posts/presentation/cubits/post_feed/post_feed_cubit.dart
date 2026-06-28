@@ -1,33 +1,73 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/entities/post_entity.dart';
 import '../../../domain/usecases/get_posts_feed_usecase.dart';
 import '../../../domain/usecases/toggle_like_usecase.dart';
 import '../../../domain/usecases/delete_post_usecase.dart';
+import '../../../../events/domain/entities/event_entity.dart';
+import '../../../../events/domain/usecases/get_all_events_usecase.dart';
 import 'post_feed_state.dart';
 
 class PostFeedCubit extends Cubit<PostFeedState> {
   final GetPostsFeedUseCase getPostsFeedUseCase;
   final ToggleLikeUseCase toggleLikeUseCase;
   final DeletePostUseCase deletePostUseCase;
+  final GetAllEventsUseCase getAllEventsUseCase;
 
   static const int _limit = 10;
   final Map<String, Timer> _likeDebouncers = {};
   final Map<String, bool> _originalLikeStates = {};
 
+  List<EventEntity> _allEvents = [];
+  int _eventIndex = 0;
+
   PostFeedCubit({
     required this.getPostsFeedUseCase,
     required this.toggleLikeUseCase,
     required this.deletePostUseCase,
+    required this.getAllEventsUseCase,
   }) : super(const PostFeedInitial());
+
+  List<dynamic> _mixPostsAndEvents(List<PostEntity> postsBatch, List<EventEntity> events, {required bool isFirstLoad}) {
+    if (isFirstLoad) {
+      _eventIndex = 0;
+    }
+    
+    final List<dynamic> mixed = [];
+    int postCountInSegment = 0;
+    
+    for (final post in postsBatch) {
+      mixed.add(post);
+      postCountInSegment++;
+      
+      // Every 2 posts, insert an event if we have any left
+      if (postCountInSegment == 2) {
+        postCountInSegment = 0;
+        if (events.isNotEmpty && _eventIndex < events.length) {
+          mixed.add(events[_eventIndex]);
+          _eventIndex++;
+        }
+      }
+    }
+    return mixed;
+  }
 
   /// Initial fetch of posts feed.
   Future<void> loadPosts() async {
     emit(const PostFeedLoading());
     try {
-      final posts = await getPostsFeedUseCase(limit: _limit);
+      final postsFuture = getPostsFeedUseCase(limit: _limit);
+      final eventsFuture = getAllEventsUseCase();
+
+      final results = await Future.wait([postsFuture, eventsFuture]);
+      final posts = results[0] as List<PostEntity>;
+      _allEvents = results[1] as List<EventEntity>;
+
+      final mixed = _mixPostsAndEvents(posts, _allEvents, isFirstLoad: true);
+
       emit(PostFeedLoaded(
-        posts: posts,
+        posts: mixed,
         hasReachedMax: posts.length < _limit,
       ));
     } catch (e) {
@@ -41,15 +81,20 @@ class PostFeedCubit extends Cubit<PostFeedState> {
     if (currentState is! PostFeedLoaded || currentState.hasReachedMax) return;
 
     try {
-      final lastPost = currentState.posts.last;
+      final postsOnly = currentState.posts.whereType<PostEntity>().toList();
+      if (postsOnly.isEmpty) return;
+
+      final lastPost = postsOnly.last;
       final morePosts = await getPostsFeedUseCase(
         limit: _limit,
         lastCreatedAt: lastPost.createdAt,
         lastPostId: lastPost.id,
       );
 
+      final mixedMore = _mixPostsAndEvents(morePosts, _allEvents, isFirstLoad: false);
+
       emit(PostFeedLoaded(
-        posts: currentState.posts + morePosts,
+        posts: currentState.posts + mixedMore,
         hasReachedMax: morePosts.length < _limit,
       ));
     } catch (_) {
@@ -65,11 +110,11 @@ class PostFeedCubit extends Cubit<PostFeedState> {
     final currentState = state;
     if (currentState is! PostFeedLoaded) return;
 
-    final posts = List<PostEntity>.from(currentState.posts);
-    final index = posts.indexWhere((p) => p.id == postId);
+    final posts = List<dynamic>.from(currentState.posts);
+    final index = posts.indexWhere((p) => p is PostEntity && p.id == postId);
     if (index == -1) return;
 
-    final post = posts[index];
+    final post = posts[index] as PostEntity;
     final bool originalLiked = post.isLikedByCurrentUser;
     final int originalCount = post.likeCount;
 
@@ -108,10 +153,10 @@ class PostFeedCubit extends Cubit<PostFeedState> {
           // Revert on DB error
           final currentLoadedState = state;
           if (currentLoadedState is PostFeedLoaded) {
-            final rollbackPosts = List<PostEntity>.from(currentLoadedState.posts);
-            final rollbackIndex = rollbackPosts.indexWhere((p) => p.id == postId);
+            final rollbackPosts = List<dynamic>.from(currentLoadedState.posts);
+            final rollbackIndex = rollbackPosts.indexWhere((p) => p is PostEntity && p.id == postId);
             if (rollbackIndex != -1) {
-              final p = rollbackPosts[rollbackIndex];
+              final p = rollbackPosts[rollbackIndex] as PostEntity;
               rollbackPosts[rollbackIndex] = p.copyWith(
                 isLikedByCurrentUser: finalOriginal,
                 likeCount: finalOriginal ? p.likeCount + 1 : p.likeCount - 1,
@@ -131,7 +176,12 @@ class PostFeedCubit extends Cubit<PostFeedState> {
 
     try {
       await deletePostUseCase(postId);
-      final updatedPosts = currentState.posts.where((p) => p.id != postId).toList();
+      final updatedPosts = currentState.posts.where((p) {
+        if (p is PostEntity) {
+          return p.id != postId;
+        }
+        return true;
+      }).toList();
       emit(PostFeedLoaded(
         posts: updatedPosts,
         hasReachedMax: currentState.hasReachedMax,
@@ -145,7 +195,7 @@ class PostFeedCubit extends Cubit<PostFeedState> {
   void onPostAdded(PostEntity newPost) {
     final currentState = state;
     if (currentState is PostFeedLoaded) {
-      final updatedPosts = [newPost] + currentState.posts;
+      final updatedPosts = [newPost, ...currentState.posts];
       emit(PostFeedLoaded(
         posts: updatedPosts,
         hasReachedMax: currentState.hasReachedMax,
@@ -157,11 +207,28 @@ class PostFeedCubit extends Cubit<PostFeedState> {
   void onCommentAdded(String postId) {
     final currentState = state;
     if (currentState is PostFeedLoaded) {
-      final posts = List<PostEntity>.from(currentState.posts);
-      final index = posts.indexWhere((p) => p.id == postId);
+      final posts = List<dynamic>.from(currentState.posts);
+      final index = posts.indexWhere((p) => p is PostEntity && p.id == postId);
       if (index != -1) {
-        posts[index] = posts[index].copyWith(
-          commentCount: posts[index].commentCount + 1,
+        final post = posts[index] as PostEntity;
+        posts[index] = post.copyWith(
+          commentCount: post.commentCount + 1,
+        );
+        emit(currentState.copyWith(posts: posts));
+      }
+    }
+  }
+
+  /// Decrements comments count of a post in state upon deletion.
+  void onCommentDeleted(String postId) {
+    final currentState = state;
+    if (currentState is PostFeedLoaded) {
+      final posts = List<dynamic>.from(currentState.posts);
+      final index = posts.indexWhere((p) => p is PostEntity && p.id == postId);
+      if (index != -1) {
+        final post = posts[index] as PostEntity;
+        posts[index] = post.copyWith(
+          commentCount: max(0, post.commentCount - 1),
         );
         emit(currentState.copyWith(posts: posts));
       }

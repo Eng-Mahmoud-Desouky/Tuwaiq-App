@@ -95,6 +95,11 @@ CREATE POLICY "Users can add comments" ON public.post_comments
 CREATE POLICY "Users can delete own comments" ON public.post_comments
     FOR DELETE TO authenticated USING (auth.uid() = creator_id);
 
+CREATE POLICY "Users can update own comments" ON public.post_comments
+    FOR UPDATE TO authenticated 
+    USING (auth.uid() = creator_id)
+    WITH CHECK (auth.uid() = creator_id);
+
 -- 8. Configure Storage Bucket for 'posts'
 INSERT INTO storage.buckets (id, name, public) VALUES ('posts', 'posts', true)
 ON CONFLICT (id) DO NOTHING;

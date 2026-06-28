@@ -60,6 +60,8 @@ import 'features/posts/domain/usecases/toggle_like_usecase.dart';
 import 'features/posts/domain/usecases/get_comments_usecase.dart';
 import 'features/posts/domain/usecases/add_comment_usecase.dart';
 import 'features/posts/domain/usecases/delete_post_usecase.dart';
+import 'features/posts/domain/usecases/delete_comment_usecase.dart';
+import 'features/posts/domain/usecases/update_comment_usecase.dart';
 import 'features/posts/presentation/cubits/post_feed/post_feed_cubit.dart';
 
 void main() async {
@@ -127,6 +129,8 @@ void main() async {
   final toggleLikeUseCase = ToggleLikeUseCase(postRepository);
   final getCommentsUseCase = GetCommentsUseCase(postRepository);
   final addCommentUseCase = AddCommentUseCase(postRepository);
+  final deleteCommentUseCase = DeleteCommentUseCase(postRepository);
+  final updateCommentUseCase = UpdateCommentUseCase(postRepository);
   final deletePostUseCase = DeletePostUseCase(postRepository);
 
   runApp(
@@ -148,6 +152,7 @@ void main() async {
             getPostsFeedUseCase: getPostsFeedUseCase,
             toggleLikeUseCase: toggleLikeUseCase,
             deletePostUseCase: deletePostUseCase,
+            getAllEventsUseCase: getAllEventsUseCase,
           )..loadPosts(),
         ),
       ],
@@ -172,6 +177,8 @@ void main() async {
         toggleLikeUseCase: toggleLikeUseCase,
         getCommentsUseCase: getCommentsUseCase,
         addCommentUseCase: addCommentUseCase,
+        deleteCommentUseCase: deleteCommentUseCase,
+        updateCommentUseCase: updateCommentUseCase,
         deletePostUseCase: deletePostUseCase,
         updatePasswordUseCase: updatePasswordUseCase,
       ),
@@ -200,6 +207,8 @@ class MyApp extends StatelessWidget {
   final ToggleLikeUseCase toggleLikeUseCase;
   final GetCommentsUseCase getCommentsUseCase;
   final AddCommentUseCase addCommentUseCase;
+  final DeleteCommentUseCase deleteCommentUseCase;
+  final UpdateCommentUseCase updateCommentUseCase;
   final DeletePostUseCase deletePostUseCase;
   final UpdatePasswordUseCase updatePasswordUseCase;
 
@@ -225,6 +234,8 @@ class MyApp extends StatelessWidget {
     required this.toggleLikeUseCase,
     required this.getCommentsUseCase,
     required this.addCommentUseCase,
+    required this.deleteCommentUseCase,
+    required this.updateCommentUseCase,
     required this.deletePostUseCase,
     required this.updatePasswordUseCase,
   });
@@ -252,6 +263,8 @@ class MyApp extends StatelessWidget {
       toggleLikeUseCase: toggleLikeUseCase,
       getCommentsUseCase: getCommentsUseCase,
       addCommentUseCase: addCommentUseCase,
+      deleteCommentUseCase: deleteCommentUseCase,
+      updateCommentUseCase: updateCommentUseCase,
       deletePostUseCase: deletePostUseCase,
       updatePasswordUseCase: updatePasswordUseCase,
     );

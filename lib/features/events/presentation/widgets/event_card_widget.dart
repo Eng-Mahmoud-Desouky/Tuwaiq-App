@@ -170,7 +170,9 @@ class EventCardWidget extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          '${event.city}، ${event.locationName}',
+                          event.city.isNotEmpty
+                              ? '${event.city}، ${event.locationName}'
+                              : event.locationName,
                           textAlign: TextAlign.right,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -198,23 +200,26 @@ class EventCardWidget extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       // Status or region tag
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceContainerLow,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          event.region,
-                          style: AppTextStyles.labelSm.copyWith(
-                            color: AppColors.secondary,
-                            fontSize: 11,
+                      if (event.region.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
                           ),
-                        ),
-                      ),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            event.region,
+                            style: AppTextStyles.labelSm.copyWith(
+                              color: AppColors.secondary,
+                              fontSize: 11,
+                            ),
+                          ),
+                        )
+                      else
+                        const SizedBox.shrink(),
                       // Creator avatar + name
                       Row(
                         children: [

@@ -34,6 +34,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
   DateTime? _startDate;
   DateTime? _endDate;
+  bool _isOnline = false;
 
   final List<String> _categories = [
     'مواسم ومهرجانات',
@@ -44,6 +45,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     'طعام وترفيه',
     'معارض ومؤتمرات',
     'فعاليات مجتمعية',
+    'أخرى',
   ];
 
   final List<String> _regions = [
@@ -216,8 +218,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
       category: _selectedCategory!,
-      region: _selectedRegion!,
-      city: _selectedCity!,
+      region: _isOnline ? '' : (_selectedRegion ?? ''),
+      city: _isOnline ? '' : (_selectedCity ?? ''),
       locationName: _locationNameController.text.trim(),
       googleMapsUrl: _googleMapsUrlController.text.trim().isNotEmpty
           ? _googleMapsUrlController.text.trim()
@@ -255,6 +257,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 _selectedCity = null;
                 _startDate = null;
                 _endDate = null;
+                _isOnline = false;
               });
             }
             // Safely navigate back or switch tab to home
@@ -302,7 +305,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     const SizedBox(height: 16),
 
                     // Description
-                    _buildLabel('تفاصيل الفعالية'),
+                    _buildLabel('تفاصيل الفعالية (اختياري)'),
                     TextFormField(
                       controller: _descriptionController,
                       enabled: !isLoading,
@@ -312,10 +315,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                         hintText:
                             'اكتب تفاصيل الفعالية، الأنشطة، وشروط الحضور...',
                       ),
-                      validator: (value) =>
-                          value == null || value.trim().isEmpty
-                          ? 'يرجى إدخال تفاصيل الفعالية'
-                          : null,
+                      validator: (value) => null,
                     ),
                     const SizedBox(height: 16),
 
@@ -346,6 +346,68 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     ),
                     const SizedBox(height: 16),
 
+                    // Switch for online event
+                    InkWell(
+                      onTap: isLoading
+                          ? null
+                          : () {
+                              setState(() {
+                                _isOnline = !_isOnline;
+                                if (_isOnline) {
+                                  _selectedRegion = null;
+                                  _selectedCity = null;
+                                }
+                              });
+                            },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceContainerLow,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: _isOnline
+                                ? AppColors.primary
+                                : AppColors.outlineVariant,
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Switch(
+                              value: _isOnline,
+                              activeColor: AppColors.primary,
+                              onChanged: isLoading
+                                  ? null
+                                  : (val) {
+                                      setState(() {
+                                        _isOnline = val;
+                                        if (_isOnline) {
+                                          _selectedRegion = null;
+                                          _selectedCity = null;
+                                        }
+                                      });
+                                    },
+                            ),
+                            Text(
+                              'فعالية أونلاين (افتراضية)',
+                              style: AppTextStyles.bodyMd.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: _isOnline
+                                    ? AppColors.primary
+                                    : AppColors.onSurface,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
                     // Region and City Row
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -354,34 +416,35 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              _buildLabel('المنطقة'),
+                              _buildLabel('المنطقة (اختياري)'),
                               DropdownButtonFormField<String>(
                                 value: _selectedRegion,
                                 alignment: Alignment.centerRight,
-                                decoration: const InputDecoration(
-                                  hintText: 'اختر المنطقة',
+                                decoration: InputDecoration(
+                                  hintText: _isOnline ? 'أونلاين' : 'اختر المنطقة',
+                                  enabled: !_isOnline && !isLoading,
                                 ),
-                                items: _regions
-                                    .map(
-                                      (r) => DropdownMenuItem(
-                                        value: r,
-                                        child: Align(
-                                          alignment: Alignment.centerRight,
-                                          child: Text(
-                                            r,
-                                            style: AppTextStyles.bodyMd,
+                                items: _isOnline
+                                    ? null
+                                    : _regions
+                                        .map(
+                                          (r) => DropdownMenuItem(
+                                            value: r,
+                                            child: Align(
+                                              alignment: Alignment.centerRight,
+                                              child: Text(
+                                                r,
+                                                style: AppTextStyles.bodyMd,
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                      ),
-                                    )
-                                    .toList(),
-                                onChanged: isLoading
+                                        )
+                                        .toList(),
+                                onChanged: isLoading || _isOnline
                                     ? null
                                     : (val) =>
                                           setState(() => _selectedRegion = val),
-                                validator: (value) => value == null
-                                    ? 'يرجى اختيار المنطقة'
-                                    : null,
+                                validator: (value) => null,
                               ),
                             ],
                           ),
@@ -391,34 +454,35 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              _buildLabel('المدينة'),
+                              _buildLabel('المدينة (اختياري)'),
                               DropdownButtonFormField<String>(
                                 value: _selectedCity,
                                 alignment: Alignment.centerRight,
-                                decoration: const InputDecoration(
-                                  hintText: 'اختر المدينة',
+                                decoration: InputDecoration(
+                                  hintText: _isOnline ? 'أونلاين' : 'اختر المدينة',
+                                  enabled: !_isOnline && !isLoading,
                                 ),
-                                items: _cities
-                                    .map(
-                                      (c) => DropdownMenuItem(
-                                        value: c,
-                                        child: Align(
-                                          alignment: Alignment.centerRight,
-                                          child: Text(
-                                            c,
-                                            style: AppTextStyles.bodyMd,
+                                items: _isOnline
+                                    ? null
+                                    : _cities
+                                        .map(
+                                          (c) => DropdownMenuItem(
+                                            value: c,
+                                            child: Align(
+                                              alignment: Alignment.centerRight,
+                                              child: Text(
+                                                c,
+                                                style: AppTextStyles.bodyMd,
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                      ),
-                                    )
-                                    .toList(),
-                                onChanged: isLoading
+                                        )
+                                        .toList(),
+                                onChanged: isLoading || _isOnline
                                     ? null
                                     : (val) =>
                                           setState(() => _selectedCity = val),
-                                validator: (value) => value == null
-                                    ? 'يرجى اختيار المدينة'
-                                    : null,
+                                validator: (value) => null,
                               ),
                             ],
                           ),

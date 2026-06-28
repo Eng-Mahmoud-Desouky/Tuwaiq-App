@@ -2,15 +2,21 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/entities/comment_entity.dart';
 import '../../../domain/usecases/get_comments_usecase.dart';
 import '../../../domain/usecases/add_comment_usecase.dart';
+import '../../../domain/usecases/delete_comment_usecase.dart';
+import '../../../domain/usecases/update_comment_usecase.dart';
 import 'post_comments_state.dart';
 
 class PostCommentsCubit extends Cubit<PostCommentsState> {
   final GetCommentsUseCase getCommentsUseCase;
   final AddCommentUseCase addCommentUseCase;
+  final DeleteCommentUseCase deleteCommentUseCase;
+  final UpdateCommentUseCase updateCommentUseCase;
 
   PostCommentsCubit({
     required this.getCommentsUseCase,
     required this.addCommentUseCase,
+    required this.deleteCommentUseCase,
+    required this.updateCommentUseCase,
   }) : super(const PostCommentsInitial());
 
   /// Loads all comments on a post.
@@ -21,6 +27,57 @@ class PostCommentsCubit extends Cubit<PostCommentsState> {
       emit(PostCommentsLoaded(comments: comments));
     } catch (e) {
       emit(PostCommentsError(message: 'فشل تحميل التعليقات: ${e.toString()}'));
+    }
+  }
+
+  /// Deletes a comment.
+  Future<void> deleteComment(String commentId) async {
+    final currentState = state;
+    if (currentState is! PostCommentsLoaded) return;
+
+    final currentComments = currentState.comments;
+    // Optimistically update UI
+    final updatedComments = currentComments.where((c) => c.id != commentId).toList();
+    emit(PostCommentsLoaded(comments: updatedComments));
+
+    try {
+      await deleteCommentUseCase(commentId);
+    } catch (e) {
+      // Revert if error occurs
+      emit(PostCommentsError(message: 'فشل حذف التعليق: ${e.toString()}'));
+      emit(PostCommentsLoaded(comments: currentComments));
+    }
+  }
+
+  /// Updates a comment.
+  Future<void> updateComment({
+    required String commentId,
+    required String content,
+  }) async {
+    final currentState = state;
+    if (currentState is! PostCommentsLoaded) return;
+
+    if (content.trim().isEmpty) {
+      emit(const PostCommentsError(message: 'لا يمكن تعديل التعليق إلى نص فارغ'));
+      return;
+    }
+
+    final currentComments = currentState.comments;
+
+    try {
+      final updatedComment = await updateCommentUseCase(
+        commentId: commentId,
+        content: content.trim(),
+      );
+
+      final updatedComments = currentComments.map((c) {
+        return c.id == commentId ? updatedComment : c;
+      }).toList();
+
+      emit(PostCommentsLoaded(comments: updatedComments));
+    } catch (e) {
+      emit(PostCommentsError(message: 'فشل تعديل التعليق: ${e.toString()}'));
+      emit(PostCommentsLoaded(comments: currentComments));
     }
   }
 

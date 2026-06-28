@@ -21,6 +21,10 @@ abstract class PostRemoteDataSource {
 
   Future<CommentModel> addComment(CommentModel comment);
 
+  Future<void> deleteComment(String commentId);
+
+  Future<CommentModel> updateComment(String commentId, String content);
+
   Future<void> deletePost(String postId);
 
   Future<String> uploadPostImage({
@@ -137,6 +141,26 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     final response = await _client
         .from('post_comments')
         .insert(comment.toJson())
+        .select('*, profiles(*)')
+        .single();
+
+    return CommentModel.fromJson(response);
+  }
+
+  @override
+  Future<void> deleteComment(String commentId) async {
+    await _client.from('post_comments').delete().eq('id', commentId);
+  }
+
+  @override
+  Future<CommentModel> updateComment(String commentId, String content) async {
+    final response = await _client
+        .from('post_comments')
+        .update({
+          'content': content,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', commentId)
         .select('*, profiles(*)')
         .single();
 

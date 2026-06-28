@@ -53,6 +53,8 @@ import '../../features/posts/domain/usecases/toggle_like_usecase.dart';
 import '../../features/posts/domain/usecases/get_comments_usecase.dart';
 import '../../features/posts/domain/usecases/add_comment_usecase.dart';
 import '../../features/posts/domain/usecases/delete_post_usecase.dart';
+import '../../features/posts/domain/usecases/delete_comment_usecase.dart';
+import '../../features/posts/domain/usecases/update_comment_usecase.dart';
 import '../../features/posts/presentation/cubits/create_post/create_post_cubit.dart';
 import '../../features/posts/presentation/cubits/post_comments/post_comments_cubit.dart';
 import '../../features/posts/presentation/screens/create_post_screen.dart';
@@ -100,6 +102,8 @@ class AppRouter {
     required ToggleLikeUseCase toggleLikeUseCase,
     required GetCommentsUseCase getCommentsUseCase,
     required AddCommentUseCase addCommentUseCase,
+    required DeleteCommentUseCase deleteCommentUseCase,
+    required UpdateCommentUseCase updateCommentUseCase,
     required DeletePostUseCase deletePostUseCase,
     required UpdatePasswordUseCase updatePasswordUseCase,
   }) {
@@ -230,6 +234,8 @@ class AppRouter {
               create: (context) => PostCommentsCubit(
                 getCommentsUseCase: getCommentsUseCase,
                 addCommentUseCase: addCommentUseCase,
+                deleteCommentUseCase: deleteCommentUseCase,
+                updateCommentUseCase: updateCommentUseCase,
               ),
               child: PostDetailsScreen(
                 eventId: postId,
