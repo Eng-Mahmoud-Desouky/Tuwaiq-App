@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../shared/extensions/context_extensions.dart';
@@ -46,23 +47,14 @@ class _SignInScreenState extends State<SignInScreen> {
           if (state is AuthSuccess) {
             context.showSnackBar('تم تسجيل الدخول بنجاح!');
             if (state.user.interests.length >= 3) {
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                AppRoutes.home,
-                (route) => false,
-              );
+              context.go(AppRoutes.home);
             } else {
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                AppRoutes.interests,
-                (route) => false,
-              );
+              context.go(AppRoutes.interests);
             }
           } else if (state is AuthEmailNotConfirmed) {
-            Navigator.pushNamed(
-              context,
+            context.push(
               AppRoutes.emailConfirmation,
-              arguments: state.email,
+              extra: state.email,
             );
           } else if (state is AuthError) {
             context.showSnackBar(state.message, isError: true);
@@ -179,10 +171,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
                               onPressed: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  AppRoutes.forgotPassword,
-                                );
+                                context.push(AppRoutes.forgotPassword);
                               },
                               child: Text(
                                 'نسيت كلمة المرور؟',
@@ -239,7 +228,7 @@ class _SignInScreenState extends State<SignInScreen> {
                             text: 'إنشاء حساب جديد',
                             isOutlined: true,
                             onPressed: () {
-                              Navigator.pushNamed(context, AppRoutes.signUp);
+                              context.push(AppRoutes.signUp);
                             },
                           ),
                           const SizedBox(height: 20),

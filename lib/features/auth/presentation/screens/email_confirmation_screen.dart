@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../shared/extensions/context_extensions.dart';
 import '../../../../shared/theme/app_colors.dart';
@@ -70,7 +71,7 @@ class _EmailConfirmationScreenState extends State<EmailConfirmationScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.arrow_forward, color: AppColors.primary),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => context.pop(),
           ),
         ],
       ),
@@ -241,7 +242,7 @@ class _EmailConfirmationScreenState extends State<EmailConfirmationScreen> {
                           const SizedBox(height: 8),
                           TextButton(
                             onPressed: () {
-                              Navigator.pop(context);
+                              context.pop();
                             },
                             child: Text(
                               'تغيير البريد الإلكتروني',

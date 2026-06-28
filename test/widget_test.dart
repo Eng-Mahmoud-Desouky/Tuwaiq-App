@@ -29,6 +29,29 @@ import 'package:tuwaiq_app/features/posts/domain/usecases/get_comments_usecase.d
 import 'package:tuwaiq_app/features/posts/domain/usecases/add_comment_usecase.dart';
 import 'package:tuwaiq_app/features/posts/domain/usecases/delete_post_usecase.dart';
 
+import 'package:tuwaiq_app/features/auth/domain/repositories/auth_repository.dart';
+import 'package:tuwaiq_app/features/auth/domain/entities/user_entity.dart';
+import 'package:tuwaiq_app/features/auth/domain/usecases/update_password_usecase.dart';
+
+class FakeAuthRepo implements AuthRepository {
+  @override
+  Future<UserEntity> signUp({required String email, required String password, required String username, required String fullName}) async =>
+      const UserEntity(id: '', email: '', username: '', fullName: '', interests: [], emailConfirmed: true);
+  @override
+  Future<UserEntity> signIn({required String email, required String password}) async =>
+      const UserEntity(id: '', email: '', username: '', fullName: '', interests: [], emailConfirmed: true);
+  @override
+  Future<void> signOut() async {}
+  @override
+  Future<void> forgotPassword({required String email}) async {}
+  @override
+  Future<void> updatePassword({required String newPassword}) async {}
+  @override
+  Future<UserEntity?> getCurrentUser() async => null;
+  @override
+  Future<void> saveUserInterests({required String userId, required List<String> interests}) async {}
+}
+
 class FakeProfileRepo implements ProfileRepository {
   @override
   Future<UserProfile> getProfile(String userId) async => UserProfile(id: userId, fullName: '', username: '');
@@ -75,6 +98,7 @@ class FakePostRepo implements PostRepository {
 
 void main() {
   testWidgets('App compiles and loads signIn by default', (WidgetTester tester) async {
+    final authRepo = FakeAuthRepo();
     final profileRepo = FakeProfileRepo();
     final eventRepo = FakeEventRepo();
     final postRepo = FakePostRepo();
@@ -97,6 +121,7 @@ void main() {
         getCommentsUseCase: GetCommentsUseCase(postRepo),
         addCommentUseCase: AddCommentUseCase(postRepo),
         deletePostUseCase: DeletePostUseCase(postRepo),
+        updatePasswordUseCase: UpdatePasswordUseCase(authRepo),
       ),
     );
   });

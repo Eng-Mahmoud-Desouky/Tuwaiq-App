@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:app_links/app_links.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import '../../domain/usecases/sign_up_usecase.dart';
 import '../../domain/usecases/sign_in_usecase.dart';
 import '../../domain/usecases/sign_out_usecase.dart';
@@ -21,6 +22,7 @@ class AuthCubit extends Cubit<AuthState> {
 
   final AppLinks _appLinks = AppLinks();
   StreamSubscription<Uri>? _linkSubscription;
+  StreamSubscription<dynamic>? _authSubscription;
 
   AuthCubit({
     required this.signUpUseCase,
@@ -32,6 +34,20 @@ class AuthCubit extends Cubit<AuthState> {
     required this.saveUserInterestsUseCase,
   }) : super(const AuthInitial()) {
     _initDeepLinks();
+    _initAuthListener();
+  }
+
+  void _initAuthListener() {
+    _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen(
+      (data) {
+        if (data.event == AuthChangeEvent.passwordRecovery) {
+          emit(const AuthPasswordRecovery());
+        }
+      },
+      onError: (err) {
+        emit(AuthError('حدث خطأ في الجلسة: $err'));
+      },
+    );
   }
 
   void _initDeepLinks() {
@@ -46,8 +62,9 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> handleDeepLink(Uri uri) async {
-    // Check if the deep link is tuwaiq://auth/callback
-    if (uri.scheme == 'tuwaiq' && uri.host == 'auth') {
+    // Check if the deep link is tuwaiq://auth/callback or cratch://reset-callback
+    if ((uri.scheme == 'tuwaiq' && uri.host == 'auth') ||
+        (uri.scheme == 'cratch' && uri.host == 'reset-callback')) {
       emit(const AuthLoading());
 
       // Check if it is a password reset callback or standard confirmation callback
@@ -56,6 +73,7 @@ class AuthCubit extends Cubit<AuthState> {
 
       // In Supabase, tokens might be passed in query params or fragment
       final isPasswordReset =
+          uri.scheme == 'cratch' ||
           fragment.contains('type=recovery') ||
           queryParams['type'] == 'recovery';
 
@@ -224,6 +242,7 @@ class AuthCubit extends Cubit<AuthState> {
   @override
   Future<void> close() {
     _linkSubscription?.cancel();
+    _authSubscription?.cancel();
     return super.close();
   }
 }

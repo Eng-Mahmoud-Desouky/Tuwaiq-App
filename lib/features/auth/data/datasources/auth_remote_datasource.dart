@@ -103,7 +103,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<void> forgotPassword({required String email}) async {
     await _client.auth.resetPasswordForEmail(
       email,
-      redirectTo: 'tuwaiq://auth/callback',
+      redirectTo: 'cratch://reset-callback',
     );
   }
 

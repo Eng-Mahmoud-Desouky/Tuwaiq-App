@@ -158,6 +158,7 @@ void main() async {
         getCommentsUseCase: getCommentsUseCase,
         addCommentUseCase: addCommentUseCase,
         deletePostUseCase: deletePostUseCase,
+        updatePasswordUseCase: updatePasswordUseCase,
       ),
     ),
   );
@@ -180,6 +181,7 @@ class MyApp extends StatelessWidget {
   final GetCommentsUseCase getCommentsUseCase;
   final AddCommentUseCase addCommentUseCase;
   final DeletePostUseCase deletePostUseCase;
+  final UpdatePasswordUseCase updatePasswordUseCase;
 
   const MyApp({
     super.key,
@@ -199,6 +201,7 @@ class MyApp extends StatelessWidget {
     required this.getCommentsUseCase,
     required this.addCommentUseCase,
     required this.deletePostUseCase,
+    required this.updatePasswordUseCase,
   });
 
   @override
@@ -220,6 +223,7 @@ class MyApp extends StatelessWidget {
       getCommentsUseCase: getCommentsUseCase,
       addCommentUseCase: addCommentUseCase,
       deletePostUseCase: deletePostUseCase,
+      updatePasswordUseCase: updatePasswordUseCase,
     );
 
     return MaterialApp.router(

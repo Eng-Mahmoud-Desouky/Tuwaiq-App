@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../shared/extensions/context_extensions.dart';
@@ -120,12 +121,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
     Future.delayed(const Duration(milliseconds: 2500), () {
       if (mounted) {
         // Dismiss dialog
-        Navigator.pop(context);
+        context.pop();
         // Go to Email Confirmation
-        Navigator.pushReplacementNamed(
-          context,
+        context.pushReplacement(
           AppRoutes.emailConfirmation,
-          arguments: email,
+          extra: email,
         );
       }
     });
@@ -142,7 +142,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.arrow_forward, color: AppColors.primary),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => context.pop(),
           ),
         ],
         title: Center(
@@ -274,10 +274,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       Center(
                         child: TextButton(
                           onPressed: () {
-                            Navigator.pushReplacementNamed(
-                              context,
-                              AppRoutes.signIn,
-                            );
+                            context.pushReplacement(AppRoutes.signIn);
                           },
                           child: RichText(
                             text: TextSpan(

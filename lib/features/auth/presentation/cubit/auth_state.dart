@@ -42,3 +42,7 @@ class AuthError extends AuthState {
   @override
   List<Object?> get props => [message];
 }
+
+class AuthPasswordRecovery extends AuthState {
+  const AuthPasswordRecovery();
+}

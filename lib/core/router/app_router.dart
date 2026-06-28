@@ -11,6 +11,8 @@ import '../../features/auth/presentation/screens/interests_screen.dart';
 import '../../features/auth/presentation/screens/sign_in_screen.dart';
 import '../../features/auth/presentation/screens/sign_up_screen.dart';
 import '../../features/auth/presentation/screens/update_password_screen.dart';
+import '../../features/auth/presentation/cubit/update_password_cubit.dart';
+import '../../features/auth/domain/usecases/update_password_usecase.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/profile/domain/entities/user_profile.dart';
 import '../../features/profile/domain/usecases/follow_user_usecase.dart';
@@ -87,6 +89,7 @@ class AppRouter {
     required GetCommentsUseCase getCommentsUseCase,
     required AddCommentUseCase addCommentUseCase,
     required DeletePostUseCase deletePostUseCase,
+    required UpdatePasswordUseCase updatePasswordUseCase,
   }) {
     return GoRouter(
       navigatorKey: _rootNavigatorKey,
@@ -97,11 +100,19 @@ class AppRouter {
         final isAuthScreen =
             state.matchedLocation.startsWith('/sign') ||
             state.matchedLocation.startsWith('/forgot') ||
-            state.matchedLocation.startsWith('/update');
+            state.matchedLocation.startsWith('/update') ||
+            state.matchedLocation.startsWith('/reset-callback');
 
         if (authState is AuthLoading) {
           // Wait for loading to finish, no redirect yet
           return null;
+        }
+
+        if (authState is AuthPasswordRecovery) {
+          if (state.matchedLocation == AppRoutes.updatePassword) {
+            return null;
+          }
+          return AppRoutes.updatePassword;
         }
 
         if (authState is AuthInitial || authState is AuthError) {
@@ -113,6 +124,13 @@ class AppRouter {
         }
 
         if (authState is AuthSuccess) {
+          // Bypass redirect to home during password recovery flow
+          final isResetFlow = state.matchedLocation == AppRoutes.updatePassword ||
+                              state.matchedLocation == '/reset-callback';
+          if (isResetFlow) {
+            return null;
+          }
+
           if (authState.user.interests.length < 3 &&
               state.matchedLocation != AppRoutes.interests) {
             return AppRoutes.interests;
@@ -138,7 +156,20 @@ class AppRouter {
         ),
         GoRoute(
           path: AppRoutes.updatePassword,
-          builder: (context, state) => const UpdatePasswordScreen(),
+          builder: (context, state) => BlocProvider(
+            create: (context) => UpdatePasswordCubit(
+              updatePasswordUseCase: updatePasswordUseCase,
+            ),
+            child: const UpdatePasswordScreen(),
+          ),
+        ),
+        GoRoute(
+          path: '/reset-callback',
+          builder: (context, state) => const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          ),
         ),
         GoRoute(
           path: AppRoutes.emailConfirmation,

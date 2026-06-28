@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../shared/extensions/context_extensions.dart';
 import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/theme/app_text_styles.dart';
 import '../../../../shared/widgets/primary_button.dart';
-import '../cubit/auth_cubit.dart';
-import '../cubit/auth_state.dart';
+import '../cubit/update_password_cubit.dart';
+import '../cubit/update_password_state.dart';
 import '../widgets/auth_text_field.dart';
 
 class UpdatePasswordScreen extends StatefulWidget {
@@ -31,7 +32,7 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
 
   void _onSubmitPressed() {
     if (_formKey.currentState?.validate() ?? false) {
-      context.read<AuthCubit>().updatePassword(
+      context.read<UpdatePasswordCubit>().updatePassword(
         newPassword: _passwordController.text,
       );
     }
@@ -48,22 +49,18 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.arrow_forward, color: AppColors.primary),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => context.pop(),
           ),
         ],
       ),
-      body: BlocListener<AuthCubit, AuthState>(
+      body: BlocListener<UpdatePasswordCubit, UpdatePasswordState>(
         listener: (context, state) {
-          if (state is AuthInitial) {
+          if (state is UpdatePasswordSuccess) {
             context.showSnackBar(
               'تم تحديث كلمة المرور بنجاح! يرجى تسجيل الدخول بكلمة المرور الجديدة.',
             );
-            Navigator.pushNamedAndRemoveUntil(
-              context,
-              AppRoutes.signIn,
-              (route) => false,
-            );
-          } else if (state is AuthError) {
+            context.go(AppRoutes.signIn);
+          } else if (state is UpdatePasswordError) {
             context.showSnackBar(state.message, isError: true);
           }
         },
@@ -117,11 +114,11 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
                       ),
                       const SizedBox(height: 32),
                       // Primary Action Button
-                      BlocBuilder<AuthCubit, AuthState>(
+                      BlocBuilder<UpdatePasswordCubit, UpdatePasswordState>(
                         builder: (context, state) {
                           return PrimaryButton(
                             text: 'تحديث كلمة المرور',
-                            isLoading: state is AuthLoading,
+                            isLoading: state is UpdatePasswordLoading,
                             onPressed: _onSubmitPressed,
                           );
                         },
