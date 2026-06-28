@@ -17,6 +17,11 @@ import 'package:tuwaiq_app/features/events/domain/entities/event_entity.dart';
 import 'package:tuwaiq_app/features/events/domain/usecases/create_event_usecase.dart';
 import 'package:tuwaiq_app/features/events/domain/usecases/get_event_usecase.dart';
 import 'package:tuwaiq_app/features/events/domain/usecases/get_all_events_usecase.dart';
+import 'package:tuwaiq_app/features/events/domain/usecases/save_event_usecase.dart';
+import 'package:tuwaiq_app/features/events/domain/usecases/unsave_event_usecase.dart';
+import 'package:tuwaiq_app/features/events/domain/usecases/is_event_saved_usecase.dart';
+import 'package:tuwaiq_app/features/events/domain/usecases/get_events_by_user_usecase.dart';
+import 'package:tuwaiq_app/features/events/domain/usecases/get_saved_events_usecase.dart';
 
 // Posts imports
 import 'package:tuwaiq_app/features/posts/domain/repositories/post_repository.dart';
@@ -56,7 +61,11 @@ class FakeProfileRepo implements ProfileRepository {
   @override
   Future<UserProfile> getProfile(String userId) async => UserProfile(id: userId, fullName: '', username: '');
   @override
-  Future<UserProfile> updateProfile({required UserProfile profile, String? localAvatarPath}) async => profile;
+  Future<UserProfile> updateProfile({
+    required UserProfile profile,
+    String? localAvatarPath,
+    String? localCoverPath,
+  }) async => profile;
   @override
   Future<ProfileSocialStats> getProfileSocialStats({required String targetUserId, required String currentUserId}) async =>
       const ProfileSocialStats(followersCount: 0, followingCount: 0, isFollowing: false);
@@ -79,11 +88,27 @@ class FakeEventRepo implements EventRepository {
   Future<List<EventEntity>> getAllEvents() async => [];
   @override
   Future<String> uploadEventCover({required String eventId, required String localFilePath}) async => '';
+
+  @override
+  Future<void> saveEvent({required String userId, required String eventId}) async {}
+  @override
+  Future<void> unsaveEvent({required String userId, required String eventId}) async {}
+  @override
+  Future<bool> isEventSaved({required String userId, required String eventId}) async => false;
+  @override
+  Future<List<EventEntity>> getEventsByUser(String userId) async => [];
+  @override
+  Future<List<EventEntity>> getSavedEvents(String userId) async => [];
 }
 
 class FakePostRepo implements PostRepository {
   @override
-  Future<List<PostEntity>> getPostsFeed({required int limit, DateTime? lastCreatedAt, String? lastPostId}) async => [];
+  Future<List<PostEntity>> getPostsFeed({
+    required int limit,
+    DateTime? lastCreatedAt,
+    String? lastPostId,
+    String? creatorId,
+  }) async => [];
   @override
   Future<PostEntity> createPost({required PostEntity post, String? localImagePath}) async => post;
   @override
@@ -115,6 +140,11 @@ void main() {
         createEventUseCase: CreateEventUseCase(eventRepo),
         getEventUseCase: GetEventUseCase(eventRepo),
         getAllEventsUseCase: GetAllEventsUseCase(eventRepo),
+        saveEventUseCase: SaveEventUseCase(eventRepo),
+        unsaveEventUseCase: UnsaveEventUseCase(eventRepo),
+        isEventSavedUseCase: IsEventSavedUseCase(eventRepo),
+        getEventsByUserUseCase: GetEventsByUserUseCase(eventRepo),
+        getSavedEventsUseCase: GetSavedEventsUseCase(eventRepo),
         getPostsFeedUseCase: GetPostsFeedUseCase(postRepo),
         createPostUseCase: CreatePostUseCase(postRepo),
         toggleLikeUseCase: ToggleLikeUseCase(postRepo),

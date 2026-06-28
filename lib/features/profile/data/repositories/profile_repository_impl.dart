@@ -30,14 +30,23 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<UserProfile> updateProfile({
     required UserProfile profile,
     String? localAvatarPath,
+    String? localCoverPath,
   }) async {
-    try {
-      String? avatarUrl = profile.avatarUrl;
+    String? uploadedAvatarUrl;
+    String? uploadedCoverUrl;
 
+    try {
       if (localAvatarPath != null) {
-        avatarUrl = await remoteDataSource.uploadAvatar(
+        uploadedAvatarUrl = await remoteDataSource.uploadAvatar(
           profile.id,
           localAvatarPath,
+        );
+      }
+
+      if (localCoverPath != null) {
+        uploadedCoverUrl = await remoteDataSource.uploadCover(
+          profile.id,
+          localCoverPath,
         );
       }
 
@@ -46,20 +55,35 @@ class ProfileRepositoryImpl implements ProfileRepository {
         fullName: profile.fullName,
         username: profile.username,
         bio: profile.bio,
-        avatarUrl: avatarUrl,
+        avatarUrl: uploadedAvatarUrl ?? profile.avatarUrl,
+        coverUrl: uploadedCoverUrl ?? profile.coverUrl,
         interests: profile.interests,
       );
 
       final updatedModel = await remoteDataSource.updateProfile(model);
       return updatedModel.toEntity();
-    } on PostgrestException catch (e) {
-      throw ServerFailure('فشل تحديث بيانات الملف الشخصي: ${e.message}');
-    } on StorageException catch (e) {
-      throw ServerFailure('فشل رفع الصورة الشخصية: ${e.message}');
-    } on SocketException {
-      throw const NetworkFailure();
     } catch (e) {
-      throw ServerFailure('حدث خطأ غير متوقع أثناء تحديث الملف الشخصي: $e');
+      // Rollback newly uploaded storage files on DB error to prevent storage leaks
+      if (uploadedAvatarUrl != null) {
+        try {
+          await remoteDataSource.deleteAvatarImage(uploadedAvatarUrl);
+        } catch (_) {}
+      }
+      if (uploadedCoverUrl != null) {
+        try {
+          await remoteDataSource.deleteCoverImage(uploadedCoverUrl);
+        } catch (_) {}
+      }
+
+      if (e is PostgrestException) {
+        throw ServerFailure('فشل تحديث بيانات الملف الشخصي: ${e.message}');
+      } else if (e is StorageException) {
+        throw ServerFailure('فشل رفع الوسائط: ${e.message}');
+      } else if (e is SocketException) {
+        throw const NetworkFailure();
+      } else {
+        throw ServerFailure('حدث خطأ غير متوقع أثناء تحديث الملف الشخصي: $e');
+      }
     }
   }
 

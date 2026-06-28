@@ -50,13 +50,13 @@ class MainScreen extends StatelessWidget {
           children: [
             _buildNavBarItem(
               icon: Icons.home_outlined,
-              label: 'Home',
+              label: 'الرئيسية',
               isActive: navigationShell.currentIndex == 0,
               onTap: () => _onTap(context, 0),
             ),
             _buildNavBarItem(
               icon: Icons.explore_outlined,
-              label: 'Explore',
+              label: 'اكتشف',
               isActive: navigationShell.currentIndex == 1,
               onTap: () => _onTap(context, 1),
             ),
@@ -80,13 +80,13 @@ class MainScreen extends StatelessWidget {
             ),
             _buildNavBarItem(
               icon: Icons.notifications_outlined,
-              label: 'Alerts',
+              label: 'التنبيهات',
               isActive: navigationShell.currentIndex == 3,
               onTap: () => _onTap(context, 3),
             ),
             _buildNavBarItem(
               icon: Icons.person,
-              label: 'Profile',
+              label: 'حسابي',
               isActive: navigationShell.currentIndex == 4,
               onTap: () => _onTap(context, 4),
             ),

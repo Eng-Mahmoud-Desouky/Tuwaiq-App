@@ -34,6 +34,11 @@ import 'features/profile/domain/usecases/get_profile_social_stats_usecase.dart';
 import 'features/events/domain/usecases/create_event_usecase.dart';
 import 'features/events/domain/usecases/get_event_usecase.dart';
 import 'features/events/domain/usecases/get_all_events_usecase.dart';
+import 'features/events/domain/usecases/save_event_usecase.dart';
+import 'features/events/domain/usecases/unsave_event_usecase.dart';
+import 'features/events/domain/usecases/is_event_saved_usecase.dart';
+import 'features/events/domain/usecases/get_events_by_user_usecase.dart';
+import 'features/events/domain/usecases/get_saved_events_usecase.dart';
 // Data
 import 'features/events/data/datasources/event_remote_datasource.dart';
 import 'features/events/data/repositories/event_repository_impl.dart';
@@ -108,6 +113,11 @@ void main() async {
   final createEventUseCase = CreateEventUseCase(eventRepository);
   final getEventUseCase = GetEventUseCase(eventRepository);
   final getAllEventsUseCase = GetAllEventsUseCase(eventRepository);
+  final saveEventUseCase = SaveEventUseCase(eventRepository);
+  final unsaveEventUseCase = UnsaveEventUseCase(eventRepository);
+  final isEventSavedUseCase = IsEventSavedUseCase(eventRepository);
+  final getEventsByUserUseCase = GetEventsByUserUseCase(eventRepository);
+  final getSavedEventsUseCase = GetSavedEventsUseCase(eventRepository);
 
   // Posts
   final postRemoteDataSource = PostRemoteDataSourceImpl(supabaseClient);
@@ -152,6 +162,11 @@ void main() async {
         createEventUseCase: createEventUseCase,
         getEventUseCase: getEventUseCase,
         getAllEventsUseCase: getAllEventsUseCase,
+        saveEventUseCase: saveEventUseCase,
+        unsaveEventUseCase: unsaveEventUseCase,
+        isEventSavedUseCase: isEventSavedUseCase,
+        getEventsByUserUseCase: getEventsByUserUseCase,
+        getSavedEventsUseCase: getSavedEventsUseCase,
         createPostUseCase: createPostUseCase,
         getPostsFeedUseCase: getPostsFeedUseCase,
         toggleLikeUseCase: toggleLikeUseCase,
@@ -175,6 +190,11 @@ class MyApp extends StatelessWidget {
   final CreateEventUseCase createEventUseCase;
   final GetEventUseCase getEventUseCase;
   final GetAllEventsUseCase getAllEventsUseCase;
+  final SaveEventUseCase saveEventUseCase;
+  final UnsaveEventUseCase unsaveEventUseCase;
+  final IsEventSavedUseCase isEventSavedUseCase;
+  final GetEventsByUserUseCase getEventsByUserUseCase;
+  final GetSavedEventsUseCase getSavedEventsUseCase;
   final CreatePostUseCase createPostUseCase;
   final GetPostsFeedUseCase getPostsFeedUseCase;
   final ToggleLikeUseCase toggleLikeUseCase;
@@ -195,6 +215,11 @@ class MyApp extends StatelessWidget {
     required this.createEventUseCase,
     required this.getEventUseCase,
     required this.getAllEventsUseCase,
+    required this.saveEventUseCase,
+    required this.unsaveEventUseCase,
+    required this.isEventSavedUseCase,
+    required this.getEventsByUserUseCase,
+    required this.getSavedEventsUseCase,
     required this.createPostUseCase,
     required this.getPostsFeedUseCase,
     required this.toggleLikeUseCase,
@@ -217,6 +242,11 @@ class MyApp extends StatelessWidget {
       getFollowingUseCase: getFollowingUseCase,
       createEventUseCase: createEventUseCase,
       getEventUseCase: getEventUseCase,
+      saveEventUseCase: saveEventUseCase,
+      unsaveEventUseCase: unsaveEventUseCase,
+      isEventSavedUseCase: isEventSavedUseCase,
+      getEventsByUserUseCase: getEventsByUserUseCase,
+      getSavedEventsUseCase: getSavedEventsUseCase,
       createPostUseCase: createPostUseCase,
       getPostsFeedUseCase: getPostsFeedUseCase,
       toggleLikeUseCase: toggleLikeUseCase,

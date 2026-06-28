@@ -6,11 +6,16 @@ import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/theme/app_text_styles.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
+import '../../../posts/presentation/widgets/post_card.dart';
+import '../../../events/presentation/widgets/event_card_widget.dart';
 import '../../domain/entities/user_profile.dart';
 import '../cubit/profile_info_cubit.dart';
 import '../cubit/profile_info_state.dart';
 import '../cubit/profile_social_cubit.dart';
 import '../cubit/profile_social_state.dart';
+import '../cubit/profile_posts_cubit.dart';
+import '../cubit/profile_events_cubit.dart';
+import '../cubit/profile_saved_events_cubit.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String userId;
@@ -21,21 +26,9 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
+class _ProfileScreenState extends State<ProfileScreen> {
+  int _mainTabIndex = 0; // 0: أنشطتي, 1: المحفوظات
+  int _innerTabIndex = 0; // 0: منشوراتي, 1: فعالياتي
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +46,6 @@ class _ProfileScreenState extends State<ProfileScreen>
             ? IconButton(
                 icon: const Icon(Icons.menu, color: AppColors.onSurfaceVariant),
                 onPressed: () {
-                  // Options drawer or sign out
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: const Text('تسجيل الخروج...'),
@@ -68,35 +60,14 @@ class _ProfileScreenState extends State<ProfileScreen>
                   );
                 },
               )
-            : IconButton(
-                icon: const Icon(
-                  Icons.arrow_back,
-                  color: AppColors.onSurfaceVariant,
-                ),
-                onPressed: () {
-                  if (context.canPop()) {
-                    context.pop();
-                  } else {
-                    context.go(AppRoutes.home);
-                  }
-                },
-              ),
+            : const BackButton(color: AppColors.onSurface),
         title: Text(
-          isOwnProfile ? '\$CRATCH' : 'الملف الشخصي',
+          'الملف الشخصي',
           style: AppTextStyles.titleMd.copyWith(
-            fontStyle: FontStyle.italic,
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.bold,
             color: AppColors.primary,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: AppColors.onSurfaceVariant),
-            onPressed: () {
-              // Mock search action
-            },
-          ),
-        ],
       ),
       body: BlocListener<ProfileSocialCubit, ProfileSocialState>(
         listener: (context, state) {
@@ -125,6 +96,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                     widget.userId,
                     currentUserId,
                   );
+                  context.read<ProfilePostsCubit>().loadPosts();
+                  context.read<ProfileEventsCubit>().loadEvents();
+                  context.read<ProfileSavedEventsCubit>().loadSavedEvents();
                 },
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -132,23 +106,34 @@ class _ProfileScreenState extends State<ProfileScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const SizedBox(height: 24),
-                      // Profile Header Info
+                      // Profile Header with overlapping Cover & Avatar
                       _buildProfileHeader(
                         context,
                         profile,
                         isOwnProfile,
                         currentUserId,
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
                       // Social Stats Card
                       _buildSocialStatsCard(context, profile),
                       const SizedBox(height: 24),
                       // Interests
                       _buildInterestsSection(profile.interests),
-                      const SizedBox(height: 32),
-                      // Content Tabs
-                      _buildTabsSection(),
+                      const SizedBox(height: 28),
+                      // Main sliding tab selection
+                      _buildMainTabBar(isOwnProfile),
+                      const SizedBox(height: 20),
+                      // Selected Content View
+                      if (_mainTabIndex == 0) ...[
+                        _buildInnerTabSelector(),
+                        const SizedBox(height: 16),
+                        if (_innerTabIndex == 0)
+                          _buildPostsList()
+                        else
+                          _buildEventsList()
+                      ] else if (_mainTabIndex == 1 && isOwnProfile) ...[
+                        _buildSavedEventsList(),
+                      ],
                     ],
                   ),
                 ),
@@ -177,72 +162,90 @@ class _ProfileScreenState extends State<ProfileScreen>
     return Column(
       children: [
         Stack(
-          alignment: Alignment.center,
+          alignment: Alignment.bottomCenter,
+          clipBehavior: Clip.none,
           children: [
-            Container(
-              width: 128,
-              height: 128,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppColors.surfaceContainerLowest,
-                  width: 4,
-                ),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x0F000000),
-                    blurRadius: 24,
-                    offset: Offset(0, 8),
+            // Cover Image banner
+            profile.coverUrl != null && profile.coverUrl!.isNotEmpty
+                ? Image.network(
+                    profile.coverUrl!,
+                    width: double.infinity,
+                    height: 180,
+                    fit: BoxFit.cover,
+                  )
+                : Container(
+                    width: double.infinity,
+                    height: 180,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [AppColors.primary, AppColors.secondary],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
                   ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(999),
-                child:
-                    profile.avatarUrl != null && profile.avatarUrl!.isNotEmpty
-                    ? Image.network(
-                        profile.avatarUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            _buildDefaultAvatar(profile.fullName),
-                      )
-                    : _buildDefaultAvatar(profile.fullName),
-              ),
-            ),
+            // Edit Cover Photo icon overlay
             if (isOwnProfile)
               Positioned(
-                bottom: 0,
-                right: 0,
-                child: InkWell(
+                top: 16,
+                left: 16,
+                child: GestureDetector(
                   onTap: () => _navigateToEditProfile(context, profile),
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: const BoxDecoration(
-                      color: AppColors.primaryContainer,
+                      color: Colors.black54,
                       shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color(0x1F000000),
-                          blurRadius: 6,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
                     ),
                     child: const Icon(
-                      Icons.edit,
-                      size: 16,
-                      color: AppColors.onPrimaryContainer,
+                      Icons.photo_camera,
+                      color: Colors.white,
+                      size: 20,
                     ),
                   ),
                 ),
               ),
+            // Avatar positioned overlapping
+            Positioned(
+              bottom: -50,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppColors.background,
+                    width: 4,
+                  ),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x0F000000),
+                      blurRadius: 12,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: profile.avatarUrl != null && profile.avatarUrl!.isNotEmpty
+                      ? Image.network(
+                          profile.avatarUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              _buildDefaultAvatar(profile.fullName),
+                        )
+                      : _buildDefaultAvatar(profile.fullName),
+                ),
+              ),
+            ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 58),
         Text(
           profile.fullName,
-          style: AppTextStyles.titleMd.copyWith(color: AppColors.onSurface),
+          style: AppTextStyles.titleMd.copyWith(color: AppColors.onSurface, fontWeight: FontWeight.bold),
         ),
+        const SizedBox(height: 4),
         Text(
           '@${profile.username}',
           style: AppTextStyles.bodyMd.copyWith(
@@ -272,7 +275,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
             ),
             child: Text(
-              'Edit Profile',
+              'تعديل الملف الشخصي',
               style: AppTextStyles.labelLg.copyWith(color: AppColors.onSurface),
             ),
           )
@@ -299,7 +302,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       ),
                     ),
                     child: Text(
-                      'Following',
+                      'متابع',
                       style: AppTextStyles.labelLg.copyWith(
                         color: AppColors.onSurfaceVariant,
                       ),
@@ -313,8 +316,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                           currentUserId: currentUserId,
                         ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryContainer,
-                      foregroundColor: AppColors.onPrimaryContainer,
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(999),
@@ -325,7 +328,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       ),
                     ),
                     child: Text(
-                      'Follow',
+                      'متابعة',
                       style: AppTextStyles.labelLg.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -408,7 +411,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Followers',
+                        'المتابعون',
                         style: AppTextStyles.labelSm.copyWith(
                           color: AppColors.onSurfaceVariant,
                         ),
@@ -434,7 +437,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Following',
+                        'أتابعهم',
                         style: AppTextStyles.labelSm.copyWith(
                           color: AppColors.onSurfaceVariant,
                         ),
@@ -451,16 +454,19 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _buildInterestsSection(List<String> interests) {
+    if (interests.isEmpty) return const SizedBox.shrink();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24.0),
           child: Text(
-            'INTERESTS',
-            style: AppTextStyles.labelLg.copyWith(
+            'الاهتمامات',
+            style: TextStyle(
               color: AppColors.onSurfaceVariant,
-              letterSpacing: 1.2,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
             ),
           ),
         ),
@@ -473,10 +479,9 @@ class _ProfileScreenState extends State<ProfileScreen>
             itemCount: interests.length,
             itemBuilder: (context, index) {
               final interest = interests[index];
-              final isActive =
-                  index < 4; // Mock first few as active matching HTML
+              final isActive = index < 4; 
               return Padding(
-                padding: const EdgeInsets.only(right: 8.0),
+                padding: const EdgeInsets.only(left: 8.0), // RTL padding
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -505,220 +510,244 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildTabsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        TabBar(
-          controller: _tabController,
-          labelColor: AppColors.primary,
-          unselectedLabelColor: AppColors.onSurfaceVariant,
-          indicatorColor: AppColors.primary,
-          indicatorWeight: 3.0,
-          tabs: const [
-            Tab(text: 'Posts'),
-            Tab(text: 'Events'),
-          ],
+  Widget _buildMainTabBar(bool showSavedTab) {
+    if (!showSavedTab) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Container(
+        height: 50,
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(12),
         ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 400,
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              _buildBentoLayout(),
-              const Center(
-                child: Text(
-                  'لا توجد فعاليات مسجلة حالياً',
-                  style: AppTextStyles.bodyMd,
+        child: Row(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _mainTabIndex = 0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: _mainTabIndex == 0
+                        ? AppColors.primary
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    'أنشطتي',
+                    style: AppTextStyles.labelLg.copyWith(
+                      color: _mainTabIndex == 0 ? Colors.white : AppColors.onSurfaceVariant,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
-            ],
-          ),
+            ),
+            Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _mainTabIndex = 1),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: _mainTabIndex == 1
+                        ? AppColors.primary
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    'المحفوظات',
+                    style: AppTextStyles.labelLg.copyWith(
+                      color: _mainTabIndex == 1 ? Colors.white : AppColors.onSurfaceVariant,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
-  // Replacing posts grid with custom Bento layout widget
-  Widget _buildBentoLayout() {
+  Widget _buildInnerTabSelector() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
-      child: Column(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Left: Big Card
-              Expanded(
-                flex: 2,
-                child: AspectRatio(
-                  aspectRatio: 1.0,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: AppColors.surfaceContainer,
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x08000000),
-                          blurRadius: 12,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Image.network(
-                            'https://lh3.googleusercontent.com/aida-public/AB6AXuDYnqF7_r3ia8jvreX3lzkWpaQFzPaQw9a9ybiApRYiEJirxmvvYJz-y68EIAv5EliuOY1JKewZMUjbq7pUF_f7DHFhckU89l3IWFCU4SXSvQR943YoC4ehP7vncsmsBwM78BHPtT2KYS6Gm-jDmNeaX9q_3qw-urBJYn87IbpCUQZo7hLrNUeAsOb9ig9qEvgLf7UIOq9RwpuAfmcD2n8xH-98upk70OHRCYz6rpoXkgy5ASokd6Ckhu_EuAsXQkyRbnkf2pvY33E',
-                            fit: BoxFit.cover,
-                          ),
-                          Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [Colors.black54, Colors.transparent],
-                                begin: Alignment.bottomCenter,
-                                end: Alignment.topCenter,
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Underground Indie Fest',
-                                  style: AppTextStyles.titleMd.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.location_on,
-                                      size: 14,
-                                      color: Colors.white70,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      'The Warehouse',
-                                      style: AppTextStyles.labelLg.copyWith(
-                                        color: Colors.white70,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              // Right: Smaller Card
-              Expanded(
-                flex: 1,
-                child: AspectRatio(
-                  aspectRatio: 1.0,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: AppColors.surfaceContainer,
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x08000000),
-                          blurRadius: 12,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Image.network(
-                        'https://lh3.googleusercontent.com/aida-public/AB6AXuCL7tx9RVOTN9MMelJc7xmiC6nks8fJF3inI0X_PTGhayjrIG0SdzGSUEOLKKVME8go1UTVJ_UG-MD_jU-nkuBq9WTFjBMBlAq5lyBraEiZfYkQ3ZKLM1_KW-Dcfq9JLMpYq0bLg7Tnwt5hR51EzR6sVrqKf1us91Q_lU23nuq7g88fktoFfzAsQ4n0JS5W70VUbiYre-Y7XnVs-b7hIgdsBYXTaV-ve5HYSDCnRCKbTb93c9rcrrp9U1KANbLl6fr3ixL_B81mZX8',
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          ChoiceChip(
+            label: const Text('المنشورات'),
+            selected: _innerTabIndex == 0,
+            onSelected: (selected) {
+              if (selected) {
+                setState(() => _innerTabIndex = 0);
+              }
+            },
+            selectedColor: AppColors.primary.withOpacity(0.15),
+            labelStyle: TextStyle(
+              color: _innerTabIndex == 0 ? AppColors.primary : AppColors.onSurfaceVariant,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              // Quote Card
-              Expanded(
-                flex: 1,
-                child: AspectRatio(
-                  aspectRatio: 1.0,
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.format_quote,
-                          size: 28,
-                          color: AppColors.primary,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '"Music is the space between the notes."',
-                          textAlign: TextAlign.center,
-                          style: AppTextStyles.bodyMd.copyWith(
-                            fontStyle: FontStyle.italic,
-                            color: AppColors.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              // Gaming Setup Card
-              Expanded(
-                flex: 1,
-                child: AspectRatio(
-                  aspectRatio: 1.0,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: AppColors.surfaceContainer,
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Image.network(
-                        'https://lh3.googleusercontent.com/aida-public/AB6AXuAXGvn3ifsOWvzqRmk4az_0U9E70GF2S_xMWZcWw0abOIeEaV9vAT77avAHBYtxrrKB-Q2yDBMnpyGqntMZ5Pdbgo1AsnLmN2ZbqzDcUqStKh7bliEwsssDqLLElEuJgizTbTK8gdjwNnfWGE_AwmFtGdzwEdEPgiG93wSTqK0332Zq2e3woMogwTrxfnaj8UKQfLkE8B3p1Dui-UeVe-hmkS0zilP0eeYkkAKXPsfBUrQIOWxWW9DIrQ9fIeHG1xhSq4RHAlWWXpI',
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          const SizedBox(width: 16),
+          ChoiceChip(
+            label: const Text('الفعاليات'),
+            selected: _innerTabIndex == 1,
+            onSelected: (selected) {
+              if (selected) {
+                setState(() => _innerTabIndex = 1);
+              }
+            },
+            selectedColor: AppColors.primary.withOpacity(0.15),
+            labelStyle: TextStyle(
+              color: _innerTabIndex == 1 ? AppColors.primary : AppColors.onSurfaceVariant,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
     );
   }
 
-  // We override TabBarView's child in _buildTabsSection with:
-  // _buildBentoLayout() instead of _buildPostsGrid()
+  Widget _buildPostsList() {
+    return BlocBuilder<ProfilePostsCubit, ProfilePostsState>(
+      builder: (context, state) {
+        if (state is ProfilePostsLoading) {
+          return const Padding(
+            padding: EdgeInsets.all(32.0),
+            child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+          );
+        } else if (state is ProfilePostsLoaded) {
+          final posts = state.posts;
+          if (posts.isEmpty) {
+            return const Padding(
+              padding: EdgeInsets.all(32.0),
+              child: Center(child: Text('لا توجد منشورات حالياً', style: AppTextStyles.bodyMd)),
+            );
+          }
+          return ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: posts.length,
+            itemBuilder: (context, index) {
+              return PostCard(post: posts[index]);
+            },
+          );
+        } else if (state is ProfilePostsError) {
+          return Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Center(
+              child: Text(
+                state.message,
+                style: AppTextStyles.bodyMd.copyWith(color: AppColors.error),
+              ),
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
+  Widget _buildEventsList() {
+    return BlocBuilder<ProfileEventsCubit, ProfileEventsState>(
+      builder: (context, state) {
+        if (state is ProfileEventsLoading) {
+          return const Padding(
+            padding: EdgeInsets.all(32.0),
+            child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+          );
+        } else if (state is ProfileEventsLoaded) {
+          final events = state.events;
+          if (events.isEmpty) {
+            return const Padding(
+              padding: EdgeInsets.all(32.0),
+              child: Center(child: Text('لا توجد فعاليات حالياً', style: AppTextStyles.bodyMd)),
+            );
+          }
+          return ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: events.length,
+            itemBuilder: (context, index) {
+              final event = events[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                child: EventCardWidget(
+                  event: event,
+                  onTap: () {
+                    context.push('/event-details/${event.id}', extra: event);
+                  },
+                ),
+              );
+            },
+          );
+        } else if (state is ProfileEventsError) {
+          return Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Center(
+              child: Text(
+                state.message,
+                style: AppTextStyles.bodyMd.copyWith(color: AppColors.error),
+              ),
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
+  Widget _buildSavedEventsList() {
+    return BlocBuilder<ProfileSavedEventsCubit, ProfileSavedEventsState>(
+      builder: (context, state) {
+        if (state is ProfileSavedEventsLoading) {
+          return const Padding(
+            padding: EdgeInsets.all(32.0),
+            child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+          );
+        } else if (state is ProfileSavedEventsLoaded) {
+          final events = state.events;
+          if (events.isEmpty) {
+            return const Padding(
+              padding: EdgeInsets.all(32.0),
+              child: Center(child: Text('لا توجد فعاليات محفوظة حالياً', style: AppTextStyles.bodyMd)),
+            );
+          }
+          return ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: events.length,
+            itemBuilder: (context, index) {
+              final event = events[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                child: EventCardWidget(
+                  event: event,
+                  onTap: () {
+                    context.push('/event-details/${event.id}', extra: event);
+                  },
+                ),
+              );
+            },
+          );
+        } else if (state is ProfileSavedEventsError) {
+          return Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Center(
+              child: Text(
+                state.message,
+                style: AppTextStyles.bodyMd.copyWith(color: AppColors.error),
+              ),
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    );
+  }
 
   String _formatNumber(int number) {
     if (number >= 1000000) {
@@ -731,7 +760,6 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   void _navigateToEditProfile(BuildContext context, UserProfile profile) {
     context.push('/profile/${AppRoutes.editProfile}', extra: profile).then((_) {
-      // Reload on pop back
       final authState = context.read<AuthCubit>().state;
       final currentUserId = (authState is AuthSuccess) ? authState.user.id : '';
       context.read<ProfileInfoCubit>().loadProfile(widget.userId);
@@ -739,6 +767,9 @@ class _ProfileScreenState extends State<ProfileScreen>
         widget.userId,
         currentUserId,
       );
+      context.read<ProfilePostsCubit>().loadPosts();
+      context.read<ProfileEventsCubit>().loadEvents();
+      context.read<ProfileSavedEventsCubit>().loadSavedEvents();
     });
   }
 
@@ -757,7 +788,6 @@ class _ProfileScreenState extends State<ProfileScreen>
           },
         )
         .then((_) {
-          // Reload stats on pop back
           final authState = context.read<AuthCubit>().state;
           final currentUserId = (authState is AuthSuccess)
               ? authState.user.id

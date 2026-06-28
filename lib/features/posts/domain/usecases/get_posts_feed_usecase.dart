@@ -10,11 +10,13 @@ class GetPostsFeedUseCase {
     required int limit,
     DateTime? lastCreatedAt,
     String? lastPostId,
+    String? creatorId,
   }) {
     return repository.getPostsFeed(
       limit: limit,
       lastCreatedAt: lastCreatedAt,
       lastPostId: lastPostId,
+      creatorId: creatorId,
     );
   }
 }

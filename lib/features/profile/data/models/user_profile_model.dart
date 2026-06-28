@@ -7,6 +7,7 @@ class UserProfileModel extends UserProfile {
     required super.username,
     super.bio,
     super.avatarUrl,
+    super.coverUrl,
     super.interests = const [],
   });
 
@@ -20,6 +21,7 @@ class UserProfileModel extends UserProfile {
       fullName: json['full_name'] as String? ?? '',
       username: json['username'] as String? ?? '',
       avatarUrl: json['avatar_url'] as String?,
+      coverUrl: json['cover_url'] as String?,
       bio: json['bio'] as String?,
       interests: parsedInterests,
     );
@@ -32,6 +34,7 @@ class UserProfileModel extends UserProfile {
       'username': username,
       'bio': bio,
       'avatar_url': avatarUrl,
+      'cover_url': coverUrl,
       'interests': interests,
     };
   }
@@ -43,6 +46,7 @@ class UserProfileModel extends UserProfile {
       username: username,
       bio: bio,
       avatarUrl: avatarUrl,
+      coverUrl: coverUrl,
       interests: interests,
     );
   }

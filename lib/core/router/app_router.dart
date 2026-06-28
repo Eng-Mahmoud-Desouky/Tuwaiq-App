@@ -35,6 +35,14 @@ import '../../features/alerts/presentation/screens/alerts_screen.dart';
 import '../../features/events/domain/entities/event_entity.dart';
 import '../../features/events/domain/usecases/create_event_usecase.dart';
 import '../../features/events/domain/usecases/get_event_usecase.dart';
+import '../../features/events/domain/usecases/save_event_usecase.dart';
+import '../../features/events/domain/usecases/unsave_event_usecase.dart';
+import '../../features/events/domain/usecases/is_event_saved_usecase.dart';
+import '../../features/events/domain/usecases/get_events_by_user_usecase.dart';
+import '../../features/events/domain/usecases/get_saved_events_usecase.dart';
+import '../../features/profile/presentation/cubit/profile_posts_cubit.dart';
+import '../../features/profile/presentation/cubit/profile_events_cubit.dart';
+import '../../features/profile/presentation/cubit/profile_saved_events_cubit.dart';
 import '../../features/events/presentation/cubit/create_event_cubit.dart';
 import '../../features/events/presentation/cubit/event_details_cubit.dart';
 import '../../features/events/presentation/screens/event_details.dart';
@@ -47,7 +55,6 @@ import '../../features/posts/domain/usecases/add_comment_usecase.dart';
 import '../../features/posts/domain/usecases/delete_post_usecase.dart';
 import '../../features/posts/presentation/cubits/create_post/create_post_cubit.dart';
 import '../../features/posts/presentation/cubits/post_comments/post_comments_cubit.dart';
-import '../../features/posts/presentation/cubits/post_feed/post_feed_cubit.dart';
 import '../../features/posts/presentation/screens/create_post_screen.dart';
 import '../../features/posts/presentation/screens/post_details_screen.dart';
 
@@ -83,6 +90,11 @@ class AppRouter {
     required GetFollowingUseCase getFollowingUseCase,
     required CreateEventUseCase createEventUseCase,
     required GetEventUseCase getEventUseCase,
+    required SaveEventUseCase saveEventUseCase,
+    required UnsaveEventUseCase unsaveEventUseCase,
+    required IsEventSavedUseCase isEventSavedUseCase,
+    required GetEventsByUserUseCase getEventsByUserUseCase,
+    required GetSavedEventsUseCase getSavedEventsUseCase,
     required CreatePostUseCase createPostUseCase,
     required GetPostsFeedUseCase getPostsFeedUseCase,
     required ToggleLikeUseCase toggleLikeUseCase,
@@ -188,8 +200,12 @@ class AppRouter {
             final eventId = state.pathParameters['id']!;
             final event = state.extra as EventEntity?;
             return BlocProvider(
-              create: (context) =>
-                  EventDetailsCubit(getEventUseCase: getEventUseCase),
+              create: (context) => EventDetailsCubit(
+                getEventUseCase: getEventUseCase,
+                isEventSavedUseCase: isEventSavedUseCase,
+                saveEventUseCase: saveEventUseCase,
+                unsaveEventUseCase: unsaveEventUseCase,
+              ),
               child: EventDetailsScreen(eventId: eventId, initialEvent: event),
             );
           },
@@ -297,6 +313,24 @@ class AppRouter {
                             followUserUseCase: followUserUseCase,
                             unfollowUserUseCase: unfollowUserUseCase,
                           )..loadSocialStats(finalUserId, currentUserId),
+                        ),
+                        BlocProvider(
+                          create: (context) => ProfilePostsCubit(
+                            getPostsFeedUseCase: getPostsFeedUseCase,
+                            userId: finalUserId,
+                          )..loadPosts(),
+                        ),
+                        BlocProvider(
+                          create: (context) => ProfileEventsCubit(
+                            getEventsByUserUseCase: getEventsByUserUseCase,
+                            userId: finalUserId,
+                          )..loadEvents(),
+                        ),
+                        BlocProvider(
+                          create: (context) => ProfileSavedEventsCubit(
+                            getSavedEventsUseCase: getSavedEventsUseCase,
+                            userId: finalUserId,
+                          )..loadSavedEvents(),
                         ),
                       ],
                       child: ProfileScreen(userId: finalUserId),

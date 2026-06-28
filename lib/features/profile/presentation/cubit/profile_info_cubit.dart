@@ -39,6 +39,7 @@ class ProfileInfoCubit extends Cubit<ProfileInfoState> {
   Future<void> updateProfileDetails({
     required UserProfile profile,
     String? localAvatarPath,
+    String? localCoverPath,
   }) async {
     final currentState = state;
     UserProfile? fallbackProfile;
@@ -53,6 +54,7 @@ class ProfileInfoCubit extends Cubit<ProfileInfoState> {
       final updatedProfile = await updateProfileUseCase(
         profile: profile,
         localAvatarPath: localAvatarPath,
+        localCoverPath: localCoverPath,
       );
       emit(ProfileInfoUpdateSuccess(updatedProfile));
       emit(ProfileInfoLoaded(updatedProfile));

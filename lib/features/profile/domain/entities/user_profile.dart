@@ -6,6 +6,7 @@ class UserProfile extends Equatable {
   final String username;
   final String? bio;
   final String? avatarUrl;
+  final String? coverUrl;
   final List<String> interests;
 
   const UserProfile({
@@ -14,6 +15,7 @@ class UserProfile extends Equatable {
     required this.username,
     this.bio,
     this.avatarUrl,
+    this.coverUrl,
     this.interests = const [],
   });
 
@@ -23,6 +25,7 @@ class UserProfile extends Equatable {
     String? username,
     String? bio,
     String? avatarUrl,
+    String? coverUrl,
     List<String>? interests,
   }) {
     return UserProfile(
@@ -31,6 +34,7 @@ class UserProfile extends Equatable {
       username: username ?? this.username,
       bio: bio ?? this.bio,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      coverUrl: coverUrl ?? this.coverUrl,
       interests: interests ?? this.interests,
     );
   }
@@ -42,6 +46,7 @@ class UserProfile extends Equatable {
     username,
     bio,
     avatarUrl,
+    coverUrl,
     interests,
   ];
 }

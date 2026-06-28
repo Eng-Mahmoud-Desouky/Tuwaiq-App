@@ -18,11 +18,13 @@ class PostRepositoryImpl implements PostRepository {
     required int limit,
     DateTime? lastCreatedAt,
     String? lastPostId,
+    String? creatorId,
   }) async {
     return await remoteDataSource.getPostsFeed(
       limit: limit,
       lastCreatedAt: lastCreatedAt,
       lastPostId: lastPostId,
+      creatorId: creatorId,
     );
   }
 

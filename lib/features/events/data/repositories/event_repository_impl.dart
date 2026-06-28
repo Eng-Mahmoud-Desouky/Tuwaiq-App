@@ -93,4 +93,71 @@ class EventRepositoryImpl implements EventRepository {
       throw ServerFailure('حدث خطأ غير متوقع أثناء رفع صورة الغلاف: $e');
     }
   }
+
+  @override
+  Future<void> saveEvent({required String userId, required String eventId}) async {
+    try {
+      await remoteDataSource.saveEvent(userId, eventId);
+    } on PostgrestException catch (e) {
+      throw ServerFailure('فشل حفظ الفعالية: ${e.message}');
+    } on SocketException {
+      throw const NetworkFailure();
+    } catch (e) {
+      throw ServerFailure('حدث خطأ غير متوقع أثناء حفظ الفعالية: $e');
+    }
+  }
+
+  @override
+  Future<void> unsaveEvent({required String userId, required String eventId}) async {
+    try {
+      await remoteDataSource.unsaveEvent(userId, eventId);
+    } on PostgrestException catch (e) {
+      throw ServerFailure('فشل إلغاء حفظ الفعالية: ${e.message}');
+    } on SocketException {
+      throw const NetworkFailure();
+    } catch (e) {
+      throw ServerFailure('حدث خطأ غير متوقع أثناء إلغاء حفظ الفعالية: $e');
+    }
+  }
+
+  @override
+  Future<bool> isEventSaved({required String userId, required String eventId}) async {
+    try {
+      return await remoteDataSource.isEventSaved(userId, eventId);
+    } on PostgrestException catch (e) {
+      throw ServerFailure('فشل التحقق من حالة حفظ الفعالية: ${e.message}');
+    } on SocketException {
+      throw const NetworkFailure();
+    } catch (e) {
+      throw ServerFailure('حدث خطأ غير متوقع أثناء التحقق من حالة الحفظ: $e');
+    }
+  }
+
+  @override
+  Future<List<EventEntity>> getEventsByUser(String userId) async {
+    try {
+      final models = await remoteDataSource.getEventsByUser(userId);
+      return models.map((m) => m.toEntity()).toList();
+    } on PostgrestException catch (e) {
+      throw ServerFailure('فشل استرداد فعاليات المستخدم: ${e.message}');
+    } on SocketException {
+      throw const NetworkFailure();
+    } catch (e) {
+      throw ServerFailure('حدث خطأ غير متوقع أثناء استرداد فعاليات المستخدم: $e');
+    }
+  }
+
+  @override
+  Future<List<EventEntity>> getSavedEvents(String userId) async {
+    try {
+      final models = await remoteDataSource.getSavedEvents(userId);
+      return models.map((m) => m.toEntity()).toList();
+    } on PostgrestException catch (e) {
+      throw ServerFailure('فشل استرداد الفعاليات المحفوظة: ${e.message}');
+    } on SocketException {
+      throw const NetworkFailure();
+    } catch (e) {
+      throw ServerFailure('حدث خطأ غير متوقع أثناء استرداد الفعاليات المحفوظة: $e');
+    }
+  }
 }

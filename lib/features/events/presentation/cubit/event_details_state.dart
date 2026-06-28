@@ -14,11 +14,12 @@ class EventDetailsLoading extends EventDetailsState {
 
 class EventDetailsLoaded extends EventDetailsState {
   final EventEntity event;
+  final bool isSaved;
 
-  const EventDetailsLoaded(this.event);
+  const EventDetailsLoaded(this.event, {required this.isSaved});
 
   @override
-  List<Object?> get props => [event];
+  List<Object?> get props => [event, isSaved];
 }
 
 class EventDetailsError extends EventDetailsState {

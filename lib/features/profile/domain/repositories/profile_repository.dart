@@ -7,6 +7,7 @@ abstract class ProfileRepository {
   Future<UserProfile> updateProfile({
     required UserProfile profile,
     String? localAvatarPath,
+    String? localCoverPath,
   });
 
   Future<ProfileSocialStats> getProfileSocialStats({

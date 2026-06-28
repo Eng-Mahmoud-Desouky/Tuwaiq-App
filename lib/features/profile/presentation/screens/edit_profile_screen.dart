@@ -22,6 +22,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _bioController;
 
   String? _localAvatarPath;
+  String? _localCoverPath;
   List<String> _interests = [];
   final ImagePicker _picker = ImagePicker();
 
@@ -50,7 +51,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
+  Future<void> _pickAvatarImage() async {
     try {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
@@ -67,6 +68,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('فشل اختيار الصورة: $e')));
+    }
+  }
+
+  Future<void> _pickCoverImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+      if (image != null) {
+        setState(() {
+          _localCoverPath = image.path;
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('فشل اختيار صورة الغلاف: $e')));
     }
   }
 
@@ -130,6 +151,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       context.read<ProfileInfoCubit>().updateProfileDetails(
         profile: updatedProfile,
         localAvatarPath: _localAvatarPath,
+        localCoverPath: _localCoverPath,
       );
     }
   }
@@ -179,14 +201,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             leading: TextButton(
               onPressed: isSaving ? null : () => Navigator.pop(context),
               child: Text(
-                'Cancel',
+                'إلغاء',
                 style: AppTextStyles.labelLg.copyWith(
                   color: AppColors.onSurfaceVariant,
                 ),
               ),
             ),
             title: Text(
-              'Edit Profile',
+              'تعديل الملف الشخصي',
               style: AppTextStyles.titleMd.copyWith(color: AppColors.onSurface),
             ),
             centerTitle: true,
@@ -209,9 +231,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 TextButton(
                   onPressed: () => _saveProfile(currentProfile!),
                   child: Text(
-                    'Save',
+                    'حفظ',
                     style: AppTextStyles.labelLg.copyWith(
-                      color: AppColors.primaryContainer,
+                      color: AppColors.primary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -225,8 +247,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Avatar section
-                  _buildAvatarSection(currentProfile),
+                  // Media Section (Cover & Avatar)
+                  _buildMediaSection(currentProfile),
                   const SizedBox(height: 32),
                   // Form Fields
                   Container(
@@ -245,13 +267,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildLabel('Full Name'),
+                        _buildLabel('الاسم الكامل'),
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: _fullNameController,
                           enabled: !isSaving,
                           decoration: const InputDecoration(
-                            hintText: 'Full Name',
+                            hintText: 'الاسم الكامل',
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
@@ -261,13 +283,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           },
                         ),
                         const SizedBox(height: 20),
-                        _buildLabel('Username'),
+                        _buildLabel('اسم المستخدم'),
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: _usernameController,
                           enabled: !isSaving,
                           decoration: const InputDecoration(
-                            hintText: 'username',
+                            hintText: 'اسم المستخدم',
                             prefixText: '@',
                             prefixStyle: TextStyle(
                               color: AppColors.outlineVariant,
@@ -281,7 +303,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           },
                         ),
                         const SizedBox(height: 20),
-                        _buildLabel('Bio'),
+                        _buildLabel('السيرة الذاتية'),
                         const SizedBox(height: 8),
                         ValueListenableBuilder<TextEditingValue>(
                           valueListenable: _bioController,
@@ -303,7 +325,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                         maxLength,
                                       }) => null,
                                   decoration: const InputDecoration(
-                                    hintText: 'Bio description...',
+                                    hintText: 'اكتب نبذة تعريفية عنك...',
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -333,84 +355,155 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _buildAvatarSection(UserProfile profile) {
-    ImageProvider? imageProvider;
-
+  Widget _buildMediaSection(UserProfile profile) {
+    ImageProvider? avatarProvider;
     if (_localAvatarPath != null) {
-      imageProvider = FileImage(File(_localAvatarPath!));
+      avatarProvider = FileImage(File(_localAvatarPath!));
     } else if (profile.avatarUrl != null && profile.avatarUrl!.isNotEmpty) {
-      imageProvider = NetworkImage(profile.avatarUrl!);
+      avatarProvider = NetworkImage(profile.avatarUrl!);
+    }
+
+    ImageProvider? coverProvider;
+    if (_localCoverPath != null) {
+      coverProvider = FileImage(File(_localCoverPath!));
+    } else if (profile.coverUrl != null && profile.coverUrl!.isNotEmpty) {
+      coverProvider = NetworkImage(profile.coverUrl!);
     }
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Cover Photo selection area
+        _buildLabel('صورة الغلاف'),
+        const SizedBox(height: 8),
         GestureDetector(
-          onTap: _pickImage,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                width: 128,
-                height: 128,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColors.surfaceContainerLowest,
-                    width: 4,
+          onTap: _pickCoverImage,
+          child: Container(
+            height: 160,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(16),
+              image: coverProvider != null
+                  ? DecorationImage(image: coverProvider, fit: BoxFit.cover)
+                  : null,
+            ),
+            child: Stack(
+              children: [
+                if (coverProvider == null)
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.add_photo_alternate_outlined,
+                          size: 40,
+                          color: AppColors.outline,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'إضافة صورة غلاف',
+                          style: AppTextStyles.labelLg.copyWith(
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x0F000000),
-                      blurRadius: 24,
-                      offset: Offset(0, 8),
+                Positioned(
+                  bottom: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(
+                      color: Colors.black54,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.photo_camera,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        // Avatar Photo Selection
+        Center(
+          child: Column(
+            children: [
+              GestureDetector(
+                onTap: _pickAvatarImage,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      width: 110,
+                      height: 110,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.surfaceContainerLowest,
+                          width: 4,
+                        ),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x0F000000),
+                            blurRadius: 24,
+                            offset: Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: avatarProvider != null
+                            ? Image(image: avatarProvider, fit: BoxFit.cover)
+                            : Container(
+                                color: AppColors.surfaceContainerHighest,
+                                child: Center(
+                                  child: Text(
+                                    profile.fullName.isNotEmpty
+                                        ? profile.fullName
+                                              .substring(0, 1)
+                                              .toUpperCase()
+                                        : '?',
+                                    style: AppTextStyles.headlineLg.copyWith(
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.3),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.photo_camera,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
-                  child: imageProvider != null
-                      ? Image(image: imageProvider, fit: BoxFit.cover)
-                      : Container(
-                          color: AppColors.surfaceContainerHighest,
-                          child: Center(
-                            child: Text(
-                              profile.fullName.isNotEmpty
-                                  ? profile.fullName
-                                        .substring(0, 1)
-                                        .toUpperCase()
-                                  : '?',
-                              style: AppTextStyles.headlineLg.copyWith(
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ),
-                        ),
-                ),
               ),
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.3),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.photo_camera,
-                      color: Colors.white,
-                      size: 36,
-                    ),
-                  ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: _pickAvatarImage,
+                child: Text(
+                  'تغيير الصورة الشخصية',
+                  style: AppTextStyles.labelSm.copyWith(color: AppColors.primary),
                 ),
               ),
             ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextButton(
-          onPressed: _pickImage,
-          child: Text(
-            'Change Photo',
-            style: AppTextStyles.labelSm.copyWith(color: AppColors.primary),
           ),
         ),
       ],
@@ -419,10 +512,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Widget _buildLabel(String text) {
     return Text(
-      text.toUpperCase(),
+      text,
       style: AppTextStyles.labelSm.copyWith(
         color: AppColors.onSurfaceVariant,
-        letterSpacing: 1.0,
+        fontWeight: FontWeight.bold,
       ),
     );
   }
@@ -444,7 +537,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Interests', style: AppTextStyles.titleMd),
+          const Text('الاهتمامات', style: AppTextStyles.titleMd),
           const SizedBox(height: 16),
           Wrap(
             spacing: 8,
@@ -477,7 +570,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       color: AppColors.onSurfaceVariant,
                     ),
                     SizedBox(width: 4),
-                    Text('Add Interest', style: AppTextStyles.labelSm),
+                    Text('إضافة اهتمام', style: AppTextStyles.labelSm),
                   ],
                 ),
                 backgroundColor: Colors.transparent,

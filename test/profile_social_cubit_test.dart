@@ -19,7 +19,11 @@ class FakeProfileRepository implements ProfileRepository {
   }
 
   @override
-  Future<UserProfile> updateProfile({required UserProfile profile, String? localAvatarPath}) async {
+  Future<UserProfile> updateProfile({
+    required UserProfile profile,
+    String? localAvatarPath,
+    String? localCoverPath,
+  }) async {
     return profile;
   }
 

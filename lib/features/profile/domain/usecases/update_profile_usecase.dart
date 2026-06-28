@@ -9,10 +9,12 @@ class UpdateProfileUseCase {
   Future<UserProfile> call({
     required UserProfile profile,
     String? localAvatarPath,
+    String? localCoverPath,
   }) {
     return repository.updateProfile(
       profile: profile,
       localAvatarPath: localAvatarPath,
+      localCoverPath: localCoverPath,
     );
   }
 }

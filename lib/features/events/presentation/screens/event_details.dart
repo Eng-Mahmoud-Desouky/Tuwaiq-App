@@ -9,6 +9,8 @@ import '../../../../core/constants/app_routes.dart';
 import '../../domain/entities/event_entity.dart';
 import '../cubit/event_details_cubit.dart';
 import '../cubit/event_details_state.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
+import '../../../auth/presentation/cubit/auth_state.dart';
 
 class EventDetailsScreen extends StatefulWidget {
   final String eventId;
@@ -28,11 +30,9 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.initialEvent != null) {
-      context.read<EventDetailsCubit>().setEvent(widget.initialEvent!);
-    } else {
-      context.read<EventDetailsCubit>().loadEvent(widget.eventId);
-    }
+    final authState = context.read<AuthCubit>().state;
+    final currentUserId = (authState is AuthSuccess) ? authState.user.id : '';
+    context.read<EventDetailsCubit>().loadEvent(widget.eventId, currentUserId);
   }
 
   Future<void> _openGoogleMaps(String urlString) async {
@@ -131,8 +131,11 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                           text: 'إعادة المحاولة',
                           width: 200,
                           onPressed: () {
+                            final authState = context.read<AuthCubit>().state;
+                            final currentUserId = (authState is AuthSuccess) ? authState.user.id : '';
                             context.read<EventDetailsCubit>().loadEvent(
                               widget.eventId,
+                              currentUserId,
                             );
                           },
                         ),
@@ -154,6 +157,42 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                     pinned: true,
                     backgroundColor: AppColors.primary,
                     iconTheme: const IconThemeData(color: Colors.white),
+                    actions: [
+                      BlocBuilder<EventDetailsCubit, EventDetailsState>(
+                        builder: (context, state) {
+                          if (state is EventDetailsLoaded) {
+                            final authState = context.read<AuthCubit>().state;
+                            final currentUserId =
+                                (authState is AuthSuccess) ? authState.user.id : '';
+                            final isOwnEvent =
+                                state.event.creatorId == currentUserId;
+                            if (isOwnEvent) return const SizedBox.shrink();
+
+                            return IconButton(
+                              icon: Icon(
+                                state.isSaved
+                                    ? Icons.bookmark
+                                    : Icons.bookmark_border,
+                                color: Colors.white,
+                              ),
+                              onPressed: () {
+                                if (currentUserId.isNotEmpty) {
+                                  context
+                                      .read<EventDetailsCubit>()
+                                      .toggleSave(currentUserId);
+                                } else {
+                                  context.showSnackBar(
+                                    'يرجى تسجيل الدخول لحفظ الفعاليات',
+                                    isError: true,
+                                  );
+                                }
+                              },
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                    ],
                     flexibleSpace: FlexibleSpaceBar(
                       background: Stack(
                         fit: StackFit.expand,

@@ -8,6 +8,7 @@ abstract class PostRemoteDataSource {
     required int limit,
     DateTime? lastCreatedAt,
     String? lastPostId,
+    String? creatorId,
   });
 
   Future<PostModel> createPost(PostModel post);
@@ -41,10 +42,15 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     required int limit,
     DateTime? lastCreatedAt,
     String? lastPostId,
+    String? creatorId,
   }) async {
     var query = _client
         .from('posts')
         .select('*, profiles:profiles!posts_creator_id_fkey(*), post_likes(count), post_comments(count)');
+
+    if (creatorId != null) {
+      query = query.eq('creator_id', creatorId);
+    }
 
     // Cursor-based filter: (created_at < lastCreatedAt) OR (created_at = lastCreatedAt AND id < lastPostId)
     if (lastCreatedAt != null && lastPostId != null) {

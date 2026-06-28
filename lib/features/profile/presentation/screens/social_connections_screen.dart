@@ -56,10 +56,7 @@ class _SocialConnectionsScreenState extends State<SocialConnectionsScreen>
       appBar: AppBar(
         backgroundColor: AppColors.surfaceContainerLowest,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.onSurface),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: const BackButton(color: AppColors.onSurface),
         title: Text(
           widget.targetUserName,
           style: AppTextStyles.titleMd.copyWith(color: AppColors.onSurface),
@@ -71,8 +68,8 @@ class _SocialConnectionsScreenState extends State<SocialConnectionsScreen>
           indicatorColor: AppColors.primary,
           indicatorWeight: 3.0,
           tabs: const [
-            Tab(text: 'Followers'),
-            Tab(text: 'Following'),
+            Tab(text: 'المتابعون'),
+            Tab(text: 'أتابعهم'),
           ],
         ),
       ),

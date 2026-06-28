@@ -10,6 +10,12 @@ abstract class ProfileRemoteDataSource {
 
   Future<String> uploadAvatar(String userId, String localFilePath);
 
+  Future<String> uploadCover(String userId, String localFilePath);
+
+  Future<void> deleteAvatarImage(String imageUrl);
+
+  Future<void> deleteCoverImage(String imageUrl);
+
   Future<ProfileSocialStatsModel> getProfileSocialStats({
     required String targetUserId,
     required String currentUserId,
@@ -69,6 +75,41 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     // Get public URL
     final publicUrl = _client.storage.from('avatars').getPublicUrl(path);
     return publicUrl;
+  }
+
+  @override
+  Future<String> uploadCover(String userId, String localFilePath) async {
+    final file = File(localFilePath);
+    final fileExt = localFilePath.split('.').last;
+    final fileName = 'cover_${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+    final path = '$userId/$fileName';
+
+    // Upload to covers bucket
+    await _client.storage.from('covers').upload(path, file);
+
+    // Get public URL
+    final publicUrl = _client.storage.from('covers').getPublicUrl(path);
+    return publicUrl;
+  }
+
+  @override
+  Future<void> deleteAvatarImage(String imageUrl) async {
+    try {
+      final path = imageUrl.split('/public/avatars/').last;
+      await _client.storage.from('avatars').remove([path]);
+    } catch (_) {
+      // Fail silently
+    }
+  }
+
+  @override
+  Future<void> deleteCoverImage(String imageUrl) async {
+    try {
+      final path = imageUrl.split('/public/covers/').last;
+      await _client.storage.from('covers').remove([path]);
+    } catch (_) {
+      // Fail silently
+    }
   }
 
   @override
@@ -134,7 +175,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   Future<List<UserProfileModel>> getFollowers(String userId) async {
     final response = await _client
         .from('follows')
-        .select('follower:profiles(*)')
+        .select('follower:profiles!follower_id(*)')
         .eq('followed_id', userId);
 
     final list = response as List? ?? const [];
@@ -152,7 +193,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   Future<List<UserProfileModel>> getFollowing(String userId) async {
     final response = await _client
         .from('follows')
-        .select('followed:profiles(*)')
+        .select('followed:profiles!followed_id(*)')
         .eq('follower_id', userId);
 
     final list = response as List? ?? const [];

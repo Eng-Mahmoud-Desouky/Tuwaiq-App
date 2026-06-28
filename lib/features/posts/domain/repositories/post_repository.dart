@@ -8,6 +8,7 @@ abstract class PostRepository {
     required int limit,
     DateTime? lastCreatedAt,
     String? lastPostId,
+    String? creatorId,
   });
 
   /// Creates a new post, with an optional local image file path.
