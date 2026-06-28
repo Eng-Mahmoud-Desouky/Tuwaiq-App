@@ -13,7 +13,9 @@
 7. [Theming System](#7-theming-system)
 8. [Core & Shared Structure](#8-core--shared-structure)
 9. [Event Management Feature & Engineering Decisions](#9-event-management-feature--engineering-decisions)
-10. [Change Log](#10-change-log)
+10. [Content Sharing & Interaction Feature & Engineering Decisions](#10-content-sharing--interaction-feature--engineering-decisions)
+11. [Password Recovery & Reset Flow & Engineering Decisions](#11-password-recovery--reset-flow--engineering-decisions)
+12. [Change Log](#12-change-log)
 
 ---
 
@@ -654,10 +656,34 @@ During the stabilization and testing phase of the Content Sharing & Interaction 
 
 ---
 
-## 11. Change Log
+## 11. Password Recovery & Reset Flow & Engineering Decisions
 
-| Version | Date | Author | Changes |
-| :--- | :--- | :--- | :--- |
+### 11.1 Feature Overview
+The **Password Recovery / Reset** flow allows users who forgot their password to safely request a reset link to their email, open the link on Android or iOS, and securely update their password inside a dedicated screen in the application.
+
+### 11.2 Engineering Decisions
+1. **Custom URL Scheme vs. Universal Links**:
+   Due to Supabase's default API domain restrictions (`zrgtnzmvqtdvaragqgoj.supabase.co`), hosting standard `.well-known/assetlinks.json` or `.well-known/apple-app-site-association` verification files is not feasible. The architecture was pivoted to utilize a Custom URL Scheme: `cratch://reset-callback`.
+2. **PKCE Code Exchange Race Condition Resolution**:
+   When the deep link is clicked, GoRouter parses the URL concurrently with Supabase's asynchronous PKCE authentication code exchange. To prevent a race condition where the screen loads before the session is established (throwing false *Verification session expired* errors):
+   - A fallback loading screen is registered under the route path `/reset-callback`.
+   - The manual deep-link stream parser ignores the recovery URLs to prevent premature data querying.
+   - `AuthCubit` monitors `Supabase.instance.client.auth.onAuthStateChange` natively. 
+   - Once the PKCE code exchange successfully completes in the background, Supabase triggers the `AuthChangeEvent.passwordRecovery` event.
+   - `AuthCubit` transitions to the `AuthPasswordRecovery` state.
+   - GoRouter (subscribing to the cubit stream) intercepts the state change and redirects the user to the `UpdatePasswordScreen`.
+3. **Redirect Loop Prevention & Session Lifecycle Management**:
+   The router prevents users with an active `AuthPasswordRecovery` state from being redirected to `/home` before submitting their password. However, to prevent users from being trapped on the reset screen indefinitely, both back arrow navigation and password update success trigger `AuthCubit.signOut()`. This terminates the recovery session, resets the cubit state back to `AuthInitial`, and allows clean routing to `/sign-in`.
+4. **Dedicated Update Password Cubit**:
+   To comply with Clean Architecture and separation of concerns, a dedicated `UpdatePasswordCubit` is introduced with states representing the transaction lifecycle: `UpdatePasswordInitial`, `UpdatePasswordLoading`, `UpdatePasswordSuccess`, and `UpdatePasswordError`. This cubit invokes the pure Dart `UpdatePasswordUseCase` to securely dispatch password updates to Supabase's authentication client.
+5. **Auth Feature Routing Migration**:
+   We migrated all authentication flow screens (`SignInScreen`, `SignUpScreen`, `ForgotPasswordScreen`, `EmailConfirmationScreen`, `InterestsScreen`, `UpdatePasswordScreen`) to use standard GoRouter routing APIs (`context.go`, `context.push`, `context.pop`, `context.pushReplacement`) instead of the legacy `Navigator` class, establishing a consistent routing standard across the entire module.
+
+---
+
+## 12. Change Log
+
+| `1.5.0` | 2026-06-28 | Mahmoud Desouky | Implemented Password Recovery / Reset Flow. Built dedicated `UpdatePasswordCubit` and states. Reconfigured deep linking from HTTPS App/Universal links to Custom URL Scheme (`cratch://reset-callback`) for compatibility. Resolved PKCE code exchange race condition by handling `onAuthStateChange` natively inside `AuthCubit` and rendering a fallback loading screen at `/reset-callback`. Prevented infinite redirection loop by calling `signOut()` on back navigation and password update success. Migrated all Auth screens to GoRouter. |
 | `1.4.1` | 2026-06-26 | Mahmoud Desouky | Stabilization and bug fixes for Content Sharing feature: resolved PostgREST PGRST201 ambiguous relationship error by specifying fkey constraint; resolved comment insertion UUID mismatch; fixed double-padding UI keyboard issue; fixed Bloc scoping crash by registering PostFeedCubit globally; fixed CreatePostScreen navigation pop on success. |
 | `1.4.0` | 2026-06-25 | Mahmoud Desouky | Implemented Content Sharing & Posts Interaction feature (`features/posts`). Created SQL schema for `posts`, `post_likes`, and `post_comments` with triggers protecting timestamps and check constraints limiting length/MIME sizes. Designed image rollbacks on DB failures, leak cleanups on delete, optimistic debounced liking, memory-capped cached network image loaders, global state provider management, and cursor pagination. |
 | `1.3.0` | 2026-06-20 | Mahmoud Desouky | Implemented Event Management Feature (`features/events`). Designed database schema, storage bucket, and RLS policies for `events`. Created composite `EventEntity` (embedding `UserProfile`) to resolve creator profile data in a single request. Developed `CreateEventCubit` with strictly defined states (Initial, UploadingImage, SavingData, Success, Error) separating storage upload from database insert. Added `CreateEventScreen` and `EventDetailsScreen` with Arabic RTL localizations support (`flutter_localizations`), form validation, maps redirection, and `mounted` guards for transitions. |
