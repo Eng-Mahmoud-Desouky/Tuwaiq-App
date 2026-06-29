@@ -30,9 +30,11 @@ import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/profile/presentation/screens/social_connections_screen.dart';
 import '../../features/main/presentation/screens/main_screen.dart';
 import '../../features/explore/presentation/screens/explore_screen.dart';
+import '../../features/explore/presentation/cubit/explore_cubit.dart';
 import '../../features/events/presentation/screens/create_event.dart';
 import '../../features/alerts/presentation/screens/alerts_screen.dart';
 import '../../features/events/domain/entities/event_entity.dart';
+import '../../features/events/domain/usecases/get_all_events_usecase.dart';
 import '../../features/events/domain/usecases/create_event_usecase.dart';
 import '../../features/events/domain/usecases/get_event_usecase.dart';
 import '../../features/events/domain/usecases/save_event_usecase.dart';
@@ -92,6 +94,7 @@ class AppRouter {
     required GetFollowingUseCase getFollowingUseCase,
     required CreateEventUseCase createEventUseCase,
     required GetEventUseCase getEventUseCase,
+    required GetAllEventsUseCase getAllEventsUseCase,
     required SaveEventUseCase saveEventUseCase,
     required UnsaveEventUseCase unsaveEventUseCase,
     required IsEventSavedUseCase isEventSavedUseCase,
@@ -264,7 +267,12 @@ class AppRouter {
               routes: [
                 GoRoute(
                   path: AppRoutes.explore,
-                  builder: (context, state) => const ExploreScreen(),
+                  builder: (context, state) => BlocProvider(
+                    create: (context) => ExploreCubit(
+                      getAllEventsUseCase: getAllEventsUseCase,
+                    )..loadEvents(),
+                    child: const ExploreScreen(),
+                  ),
                 ),
               ],
             ),

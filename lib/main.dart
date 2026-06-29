@@ -253,6 +253,7 @@ class MyApp extends StatelessWidget {
       getFollowingUseCase: getFollowingUseCase,
       createEventUseCase: createEventUseCase,
       getEventUseCase: getEventUseCase,
+      getAllEventsUseCase: getAllEventsUseCase,
       saveEventUseCase: saveEventUseCase,
       unsaveEventUseCase: unsaveEventUseCase,
       isEventSavedUseCase: isEventSavedUseCase,
