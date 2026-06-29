@@ -1,5 +1,5 @@
 # 📐 System Blueprint — Tuwaiq App
-**Version:** 1.4.1 | **Status:** Active | **Last Updated:** 2026-06-25
+**Version:** 1.6.0 | **Status:** Active | **Last Updated:** 2026-06-30
 
 ---
 
@@ -15,7 +15,8 @@
 9. [Event Management Feature & Engineering Decisions](#9-event-management-feature--engineering-decisions)
 10. [Content Sharing & Interaction Feature & Engineering Decisions](#10-content-sharing--interaction-feature--engineering-decisions)
 11. [Password Recovery & Reset Flow & Engineering Decisions](#11-password-recovery--reset-flow--engineering-decisions)
-12. [Change Log](#12-change-log)
+12. [Discover (Explore) Events Feature & Engineering Decisions](#12-discover-explore-events-feature--engineering-decisions)
+13. [Change Log](#13-change-log)
 
 ---
 
@@ -131,10 +132,10 @@ lib/
     │   └── presentation/
     │       └── screens/
     │           └── home_screen.dart
-    ├── explore/                 # Explore page stub
+    ├── explore/                 # Discover/Explore events feature module
     │   └── presentation/
-    │       └── screens/
-    │           └── explore_screen.dart
+    │       ├── cubit/           # ExploreCubit, ExploreState
+    │       └── screens/         # ExploreScreen (Fully implemented with search, categories, and event grid)
     ├── posts/                   # Content sharing & posts interaction feature
     │   ├── data/
     │   │   ├── datasources/     # PostRemoteDataSource
@@ -681,8 +682,28 @@ The **Password Recovery / Reset** flow allows users who forgot their password to
 
 ---
 
-## 12. Change Log
+## 12. Discover (Explore) Events Feature & Engineering Decisions
 
+### 12.1 Feature Overview
+The **Discover / Explore** module (`features/explore`) is a fully interactive page where users can browse, search, and filter all available events. Key elements include:
+- **`ExploreScreen`**: A screen containing a search bar, a horizontal scrollable category chip bar, and a grid showing event cards.
+- **`ExploreCubit` / `ExploreState`**: Cubit managing original events lists, current search query, and current selected category filter. Real-time filtering is applied locally on the fetched events to minimize database roundtrips.
+
+### 12.2 Engineering Decisions
+1. **Local Search & Filter Engine**:
+   To reduce network bandwidth and database queries, all active events are loaded once using `GetAllEventsUseCase` via `ExploreCubit.loadEvents()`. Any subsequent text search or category selection filters the events list *locally* in memory.
+2. **RTL Formatted Localized Date Helpers**:
+   A custom date formatter utility `_formatDate` displays the event start date in Arabic format (e.g., *الخميس، ٢٥ أكتوبر*) with correct weekday mapping based on the Dart `DateTime.weekday` index.
+3. **Visual Tag Exclusions**:
+   Following design directives, ticket status tags (Free/Paid) are excluded from the UI code, and only the category tags with corresponding emojis (e.g. `حفلات ومهرجانات 🎵`) are rendered.
+4. **Active Tab Scoping of ExploreCubit**:
+   Instead of placing `ExploreCubit` at the global level, it is scoped to the `/explore` route branch inside GoRouter via a local `BlocProvider`. This ensures that memory is freed when the user navigates away from the Explore screen, and the events list is fresh whenever the Explore tab is opened.
+
+---
+
+## 13. Change Log
+
+| `1.6.0` | 2026-06-30 | Mahmoud Desouky | Fully implemented Discover/Explore Events page module (features/explore). Built ExploreCubit and ExploreState for managing and locally filtering events lists by category and text search query. Configured GoRouter and main.dart to dynamically register the cubit. Polished the UI to match the Stitch design using a responsive event card grid, a search field, and horizontal scrolling category chips with emojis. |
 | `1.5.0` | 2026-06-28 | Mahmoud Desouky | Implemented Password Recovery / Reset Flow. Built dedicated `UpdatePasswordCubit` and states. Reconfigured deep linking from HTTPS App/Universal links to Custom URL Scheme (`cratch://reset-callback`) for compatibility. Resolved PKCE code exchange race condition by handling `onAuthStateChange` natively inside `AuthCubit` and rendering a fallback loading screen at `/reset-callback`. Prevented infinite redirection loop by calling `signOut()` on back navigation and password update success. Migrated all Auth screens to GoRouter. |
 | `1.4.1` | 2026-06-26 | Mahmoud Desouky | Stabilization and bug fixes for Content Sharing feature: resolved PostgREST PGRST201 ambiguous relationship error by specifying fkey constraint; resolved comment insertion UUID mismatch; fixed double-padding UI keyboard issue; fixed Bloc scoping crash by registering PostFeedCubit globally; fixed CreatePostScreen navigation pop on success. |
 | `1.4.0` | 2026-06-25 | Mahmoud Desouky | Implemented Content Sharing & Posts Interaction feature (`features/posts`). Created SQL schema for `posts`, `post_likes`, and `post_comments` with triggers protecting timestamps and check constraints limiting length/MIME sizes. Designed image rollbacks on DB failures, leak cleanups on delete, optimistic debounced liking, memory-capped cached network image loaders, global state provider management, and cursor pagination. |
