@@ -273,7 +273,13 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         scrolledUnderElevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+            if (widget.eventToEdit != null) {
+              Navigator.of(context).pop();
+            } else {
+              context.go(AppRoutes.home);
+            }
+          },
         ),
         shape: const Border(
           bottom: BorderSide(
@@ -305,7 +311,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               });
             }
             // Safely navigate back or switch tab to home
-            if (Navigator.of(context).canPop()) {
+            if (widget.eventToEdit != null) {
               Navigator.of(context).pop();
             } else {
               context.go(AppRoutes.home);

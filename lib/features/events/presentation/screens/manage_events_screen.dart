@@ -9,6 +9,7 @@ import '../../../auth/presentation/cubit/auth_state.dart';
 import '../../../profile/presentation/cubit/profile_events_cubit.dart';
 import '../../../profile/presentation/cubit/profile_saved_events_cubit.dart';
 import '../widgets/event_card_widget.dart';
+import '../../../../core/constants/app_routes.dart';
 
 class ManageEventsScreen extends StatefulWidget {
   const ManageEventsScreen({super.key});
@@ -44,8 +45,8 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
         centerTitle: true,
         leading: const AppBarAvatar(),
         title: Image.asset(
-          'assets/images/logo.png',
-          height: 24,
+          'assets/images/logo_without_name.png',
+          height: 42,
           fit: BoxFit.contain,
         ),
         actions: [
@@ -64,9 +65,8 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.onPrimary,
-        onPressed: () async {
-          await context.push('/create/new');
-          _refreshData();
+        onPressed: () {
+          context.go(AppRoutes.create);
         },
         child: const Icon(Icons.add, size: 28),
       ),
@@ -192,7 +192,7 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
                           children: [
                             TextButton.icon(
                               onPressed: () async {
-                                await context.push('/create/edit', extra: event);
+                                await context.push(AppRoutes.editEvent, extra: event);
                                 _refreshData();
                               },
                               icon: const Icon(Icons.edit_note, size: 18, color: AppColors.primary),

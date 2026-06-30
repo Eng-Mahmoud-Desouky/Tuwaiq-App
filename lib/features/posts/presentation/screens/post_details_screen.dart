@@ -163,8 +163,8 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
         elevation: 0,
         centerTitle: true,
         title: Image.asset(
-          'assets/images/logo.png',
-          height: 24,
+          'assets/images/logo_without_name.png',
+          height: 42,
           fit: BoxFit.contain,
         ),
         leading: IconButton(

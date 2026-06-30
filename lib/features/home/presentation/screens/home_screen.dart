@@ -110,8 +110,8 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 0,
         leading: const AppBarAvatar(),
         title: Image.asset(
-          'assets/images/logo.png',
-          height: 24,
+          'assets/images/logo_without_name.png',
+          height: 42,
           fit: BoxFit.contain,
         ),
         centerTitle: true,
@@ -225,7 +225,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: () {
           context.push(AppRoutes.createPost);
         },
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
+        child: const Icon(Icons.add, color: AppColors.background, size: 28),
       ),
     );
   }

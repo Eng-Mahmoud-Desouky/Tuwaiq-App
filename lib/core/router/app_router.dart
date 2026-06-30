@@ -248,6 +248,19 @@ class AppRouter {
             );
           },
         ),
+        GoRoute(
+          path: AppRoutes.editEvent,
+          parentNavigatorKey: _rootNavigatorKey,
+          builder: (context, state) {
+            final event = state.extra as EventEntity?;
+            return BlocProvider(
+              create: (context) => CreateEventCubit(
+                createEventUseCase: createEventUseCase,
+              ),
+              child: CreateEventScreen(eventToEdit: event),
+            );
+          },
+        ),
 
         // Main Navigation (StatefulShellRoute)
         StatefulShellRoute.indexedStack(
@@ -277,11 +290,25 @@ class AppRouter {
                 ),
               ],
             ),
-            // Create/Manage Branch (2)
+            // Create Event Branch (2)
             StatefulShellBranch(
               routes: [
                 GoRoute(
                   path: AppRoutes.create,
+                  builder: (context, state) => BlocProvider(
+                    create: (context) => CreateEventCubit(
+                      createEventUseCase: createEventUseCase,
+                    ),
+                    child: const CreateEventScreen(),
+                  ),
+                ),
+              ],
+            ),
+            // Manage Events Branch (3)
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: AppRoutes.manageEvents,
                   builder: (context, state) {
                     final authState = context.read<AuthCubit>().state;
                     final currentUserId = (authState is AuthSuccess) ? authState.user.id : '';
@@ -303,35 +330,10 @@ class AppRouter {
                       child: const ManageEventsScreen(),
                     );
                   },
-                  routes: [
-                    GoRoute(
-                      path: 'new',
-                      parentNavigatorKey: _rootNavigatorKey,
-                      builder: (context, state) => BlocProvider(
-                        create: (context) => CreateEventCubit(
-                          createEventUseCase: createEventUseCase,
-                        ),
-                        child: const CreateEventScreen(),
-                      ),
-                    ),
-                    GoRoute(
-                      path: 'edit',
-                      parentNavigatorKey: _rootNavigatorKey,
-                      builder: (context, state) {
-                        final event = state.extra as EventEntity?;
-                        return BlocProvider(
-                          create: (context) => CreateEventCubit(
-                            createEventUseCase: createEventUseCase,
-                          ),
-                          child: CreateEventScreen(eventToEdit: event),
-                        );
-                      },
-                    ),
-                  ],
                 ),
               ],
             ),
-            // Alerts Branch (3)
+            // Alerts Branch (4)
             StatefulShellBranch(
               routes: [
                 GoRoute(

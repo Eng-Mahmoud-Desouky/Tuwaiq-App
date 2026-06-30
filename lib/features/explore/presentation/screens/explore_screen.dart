@@ -90,8 +90,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
         elevation: 0,
         centerTitle: true,
         title: Image.asset(
-          'assets/images/logo.png',
-          height: 24,
+          'assets/images/logo_without_name.png',
+          height: 42,
           fit: BoxFit.contain,
         ),
         leading: const AppBarAvatar(),
@@ -229,8 +229,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                   '$category $emoji',
                                   style: AppTextStyles.labelLg.copyWith(
                                     color: isSelected
-                                        ? Colors.white
-                                        : AppColors.onSurface,
+                                        ? AppColors.background
+                                        : AppColors.primary,
                                     fontWeight: isSelected
                                         ? FontWeight.bold
                                         : FontWeight.normal,
