@@ -16,6 +16,8 @@ import '../cubit/profile_social_state.dart';
 import '../cubit/profile_posts_cubit.dart';
 import '../cubit/profile_events_cubit.dart';
 import '../cubit/profile_saved_events_cubit.dart';
+import '../../../posts/domain/entities/post_entity.dart';
+import '../../../events/domain/entities/event_entity.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String userId;
@@ -27,8 +29,57 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  int _mainTabIndex = 0; // 0: أنشطتي, 1: المحفوظات
-  int _innerTabIndex = 0; // 0: منشوراتي, 1: فعالياتي
+
+  void _showLogoutConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: AppColors.surfaceContainerLow,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: AppColors.outline, width: 0.5),
+          ),
+          title: const Text(
+            'تسجيل الخروج',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.right,
+          ),
+          content: const Text(
+            'هل أنت متأكد من رغبتك في تسجيل الخروج؟',
+            style: TextStyle(color: Colors.white70),
+            textAlign: TextAlign.right,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text(
+                'إلغاء',
+                style: TextStyle(color: AppColors.secondary),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.error,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                context.read<AuthCubit>().signOut();
+                context.go(AppRoutes.signIn);
+              },
+              child: const Text(
+                'خروج',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,15 +93,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         centerTitle: true,
-        leading: isOwnProfile
-            ? IconButton(
-                icon: const Icon(Icons.logout, color: AppColors.secondary),
-                onPressed: () {
-                  context.read<AuthCubit>().signOut();
-                  context.go(AppRoutes.signIn);
-                },
-              )
-            : const BackButton(color: Colors.white),
+        leading: !isOwnProfile
+            ? const BackButton(color: Colors.white)
+            : null,
+        actions: [
+          if (isOwnProfile)
+            IconButton(
+              icon: const Icon(Icons.logout, color: AppColors.error),
+              onPressed: () => _showLogoutConfirmation(context),
+            ),
+        ],
         title: const Text(
           'الملف الشخصي',
           style: TextStyle(
@@ -117,20 +169,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       // Interests
                       _buildInterestsSection(profile.interests),
                       const SizedBox(height: 28),
-                      // Main sliding tab selection
-                      _buildMainTabBar(isOwnProfile),
-                      const SizedBox(height: 20),
-                      // Selected Content View
-                      if (_mainTabIndex == 0) ...[
-                        _buildInnerTabSelector(),
-                        const SizedBox(height: 16),
-                        if (_innerTabIndex == 0)
-                          _buildPostsList()
-                        else
-                          _buildEventsList()
-                      ] else if (_mainTabIndex == 1 && isOwnProfile) ...[
-                        _buildSavedEventsList(),
-                      ],
+                      const SizedBox(height: 28),
+                      // Unified Feed (Posts & Events sorted by newest first)
+                      _buildUnifiedFeed(),
                     ],
                   ),
                 ),
@@ -513,241 +554,74 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildMainTabBar(bool showSavedTab) {
-    if (!showSavedTab) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-      child: Container(
-        height: 50,
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: GestureDetector(
-                onTap: () => setState(() => _mainTabIndex = 0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: _mainTabIndex == 0
-                        ? AppColors.primary
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    'أنشطتي',
-                    style: AppTextStyles.labelLg.copyWith(
-                      color: _mainTabIndex == 0 ? Colors.white : AppColors.onSurfaceVariant,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: GestureDetector(
-                onTap: () => setState(() => _mainTabIndex = 1),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: _mainTabIndex == 1
-                        ? AppColors.primary
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    'المحفوظات',
-                    style: AppTextStyles.labelLg.copyWith(
-                      color: _mainTabIndex == 1 ? Colors.white : AppColors.onSurfaceVariant,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInnerTabSelector() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ChoiceChip(
-            label: const Text('المنشورات'),
-            selected: _innerTabIndex == 0,
-            onSelected: (selected) {
-              if (selected) {
-                setState(() => _innerTabIndex = 0);
-              }
-            },
-            selectedColor: AppColors.primary.withOpacity(0.15),
-            labelStyle: TextStyle(
-              color: _innerTabIndex == 0 ? AppColors.primary : AppColors.onSurfaceVariant,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(width: 16),
-          ChoiceChip(
-            label: const Text('الفعاليات'),
-            selected: _innerTabIndex == 1,
-            onSelected: (selected) {
-              if (selected) {
-                setState(() => _innerTabIndex = 1);
-              }
-            },
-            selectedColor: AppColors.primary.withOpacity(0.15),
-            labelStyle: TextStyle(
-              color: _innerTabIndex == 1 ? AppColors.primary : AppColors.onSurfaceVariant,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPostsList() {
+  Widget _buildUnifiedFeed() {
     return BlocBuilder<ProfilePostsCubit, ProfilePostsState>(
-      builder: (context, state) {
-        if (state is ProfilePostsLoading) {
-          return const Padding(
-            padding: EdgeInsets.all(32.0),
-            child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
-          );
-        } else if (state is ProfilePostsLoaded) {
-          final posts = state.posts;
-          if (posts.isEmpty) {
-            return const Padding(
-              padding: EdgeInsets.all(32.0),
-              child: Center(child: Text('لا توجد منشورات حالياً', style: AppTextStyles.bodyMd)),
-            );
-          }
-          return ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: posts.length,
-            itemBuilder: (context, index) {
-              return PostCard(post: posts[index]);
-            },
-          );
-        } else if (state is ProfilePostsError) {
-          return Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: Center(
-              child: Text(
-                state.message,
-                style: AppTextStyles.bodyMd.copyWith(color: AppColors.error),
-              ),
-            ),
-          );
-        }
-        return const SizedBox.shrink();
-      },
-    );
-  }
+      builder: (context, postsState) {
+        return BlocBuilder<ProfileEventsCubit, ProfileEventsState>(
+          builder: (context, eventsState) {
+            bool isLoading = postsState is ProfilePostsLoading || eventsState is ProfileEventsLoading;
 
-  Widget _buildEventsList() {
-    return BlocBuilder<ProfileEventsCubit, ProfileEventsState>(
-      builder: (context, state) {
-        if (state is ProfileEventsLoading) {
-          return const Padding(
-            padding: EdgeInsets.all(32.0),
-            child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
-          );
-        } else if (state is ProfileEventsLoaded) {
-          final events = state.events;
-          if (events.isEmpty) {
-            return const Padding(
-              padding: EdgeInsets.all(32.0),
-              child: Center(child: Text('لا توجد فعاليات حالياً', style: AppTextStyles.bodyMd)),
-            );
-          }
-          return ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: events.length,
-            itemBuilder: (context, index) {
-              final event = events[index];
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-                child: EventCardWidget(
-                  event: event,
-                  onTap: () {
-                    context.push('/event-details/${event.id}', extra: event);
-                  },
+            if (isLoading) {
+              return const Padding(
+                padding: EdgeInsets.all(32.0),
+                child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+              );
+            }
+
+            List<PostEntity> posts = [];
+            if (postsState is ProfilePostsLoaded) {
+              posts = postsState.posts;
+            }
+
+            List<EventEntity> events = [];
+            if (eventsState is ProfileEventsLoaded) {
+              events = eventsState.events;
+            }
+
+            if (posts.isEmpty && events.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.all(32.0),
+                child: Center(
+                  child: Text(
+                    'لا توجد منشورات أو فعاليات حالياً',
+                    style: TextStyle(color: AppColors.secondary, fontSize: 14),
+                  ),
                 ),
               );
-            },
-          );
-        } else if (state is ProfileEventsError) {
-          return Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: Center(
-              child: Text(
-                state.message,
-                style: AppTextStyles.bodyMd.copyWith(color: AppColors.error),
-              ),
-            ),
-          );
-        }
-        return const SizedBox.shrink();
-      },
-    );
-  }
+            }
 
-  Widget _buildSavedEventsList() {
-    return BlocBuilder<ProfileSavedEventsCubit, ProfileSavedEventsState>(
-      builder: (context, state) {
-        if (state is ProfileSavedEventsLoading) {
-          return const Padding(
-            padding: EdgeInsets.all(32.0),
-            child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
-          );
-        } else if (state is ProfileSavedEventsLoaded) {
-          final events = state.events;
-          if (events.isEmpty) {
-            return const Padding(
-              padding: EdgeInsets.all(32.0),
-              child: Center(child: Text('لا توجد فعاليات محفوظة حالياً', style: AppTextStyles.bodyMd)),
+            // Combine and sort by date (newest first)
+            final List<dynamic> combinedList = [...posts, ...events];
+            combinedList.sort((a, b) {
+              final dateA = (a is PostEntity) ? a.createdAt : (a as EventEntity).startDate;
+              final dateB = (b is PostEntity) ? b.createdAt : (b as EventEntity).startDate;
+              return dateB.compareTo(dateA);
+            });
+
+            return ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: combinedList.length,
+              itemBuilder: (context, index) {
+                final item = combinedList[index];
+                if (item is PostEntity) {
+                  return PostCard(post: item);
+                } else {
+                  final event = item as EventEntity;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: EventCardWidget(
+                      event: event,
+                      onTap: () {
+                        context.push('/events/${event.id}', extra: event);
+                      },
+                    ),
+                  );
+                }
+              },
             );
-          }
-          return ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: events.length,
-            itemBuilder: (context, index) {
-              final event = events[index];
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-                child: EventCardWidget(
-                  event: event,
-                  onTap: () {
-                    context.push('/event-details/${event.id}', extra: event);
-                  },
-                ),
-              );
-            },
-          );
-        } else if (state is ProfileSavedEventsError) {
-          return Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: Center(
-              child: Text(
-                state.message,
-                style: AppTextStyles.bodyMd.copyWith(color: AppColors.error),
-              ),
-            ),
-          );
-        }
-        return const SizedBox.shrink();
+          },
+        );
       },
     );
   }

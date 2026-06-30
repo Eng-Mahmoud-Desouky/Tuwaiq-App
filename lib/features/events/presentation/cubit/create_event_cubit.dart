@@ -49,6 +49,11 @@ class CreateEventCubit extends Cubit<CreateEventState> {
     emit(const CreateEventInitial());
   }
 
+  void setEventIdForEdit(String eventId, String? coverUrl) {
+    _generatedEventId = eventId;
+    emit(CreateEventInitial(coverUrl: coverUrl));
+  }
+
   Future<void> submitEvent({
     required String creatorId,
     required String title,

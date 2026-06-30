@@ -32,6 +32,7 @@ import '../../features/main/presentation/screens/main_screen.dart';
 import '../../features/explore/presentation/screens/explore_screen.dart';
 import '../../features/explore/presentation/cubit/explore_cubit.dart';
 import '../../features/events/presentation/screens/create_event.dart';
+import '../../features/events/presentation/screens/manage_events_screen.dart';
 import '../../features/alerts/presentation/screens/alerts_screen.dart';
 import '../../features/events/domain/entities/event_entity.dart';
 import '../../features/events/domain/usecases/get_all_events_usecase.dart';
@@ -276,17 +277,57 @@ class AppRouter {
                 ),
               ],
             ),
-            // Create Branch (2)
+            // Create/Manage Branch (2)
             StatefulShellBranch(
               routes: [
                 GoRoute(
                   path: AppRoutes.create,
-                  builder: (context, state) => BlocProvider(
-                    create: (context) => CreateEventCubit(
-                      createEventUseCase: createEventUseCase,
+                  builder: (context, state) {
+                    final authState = context.read<AuthCubit>().state;
+                    final currentUserId = (authState is AuthSuccess) ? authState.user.id : '';
+                    return MultiBlocProvider(
+                      providers: [
+                        BlocProvider(
+                          create: (context) => ProfileEventsCubit(
+                            getEventsByUserUseCase: getEventsByUserUseCase,
+                            userId: currentUserId,
+                          ),
+                        ),
+                        BlocProvider(
+                          create: (context) => ProfileSavedEventsCubit(
+                            getSavedEventsUseCase: getSavedEventsUseCase,
+                            userId: currentUserId,
+                          ),
+                        ),
+                      ],
+                      child: const ManageEventsScreen(),
+                    );
+                  },
+                  routes: [
+                    GoRoute(
+                      path: 'new',
+                      parentNavigatorKey: _rootNavigatorKey,
+                      builder: (context, state) => BlocProvider(
+                        create: (context) => CreateEventCubit(
+                          createEventUseCase: createEventUseCase,
+                        ),
+                        child: const CreateEventScreen(),
+                      ),
                     ),
-                    child: const CreateEventScreen(),
-                  ),
+                    GoRoute(
+                      path: 'edit',
+                      parentNavigatorKey: _rootNavigatorKey,
+                      builder: (context, state) {
+                        final event = state.extra as EventEntity?;
+                        return BlocProvider(
+                          create: (context) => CreateEventCubit(
+                            createEventUseCase: createEventUseCase,
+                          ),
+                          child: CreateEventScreen(eventToEdit: event),
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),

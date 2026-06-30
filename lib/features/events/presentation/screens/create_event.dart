@@ -12,9 +12,11 @@ import '../../../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../../../features/auth/presentation/cubit/auth_state.dart';
 import '../cubit/create_event_cubit.dart';
 import '../cubit/create_event_state.dart';
+import '../../domain/entities/event_entity.dart';
 
 class CreateEventScreen extends StatefulWidget {
-  const CreateEventScreen({super.key});
+  final EventEntity? eventToEdit;
+  const CreateEventScreen({super.key, this.eventToEdit});
 
   @override
   State<CreateEventScreen> createState() => _CreateEventScreenState();
@@ -35,6 +37,29 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   DateTime? _startDate;
   DateTime? _endDate;
   bool _isOnline = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.eventToEdit != null) {
+      final ev = widget.eventToEdit!;
+      _titleController.text = ev.title;
+      _descriptionController.text = ev.description;
+      _locationNameController.text = ev.locationName;
+      _googleMapsUrlController.text = ev.googleMapsUrl ?? '';
+      _selectedCategory = ev.category;
+      _selectedRegion = ev.region.isNotEmpty ? ev.region : null;
+      _selectedCity = ev.city.isNotEmpty ? ev.city : null;
+      _startDate = ev.startDate;
+      _endDate = ev.endDate;
+      _isOnline = ev.region.isEmpty && ev.city.isEmpty;
+
+      // Let the cubit know we are in edit mode
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<CreateEventCubit>().setEventIdForEdit(ev.id, ev.coverUrl);
+      });
+    }
+  }
 
   final List<String> _categories = [
     'مواسم ومهرجانات',
@@ -234,16 +259,35 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('إنشاء فعالية', style: AppTextStyles.titleSm),
+        title: Text(
+          widget.eventToEdit != null ? 'تعديل فعالية' : 'إنشاء فعالية',
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
         centerTitle: true,
-        backgroundColor: AppColors.surfaceContainerLowest,
+        backgroundColor: AppColors.background,
         elevation: 0,
         scrolledUnderElevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        shape: const Border(
+          bottom: BorderSide(
+            color: AppColors.outline,
+            width: 0.5,
+          ),
+        ),
       ),
       body: BlocConsumer<CreateEventCubit, CreateEventState>(
         listener: (context, state) {
           if (state is CreateEventSuccess) {
-            context.showSnackBar('تم إنشاء الفعالية بنجاح!');
+            context.showSnackBar(
+              widget.eventToEdit != null ? 'تم حفظ التعديلات بنجاح!' : 'تم إنشاء الفعالية بنجاح!',
+            );
             context.read<CreateEventCubit>().reset();
             // Reset local controllers
             _titleController.clear();

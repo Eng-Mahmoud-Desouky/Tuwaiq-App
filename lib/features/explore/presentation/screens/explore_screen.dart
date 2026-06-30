@@ -89,14 +89,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
-          r'$CRATCH',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w900,
-            fontSize: 22,
-            letterSpacing: 1.2,
-          ),
+        title: Image.asset(
+          'assets/images/logo.png',
+          height: 24,
+          fit: BoxFit.contain,
         ),
         leading: const AppBarAvatar(),
         actions: const [],

@@ -159,15 +159,16 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
-          'المنشور والتعليقات',
-          style: AppTextStyles.titleSm,
+        title: Image.asset(
+          'assets/images/logo.png',
+          height: 24,
+          fit: BoxFit.contain,
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.primary),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             if (Navigator.of(context).canPop()) {
               Navigator.of(context).pop();
@@ -175,6 +176,12 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
               context.go(AppRoutes.home);
             }
           },
+        ),
+        shape: const Border(
+          bottom: BorderSide(
+            color: AppColors.outline,
+            width: 0.5,
+          ),
         ),
       ),
       body: Column(
@@ -295,15 +302,14 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
           // Comment Text Input Bar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -4),
+            decoration: const BoxDecoration(
+              color: AppColors.background,
+              border: Border(
+                top: BorderSide(
+                  color: AppColors.outline,
+                  width: 0.5,
                 ),
-              ],
+              ),
             ),
             child: Row(
               children: [

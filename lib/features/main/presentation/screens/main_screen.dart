@@ -60,11 +60,19 @@ class MainScreen extends StatelessWidget {
             GestureDetector(
               onTap: () => _onTap(context, 2),
               child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: const BoxDecoration(
-                  color: AppColors.primary,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: navigationShell.currentIndex == 2
+                      ? AppColors.primary
+                      : AppColors.surfaceContainerLow,
                   shape: BoxShape.circle,
-                  boxShadow: [
+                  border: Border.all(
+                    color: navigationShell.currentIndex == 2
+                        ? AppColors.primary
+                        : AppColors.outline,
+                    width: 0.5,
+                  ),
+                  boxShadow: const [
                     BoxShadow(
                       color: Color(0x3F000000),
                       blurRadius: 8,
@@ -72,19 +80,12 @@ class MainScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(bottom: 2, right: 2),
-                      child: Icon(Icons.calendar_today_outlined, size: 22, color: Colors.white),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Icon(Icons.add, size: 12, color: Colors.white, weight: 900),
-                    ),
-                  ],
+                child: Icon(
+                  Icons.event_note,
+                  size: 24,
+                  color: navigationShell.currentIndex == 2
+                      ? Colors.black
+                      : AppColors.secondary,
                 ),
               ),
             ),

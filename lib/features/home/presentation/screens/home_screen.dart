@@ -50,6 +50,57 @@ class _HomeScreenState extends State<HomeScreen> {
     return currentScroll >= (maxScroll - 200);
   }
 
+  void _showLogoutConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: AppColors.surfaceContainerLow,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: AppColors.outline, width: 0.5),
+          ),
+          title: const Text(
+            'تسجيل الخروج',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.right,
+          ),
+          content: const Text(
+            'هل أنت متأكد من رغبتك في تسجيل الخروج؟',
+            style: TextStyle(color: Colors.white70),
+            textAlign: TextAlign.right,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text(
+                'إلغاء',
+                style: TextStyle(color: AppColors.secondary),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.error,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                context.read<AuthCubit>().signOut();
+                context.go(AppRoutes.signIn);
+              },
+              child: const Text(
+                'خروج',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -58,23 +109,16 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: const AppBarAvatar(),
-        title: const Text(
-          r'$CRATCH',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w900,
-            fontSize: 22,
-            letterSpacing: 1.2,
-          ),
+        title: Image.asset(
+          'assets/images/logo.png',
+          height: 24,
+          fit: BoxFit.contain,
         ),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout, color: AppColors.secondary),
-            onPressed: () {
-              context.read<AuthCubit>().signOut();
-              context.go(AppRoutes.signIn);
-            },
+            icon: const Icon(Icons.logout, color: AppColors.error),
+            onPressed: () => _showLogoutConfirmation(context),
           ),
         ],
         shape: const Border(

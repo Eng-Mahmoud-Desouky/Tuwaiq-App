@@ -22,26 +22,27 @@ class AppBarAvatar extends StatelessWidget {
             onTap: () {
               context.go(AppRoutes.profile);
             },
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppColors.outline,
-                  width: 1.0,
+            child: Center(
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppColors.outline,
+                    width: 1.0,
+                  ),
                 ),
-              ),
-              child: ClipOval(
-                child: avatarUrl != null && avatarUrl.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: avatarUrl,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => const CircularProgressIndicator(strokeWidth: 2),
-                        errorWidget: (context, url, error) => _buildPlaceholder(user.username),
-                      )
-                    : _buildPlaceholder(user.username),
+                child: ClipOval(
+                  child: avatarUrl != null && avatarUrl.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: avatarUrl,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => const CircularProgressIndicator(strokeWidth: 2),
+                          errorWidget: (context, url, error) => _buildPlaceholder(user.username),
+                        )
+                      : _buildPlaceholder(user.username),
+                ),
               ),
             ),
           );

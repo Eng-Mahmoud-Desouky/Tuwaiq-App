@@ -101,15 +101,12 @@ class PostCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0F000000), // Level 2 Ambient Shadow (approx 0.06 opacity)
-            blurRadius: 24,
-            offset: Offset(0, 8),
-          ),
-        ],
+        border: Border.all(
+          color: AppColors.outline,
+          width: 0.5,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
