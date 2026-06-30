@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:app_links/app_links.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
@@ -9,6 +11,9 @@ import '../../domain/usecases/forgot_password_usecase.dart';
 import '../../domain/usecases/update_password_usecase.dart';
 import '../../domain/usecases/get_current_user_usecase.dart';
 import '../../domain/usecases/save_user_interests_usecase.dart';
+import '../../../notifications/domain/usecases/save_fcm_token_usecase.dart';
+import '../../../notifications/domain/usecases/delete_fcm_token_usecase.dart';
+import '../../../../core/services/notification_service.dart';
 import 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
@@ -19,10 +24,13 @@ class AuthCubit extends Cubit<AuthState> {
   final UpdatePasswordUseCase updatePasswordUseCase;
   final GetCurrentUserUseCase getCurrentUserUseCase;
   final SaveUserInterestsUseCase saveUserInterestsUseCase;
+  final SaveFCMTokenUseCase saveFCMTokenUseCase;
+  final DeleteFCMTokenUseCase deleteFCMTokenUseCase;
 
   final AppLinks _appLinks = AppLinks();
   StreamSubscription<Uri>? _linkSubscription;
   StreamSubscription<dynamic>? _authSubscription;
+  StreamSubscription<String>? _fcmTokenSubscription;
 
   AuthCubit({
     required this.signUpUseCase,
@@ -32,6 +40,8 @@ class AuthCubit extends Cubit<AuthState> {
     required this.updatePasswordUseCase,
     required this.getCurrentUserUseCase,
     required this.saveUserInterestsUseCase,
+    required this.saveFCMTokenUseCase,
+    required this.deleteFCMTokenUseCase,
   }) : super(const AuthInitial()) {
     _initDeepLinks();
     _initAuthListener();
@@ -244,9 +254,67 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   @override
+  void emit(AuthState state) {
+    if (state is AuthSuccess) {
+      _syncFCMToken(state.user.id);
+    } else if (state is AuthInitial) {
+      _unsyncFCMToken();
+    }
+    super.emit(state);
+  }
+
+  void _syncFCMToken(String userId) async {
+    _fcmTokenSubscription?.cancel();
+    final notificationService = NotificationService();
+    final token = await notificationService.getToken();
+    if (token != null) {
+      try {
+        final platform = kIsWeb ? 'web' : (Platform.isAndroid ? 'android' : 'ios');
+        await saveFCMTokenUseCase(
+          userId: userId,
+          token: token,
+          platform: platform,
+        );
+        print("FCM Token synced successfully: $token");
+      } catch (e) {
+        print("Error syncing FCM Token: $e");
+      }
+    }
+
+    _fcmTokenSubscription = notificationService.onTokenRefresh.listen((newToken) async {
+      try {
+        final platform = kIsWeb ? 'web' : (Platform.isAndroid ? 'android' : 'ios');
+        await saveFCMTokenUseCase(
+          userId: userId,
+          token: newToken,
+          platform: platform,
+        );
+        print("FCM Token refreshed and synced: $newToken");
+      } catch (e) {
+        print("Error syncing refreshed FCM Token: $e");
+      }
+    });
+  }
+
+  void _unsyncFCMToken() async {
+    _fcmTokenSubscription?.cancel();
+    _fcmTokenSubscription = null;
+    final token = await NotificationService().getToken();
+    if (token != null) {
+      try {
+        await deleteFCMTokenUseCase(token: token);
+        print("FCM Token deleted from server successfully.");
+      } catch (e) {
+        print("Error deleting FCM Token from server: $e");
+      }
+    }
+  }
+
+  @override
   Future<void> close() {
     _linkSubscription?.cancel();
     _authSubscription?.cancel();
+    _fcmTokenSubscription?.cancel();
     return super.close();
   }
 }

@@ -33,7 +33,11 @@ import '../../features/explore/presentation/screens/explore_screen.dart';
 import '../../features/explore/presentation/cubit/explore_cubit.dart';
 import '../../features/events/presentation/screens/create_event.dart';
 import '../../features/events/presentation/screens/manage_events_screen.dart';
-import '../../features/alerts/presentation/screens/alerts_screen.dart';
+import '../../features/notifications/presentation/screens/notifications_screen.dart';
+import '../../features/notifications/presentation/cubit/notifications_cubit.dart';
+import '../../features/notifications/domain/usecases/get_notifications_usecase.dart';
+import '../../features/notifications/domain/usecases/mark_notification_as_read_usecase.dart';
+import '../../core/services/notification_service.dart';
 import '../../features/events/domain/entities/event_entity.dart';
 import '../../features/events/domain/usecases/get_all_events_usecase.dart';
 import '../../features/events/domain/usecases/create_event_usecase.dart';
@@ -110,8 +114,10 @@ class AppRouter {
     required UpdateCommentUseCase updateCommentUseCase,
     required DeletePostUseCase deletePostUseCase,
     required UpdatePasswordUseCase updatePasswordUseCase,
+    required GetNotificationsUseCase getNotificationsUseCase,
+    required MarkNotificationAsReadUseCase markNotificationAsReadUseCase,
   }) {
-    return GoRouter(
+    final routerInstance = GoRouter(
       navigatorKey: _rootNavigatorKey,
       initialLocation: AppRoutes.signIn,
       refreshListenable: AppRouterRefreshStream(authCubit.stream),
@@ -338,7 +344,18 @@ class AppRouter {
               routes: [
                 GoRoute(
                   path: AppRoutes.alerts,
-                  builder: (context, state) => const AlertsScreen(),
+                  builder: (context, state) {
+                    final authState = context.read<AuthCubit>().state;
+                    final currentUserId = (authState is AuthSuccess) ? authState.user.id : '';
+                    return BlocProvider(
+                      create: (context) => NotificationsCubit(
+                        getNotificationsUseCase: getNotificationsUseCase,
+                        markNotificationAsReadUseCase: markNotificationAsReadUseCase,
+                        userId: currentUserId,
+                      )..loadNotifications(),
+                      child: const NotificationsScreen(),
+                    );
+                  },
                 ),
               ],
             ),
@@ -447,5 +464,20 @@ class AppRouter {
         ),
       ],
     );
+
+    // Setup FCM / Local Notifications Deep Linking stream listener
+    NotificationService().selectNotificationStream.listen((data) {
+      final type = data['type'];
+      final targetId = data['target_id'];
+      if (targetId != null && targetId.isNotEmpty) {
+        if (type == 'comment' || type == 'like') {
+          routerInstance.push('/posts/$targetId');
+        } else if (type == 'event_update') {
+          routerInstance.push('/events/$targetId');
+        }
+      }
+    });
+
+    return routerInstance;
   }
 }

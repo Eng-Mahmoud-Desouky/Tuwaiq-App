@@ -6,6 +6,15 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
+// Notifications clean architecture slice & service
+import 'core/services/notification_service.dart';
+import 'features/notifications/data/datasources/notifications_remote_data_source.dart';
+import 'features/notifications/data/repositories/notifications_repository_impl.dart';
+import 'features/notifications/domain/usecases/save_fcm_token_usecase.dart';
+import 'features/notifications/domain/usecases/delete_fcm_token_usecase.dart';
+import 'features/notifications/domain/usecases/get_notifications_usecase.dart';
+import 'features/notifications/domain/usecases/mark_notification_as_read_usecase.dart';
+
 // Core
 import 'shared/theme/app_theme.dart';
 
@@ -71,6 +80,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await NotificationService().initialize();
 
   await dotenv.load(fileName: ".env");
 
@@ -138,6 +148,14 @@ void main() async {
   final updateCommentUseCase = UpdateCommentUseCase(postRepository);
   final deletePostUseCase = DeletePostUseCase(postRepository);
 
+  // Notifications
+  final notificationsRemoteDataSource = NotificationsRemoteDataSourceImpl(supabaseClient);
+  final notificationsRepository = NotificationsRepositoryImpl(remoteDataSource: notificationsRemoteDataSource);
+  final saveFCMTokenUseCase = SaveFCMTokenUseCase(notificationsRepository);
+  final deleteFCMTokenUseCase = DeleteFCMTokenUseCase(notificationsRepository);
+  final getNotificationsUseCase = GetNotificationsUseCase(notificationsRepository);
+  final markNotificationAsReadUseCase = MarkNotificationAsReadUseCase(notificationsRepository);
+
   runApp(
     MultiBlocProvider(
       providers: [
@@ -150,6 +168,8 @@ void main() async {
             updatePasswordUseCase: updatePasswordUseCase,
             getCurrentUserUseCase: getCurrentUserUseCase,
             saveUserInterestsUseCase: saveUserInterestsUseCase,
+            saveFCMTokenUseCase: saveFCMTokenUseCase,
+            deleteFCMTokenUseCase: deleteFCMTokenUseCase,
           )..checkCurrentUser(),
         ),
         BlocProvider<PostFeedCubit>(
@@ -186,6 +206,8 @@ void main() async {
         updateCommentUseCase: updateCommentUseCase,
         deletePostUseCase: deletePostUseCase,
         updatePasswordUseCase: updatePasswordUseCase,
+        getNotificationsUseCase: getNotificationsUseCase,
+        markNotificationAsReadUseCase: markNotificationAsReadUseCase,
       ),
     ),
   );
@@ -216,6 +238,8 @@ class MyApp extends StatelessWidget {
   final UpdateCommentUseCase updateCommentUseCase;
   final DeletePostUseCase deletePostUseCase;
   final UpdatePasswordUseCase updatePasswordUseCase;
+  final GetNotificationsUseCase getNotificationsUseCase;
+  final MarkNotificationAsReadUseCase markNotificationAsReadUseCase;
 
   const MyApp({
     super.key,
@@ -243,6 +267,8 @@ class MyApp extends StatelessWidget {
     required this.updateCommentUseCase,
     required this.deletePostUseCase,
     required this.updatePasswordUseCase,
+    required this.getNotificationsUseCase,
+    required this.markNotificationAsReadUseCase,
   });
 
   @override
@@ -273,6 +299,8 @@ class MyApp extends StatelessWidget {
       updateCommentUseCase: updateCommentUseCase,
       deletePostUseCase: deletePostUseCase,
       updatePasswordUseCase: updatePasswordUseCase,
+      getNotificationsUseCase: getNotificationsUseCase,
+      markNotificationAsReadUseCase: markNotificationAsReadUseCase,
     );
 
     return MaterialApp.router(
