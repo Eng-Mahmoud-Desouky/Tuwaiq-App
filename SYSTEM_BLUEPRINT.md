@@ -1,5 +1,5 @@
 # 📐 System Blueprint — Tuwaiq App
-**Version:** 1.6.0 | **Status:** Active | **Last Updated:** 2026-06-30
+**Version:** 1.8.0 | **Status:** Active | **Last Updated:** 2026-06-30
 
 ---
 
@@ -16,7 +16,9 @@
 10. [Content Sharing & Interaction Feature & Engineering Decisions](#10-content-sharing--interaction-feature--engineering-decisions)
 11. [Password Recovery & Reset Flow & Engineering Decisions](#11-password-recovery--reset-flow--engineering-decisions)
 12. [Discover (Explore) Events Feature & Engineering Decisions](#12-discover-explore-events-feature--engineering-decisions)
-13. [Change Log](#13-change-log)
+13. [UI Refactoring & Rebranding to $CRATCH & Event Management Layout](#14-ui-refactoring--rebranding-to-scratch--event-management-layout)
+14. [Push Notifications & Deep Linking Flow & Engineering Decisions](#15-push-notifications--deep-linking-flow--engineering-decisions)
+15. [Change Log](#13-change-log)
 
 ---
 
@@ -149,10 +151,18 @@ lib/
     │       ├── cubits/          # CreatePostCubit, PostFeedCubit, PostCommentsCubit
     │       ├── screens/         # CreatePostScreen, PostDetailsScreen
     │       └── widgets/         # PostCard, CommentCard
-    ├── alerts/                  # Notifications & Alerts stub
+    ├── notifications/           # Push Notifications & In-App history
+    │   ├── data/
+    │   │   ├── datasources/     # NotificationsRemoteDataSource
+    │   │   ├── models/          # NotificationModel
+    │   │   └── repositories/    # NotificationsRepositoryImpl
+    │   ├── domain/
+    │   │   ├── entities/        # NotificationEntity
+    │   │   ├── repositories/    # NotificationsRepository interface
+    │   │   └── usecases/        # SaveFCMTokenUseCase, DeleteFCMTokenUseCase, GetNotificationsUseCase, MarkNotificationAsReadUseCase
     │   └── presentation/
-    │       └── screens/
-    │           └── alerts_screen.dart
+    │       ├── cubit/           # NotificationsCubit, NotificationsState
+    │       └── screens/         # NotificationsScreen (RTL, Dark Mode pull-to-refresh, custom pulse-skeleton loaders)
     └── profile/                 # Profile management and social connections
         ├── data/
         │   ├── datasources/
@@ -173,11 +183,12 @@ lib/
 The application uses **GoRouter** for declarative routing, nested navigation, and authentication-based redirection.
 
 - **Centralized Router:** Defined in [app_router.dart](file:///c:/Users/IT/StudioProjects/tuwaiq_app/lib/core/router/app_router.dart).
-- **Stateful Bottom Navigation:** Implemented using `StatefulShellRoute.indexedStack`. This allows each navigation branch (Home, Explore, Create Content, Alerts, Profile) to maintain its own navigation stack and state when switching between tabs.
+- **Stateful Bottom Navigation:** Implemented using `StatefulShellRoute.indexedStack`. This allows each of the 5 navigation branches (Home, Explore, Create Event (Center), Manage Events, Alerts/Notifications) to maintain its own navigation stack and state when switching between tabs.
 - **Auth Guard & Redirection:** The router is configured with a `redirect` handler that listens to the `AuthCubit` stream (via `AppRouterRefreshStream`). It dynamically redirects users:
   - If unauthenticated: redirects to the Sign-In screen.
   - If authenticated but has selected fewer than 3 interests: redirects to the Interests Selection screen.
   - If authenticated with complete interests and attempts to access authentication screens (like Sign-In/Sign-Up): redirects to the Home screen.
+- **Deep Linking & Push Taps:** Centrally intercepts click streams from `NotificationService` in `AppRouter` and navigates to details screens (`/posts/$targetId` or `/events/$targetId`) dynamically. Supports app opens in foreground, background, and cold start terminated states.
 - **Manual Dependency Injection:** Since there is no service locator (like `GetIt`) in Sprint 1, dependency injection is performed manually in `main.dart` and the required use cases are passed down to `AppRouter.router()`.
 
 ---
@@ -271,7 +282,39 @@ Stores flat comments on user posts.
 * `post_comments.post_id` → `posts.id` (Many-to-One, Foreign Key)
 * `post_comments.creator_id` → `profiles.id` (Many-to-One, Foreign Key)
 
-### 5.2 ERD — Complete Database Schema Scope (Sprint 2)
+#### `user_tokens`
+Stores FCM device tokens for push notifications.
+
+| Column | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `user_id` | `uuid` | PK, FK → `profiles.id` ON DELETE CASCADE | Owner of the device token |
+| `fcm_token` | `text` | PK, UNIQUE | Unique FCM device token |
+| `device_platform` | `text` | NOT NULL | Device OS (e.g. ios, android) |
+| `updated_at` | `timestamptz` | DEFAULT now() | Timestamp of last upsert |
+
+**Relationships:**
+* `user_tokens.user_id` → `profiles.id` (Many-to-One, Foreign Key)
+
+#### `notifications`
+Stores generated push notifications for in-app history.
+
+| Column | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | PK, DEFAULT gen_random_uuid() | Unique notification ID |
+| `user_id` | `uuid` | FK → `profiles.id` ON DELETE CASCADE | Target user to receive push |
+| `actor_id` | `uuid` | FK → `profiles.id` ON DELETE SET NULL | User who triggered the action |
+| `type` | `notification_type` | enum: comment, like, event_update | Type of trigger event |
+| `target_id` | `uuid` | NOT NULL | Target item ID (post_id or event_id) |
+| `title` | `text` | NOT NULL | Notification title |
+| `body` | `text` | NOT NULL | Notification body |
+| `is_read` | `boolean` | DEFAULT false | Read receipt status |
+| `created_at` | `timestamptz` | DEFAULT now() | Creation timestamp |
+
+**Relationships:**
+* `notifications.user_id` → `profiles.id` (Many-to-One, Foreign Key)
+* `notifications.actor_id` → `profiles.id` (Many-to-One, Foreign Key)
+
+### 5.2 ERD — Complete Database Schema Scope (Sprint 3)
 
 ```
 auth.users (Supabase Managed)
@@ -447,6 +490,26 @@ USING (
     bucket_id = 'posts'::text AND 
     owner = auth.uid()
 );
+
+-- -----------------------------------------------------
+-- Push Notifications RLS Policies (Sprint 3)
+-- -----------------------------------------------------
+
+-- SELECT: users can view their own tokens
+CREATE POLICY "Users can view own tokens" ON public.user_tokens
+    FOR SELECT TO authenticated USING (auth.uid() = user_id);
+
+-- ALL: users can insert/update/delete their own tokens (UPSERT)
+CREATE POLICY "Users can manage own tokens" ON public.user_tokens
+    FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+-- SELECT: users can only view their own notifications
+CREATE POLICY "Users can view own notifications" ON public.notifications
+    FOR SELECT TO authenticated USING (auth.uid() = user_id);
+
+-- UPDATE: users can only update read status for their own notifications
+CREATE POLICY "Users can update own notifications" ON public.notifications
+    FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 ```
 
 ---
@@ -701,26 +764,12 @@ The **Discover / Explore** module (`features/explore`) is a fully interactive pa
 
 ---
 
-## 13. Change Log
+## 13. UI Refactoring & Rebranding to $CRATCH & Event Management Layout
 
-| `1.7.0` | 2026-06-30 | Mahmoud Desouky | Rebranded the app to $CRATCH with metallic silver/slate color scheme and dark card styles. Built dedicated ManageEventsScreen with edit capability and tabs. Restructured GoRouter to support a 5-branch navigation shell, introducing custom vector AddEventIcon using CustomPainter and resolving SnackBar BottomAppBar height layout assertion crashes. Resolved Navigator pop state lock failures. |
-| `1.6.0` | 2026-06-30 | Mahmoud Desouky | Fully implemented Discover/Explore Events page module (features/explore). Built ExploreCubit and ExploreState for managing and locally filtering events lists by category and text search query. Configured GoRouter and main.dart to dynamically register the cubit. Polished the UI to match the Stitch design using a responsive event card grid, a search field, and horizontal scrolling category chips with emojis. |
-| `1.5.0` | 2026-06-28 | Mahmoud Desouky | Implemented Password Recovery / Reset Flow. Built dedicated `UpdatePasswordCubit` and states. Reconfigured deep linking from HTTPS App/Universal links to Custom URL Scheme (`cratch://reset-callback`) for compatibility. Resolved PKCE code exchange race condition by handling `onAuthStateChange` natively inside `AuthCubit` and rendering a fallback loading screen at `/reset-callback`. Prevented infinite redirection loop by calling `signOut()` on back navigation and password update success. Migrated all Auth screens to GoRouter. |
-| `1.4.1` | 2026-06-26 | Mahmoud Desouky | Stabilization and bug fixes for Content Sharing feature: resolved PostgREST PGRST201 ambiguous relationship error by specifying fkey constraint; resolved comment insertion UUID mismatch; fixed double-padding UI keyboard issue; fixed Bloc scoping crash by registering PostFeedCubit globally; fixed CreatePostScreen navigation pop on success. |
-| `1.4.0` | 2026-06-25 | Mahmoud Desouky | Implemented Content Sharing & Posts Interaction feature (`features/posts`). Created SQL schema for `posts`, `post_likes`, and `post_comments` with triggers protecting timestamps and check constraints limiting length/MIME sizes. Designed image rollbacks on DB failures, leak cleanups on delete, optimistic debounced liking, memory-capped cached network image loaders, global state provider management, and cursor pagination. |
-| `1.3.0` | 2026-06-20 | Mahmoud Desouky | Implemented Event Management Feature (`features/events`). Designed database schema, storage bucket, and RLS policies for `events`. Created composite `EventEntity` (embedding `UserProfile`) to resolve creator profile data in a single request. Developed `CreateEventCubit` with strictly defined states (Initial, UploadingImage, SavingData, Success, Error) separating storage upload from database insert. Added `CreateEventScreen` and `EventDetailsScreen` with Arabic RTL localizations support (`flutter_localizations`), form validation, maps redirection, and `mounted` guards for transitions. |
-| `1.2.0` | 2026-06-19 | Mahmoud Desouky | Migrated application routing to `go_router` with declarative routing and nested branch navigation (`StatefulShellRoute`). Moved `HomeScreen` to `features/home` and created main navigation bar shell (`MainScreen`). Created stub features (`explore`, `create_content`, `alerts`) and set up centralized redirection gates for authentication status and user interests checklist. |
-| `1.1.0` | 2026-05-31 | Mahmoud Desouky | Implemented Auth & Onboarding feature. Added `interests` text[] to `profiles`, RLS security triggers, deep linking, bloc/Cubit state management, and 6 premium RTL UI screens. |
-| `1.0.0` | 2026-05-20 | Mahmoud Desouky | Initial Blueprint — Tech Stack, User Roles, DB Core (profiles), Clean Architecture, Theming System |
-
----
-
-## 14. UI Refactoring & Rebranding to $CRATCH & Event Management Layout
-
-### 14.1 Feature Overview
+### 13.1 Feature Overview
 In this iteration, the application underwent a visual refactoring and rebranding to **$CRATCH**, shifting from standard themes to a premium dark aesthetic with high-contrast metallic details. The navigation structure was also expanded to place "Add Event" as a first-class center action, while keeping the "Event Management" view accessible as a separate tab.
 
-### 14.2 Engineering Decisions & UI Improvements
+### 13.2 Engineering Decisions & UI Improvements
 1. **Metallic Silver & Slate Gray Theme Migration**:
    To align with the transparent chrome `$CRATCH` brand logo, the overall color palette was refactored in [app_colors.dart](file:///c:/Users/IT/StudioProjects/tuwaiq_app/lib/shared/theme/app_colors.dart) to define brand metallic shades: `#E2E8F0` (primary silver), `#94A3B8` (slate steel), and absolute black `#000000`. Hardcoded colors throughout the cards and pages were removed.
 2. **Post & Comment Card Visual Polish**:
@@ -741,6 +790,60 @@ In this iteration, the application underwent a visual refactoring and rebranding
    To prevent `!_debugLocked` navigator assertion errors, the back button and submit listener in `CreateEventScreen` dynamically check if `widget.eventToEdit != null`:
    - If in **edit mode** (pushed to the root navigator), it calls `Navigator.of(context).pop()`.
    - If in **create mode** (tab root of branch 2), it calls `context.go(AppRoutes.home)` to change tabs safely.
+
+---
+
+## 14. Push Notifications & Deep Linking Flow & Engineering Decisions
+
+### 14.1 Feature Overview
+The **Push Notification & Deep Linking** system enables real-time notification dispatches via Firebase Cloud Messaging (FCM), database persistence of notification history, in-app notifications rendering, and seamless redirection to specific content pages upon tapping notification alerts.
+Key pages and components:
+- **`NotificationsScreen`**: Dark-mode notification list styled after the $CRATCH container layout (Pitch Black background, Slate steel border, `#15181C` container background). Contains custom pulse skeleton loaders, pull-to-refresh, and infinite scroll pagination.
+- **`NotificationService`**: A centralized Flutter service wrapped around `firebase_messaging` and `flutter_local_notifications` that handles FCM token fetching, background messaging, permission requests, OS channel registration, and exposes a broadcast stream for notification tap actions.
+
+### 14.2 Engineering Decisions & System Flow
+
+#### 14.2.1 Database Architecture & Postgres triggers
+1. **FCM Token Registry (`user_tokens` table)**:
+   Device tokens are saved against authenticated profiles. A unique constraint on `(user_id, fcm_token)` paired with DB upsert logic prevents duplicate token insertion across different devices or logins.
+2. **Notification Persistence (`notifications` table)**:
+   Saves notification records. Contains foreign key relationships to profiles (target `user_id` and actor `actor_id`), action payload links (`target_id`), and titles/bodies.
+3. **Database triggers**:
+   - `on_post_commented`: Triggers on comment insertions, auto-populating notification titles and bodies with the actor's display name.
+   - `on_post_liked` (**Milestone Logic**): To prevent resource exhaustion and user fatigue, likes do not blindly trigger pushes. The function calculates likes count and only inserts notifications when counts match threshold milestone steps: `ARRAY[1, 5, 10, 20, 50, 100, 200, 500, 1000]`.
+   - `on_event_updated`: Triggers on event updates. Queries the `saved_events` table to notify only users who saved the event, excluding the creator.
+   - `on_notification_created` (Webhook Dispatcher): Invokes `net.http_post` via the `pg_net` Postgres extension, asynchronously notifying the `push-notification` Supabase Edge Function of new notification inserts.
+
+#### 14.2.2 Backend Edge Function
+1. **RS256 FCM HTTP v1 Authentication**:
+   The Deno Edge Function parses the `FIREBASE_SERVICE_ACCOUNT` JSON secret containing Firebase Service Account credentials. It dynamically generates and signs a secure RS256 JWT using the Web Crypto API, exchanging it with Google OAuth2 APIs for a Bearer token without requiring heavy external dependencies.
+2. **Non-Blocking Cleanups**:
+   To minimize response latencies, FCM push dispatches execute concurrently via `Promise.all()`. If FCM responds with unregistered or invalid tokens (e.g. app uninstalled), the Edge Function schedules database deletions asynchronously using a `.then()` promise callback without `await`-blocking the API response.
+
+#### 14.2.3 Client-Side FCM Sync
+1. **Token Lifecycle Syncing**:
+   FCM tokens are kept in sync with authentication state. Inside `AuthCubit`, successful logins (`AuthSuccess` state) and session recovery hooks automatically fetch current FCM tokens and call `SaveFCMTokenUseCase`. Logouts call `DeleteFCMTokenUseCase` before clearing local sessions.
+2. **Foreground Banner Handlers**:
+   When the app is in the foreground, FCM does not trigger heads-up displays natively. `NotificationService` intercepts the foreground message stream and triggers a local banner utilizing `flutter_local_notifications` with high importance channels.
+3. **GoRouter Integration**:
+   `AppRouter` subscribes to `NotificationService.selectNotificationStream` clicks. Tap events trigger instant redirection. Comment/like types route to `/posts/$targetId`, whereas event update types route to `/events/$targetId`.
+
+---
+
+## 15. Change Log
+
+| Version | Date | Author | Description |
+| :--- | :--- | :--- | :--- |
+| `1.8.0` | 2026-06-30 | Mahmoud Desouky | Designed and built a complete Push Notification & Deep Linking system (Sprint 3 / Phase 1 to 5). Created database tables (user_tokens, notifications) and triggers on comments, event updates, and milestone-based likes. Deployed and integrated the TypeScript Deno Edge Function with native RS256 token exchange. Implemented Flutter NotificationService and Clean Architecture notifications module with Cubit state management. Bound taps to GoRouter deep linking and fixed analyzer/test failures. |
+| `1.7.0` | 2026-06-30 | Mahmoud Desouky | Rebranded the app to $CRATCH with metallic silver/slate color scheme and dark card styles. Built dedicated ManageEventsScreen with edit capability and tabs. Restructured GoRouter to support a 5-branch navigation shell, introducing custom vector AddEventIcon using CustomPainter and resolving SnackBar BottomAppBar height layout assertion crashes. Resolved Navigator pop state lock failures. |
+| `1.6.0` | 2026-06-30 | Mahmoud Desouky | Fully implemented Discover/Explore Events page module (features/explore). Built ExploreCubit and ExploreState for managing and locally filtering events lists by category and text search query. Configured GoRouter and main.dart to dynamically register the cubit. Polished the UI to match the Stitch design using a responsive event card grid, a search field, and horizontal scrolling category chips with emojis. |
+| `1.5.0` | 2026-06-28 | Mahmoud Desouky | Implemented Password Recovery / Reset Flow. Built dedicated `UpdatePasswordCubit` and states. Reconfigured deep linking from HTTPS App/Universal links to Custom URL Scheme (`cratch://reset-callback`) for compatibility. Resolved PKCE code exchange race condition by handling `onAuthStateChange` natively inside `AuthCubit` and rendering a fallback loading screen at `/reset-callback`. Prevented infinite redirection loop by calling `signOut()` on back navigation and password update success. Migrated all Auth screens to GoRouter. |
+| `1.4.1` | 2026-06-26 | Mahmoud Desouky | Stabilization and bug fixes for Content Sharing feature: resolved PostgREST PGRST201 ambiguous relationship error by specifying fkey constraint; resolved comment insertion UUID mismatch; fixed double-padding UI keyboard issue; fixed Bloc scoping crash by registering PostFeedCubit globally; fixed CreatePostScreen navigation pop on success. |
+| `1.4.0` | 2026-06-25 | Mahmoud Desouky | Implemented Content Sharing & Posts Interaction feature (`features/posts`). Created SQL schema for `posts`, `post_likes`, and `post_comments` with triggers protecting timestamps and check constraints limiting length/MIME sizes. Designed image rollbacks on DB failures, leak cleanups on delete, optimistic debounced liking, memory-capped cached network image loaders, global state provider management, and cursor pagination. |
+| `1.3.0` | 2026-06-20 | Mahmoud Desouky | Implemented Event Management Feature (`features/events`). Designed database schema, storage bucket, and RLS policies for `events`. Created composite `EventEntity` (embedding `UserProfile`) to resolve creator profile data in a single request. Developed `CreateEventCubit` with strictly defined states (Initial, UploadingImage, SavingData, Success, Error) separating storage upload from database insert. Added `CreateEventScreen` and `EventDetailsScreen` with Arabic RTL localizations support (`flutter_localizations`), form validation, maps redirection, and `mounted` guards for transitions. |
+| `1.2.0` | 2026-06-19 | Mahmoud Desouky | Migrated application routing to `go_router` with declarative routing and nested branch navigation (`StatefulShellRoute`). Moved `HomeScreen` to `features/home` and created main navigation bar shell (`MainScreen`). Created stub features (`explore`, `create_content`, `alerts`) and set up centralized redirection gates for authentication status and user interests checklist. |
+| `1.1.0` | 2026-05-31 | Mahmoud Desouky | Implemented Auth & Onboarding feature. Added `interests` text[] to `profiles`, RLS security triggers, deep linking, bloc/Cubit state management, and 6 premium RTL UI screens. |
+| `1.0.0` | 2026-05-20 | Mahmoud Desouky | Initial Blueprint — Tech Stack, User Roles, DB Core (profiles), Clean Architecture, Theming System |
 
 ---
 

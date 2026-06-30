@@ -1,6 +1,6 @@
 {
-    "name": "tuwaiq_app",
-    "short_name": "tuwaiq_app",
+    "name": "Scratch",
+    "short_name": "Scratch",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
