@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/theme/app_text_styles.dart';
 import '../../domain/entities/event_entity.dart';
+import 'event_interest_button.dart';
 
 class EventCardWidget extends StatelessWidget {
   final EventEntity event;
@@ -120,6 +121,14 @@ class EventCardWidget extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: EventInterestButton(
+                      eventId: event.id,
+                      creatorId: event.creatorId,
                     ),
                   ),
                 ],

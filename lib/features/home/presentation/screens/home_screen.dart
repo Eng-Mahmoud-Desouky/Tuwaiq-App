@@ -206,7 +206,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (item is PostEntity) {
                     return PostCard(post: item);
                   } else if (item is EventEntity) {
-                    return EventCardWidget(event: item);
+                    return EventCardWidget(
+                      event: item,
+                      onTap: () {
+                        context.push('/events/${item.id}', extra: item);
+                      },
+                    );
                   }
                   return const SizedBox.shrink();
                 },

@@ -180,8 +180,9 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
                     children: [
                       EventCardWidget(
                         event: event,
-                        onTap: () {
-                          context.push('/events/${event.id}', extra: event);
+                        onTap: () async {
+                          await context.push('/events/${event.id}', extra: event);
+                          _refreshData();
                         },
                       ),
                       const Divider(height: 1, color: AppColors.outline),
@@ -253,8 +254,9 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                 child: EventCardWidget(
                   event: event,
-                  onTap: () {
-                    context.push('/events/${event.id}', extra: event);
+                  onTap: () async {
+                    await context.push('/events/${event.id}', extra: event);
+                    _refreshData();
                   },
                 ),
               );

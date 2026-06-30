@@ -155,7 +155,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   SliverAppBar(
                     expandedHeight: 280,
                     pinned: true,
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: AppColors.background,
                     iconTheme: const IconThemeData(color: Colors.white),
                     actions: [
                       BlocBuilder<EventDetailsCubit, EventDetailsState>(
@@ -464,6 +464,51 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                     ),
                   ),
                 ],
+              ),
+            );
+          }
+          return const SizedBox.shrink();
+        },
+      ),
+      bottomNavigationBar: BlocBuilder<EventDetailsCubit, EventDetailsState>(
+        builder: (context, state) {
+          if (state is EventDetailsLoaded) {
+            final authState = context.read<AuthCubit>().state;
+            final currentUserId =
+                (authState is AuthSuccess) ? authState.user.id : '';
+            final isOwnEvent = state.event.creatorId == currentUserId;
+
+            if (isOwnEvent) return const SizedBox.shrink();
+
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: const BoxDecoration(
+                color: AppColors.surfaceContainerLow,
+                border: Border(
+                  top: BorderSide(
+                    color: AppColors.outline,
+                    width: 0.5,
+                  ),
+                ),
+              ),
+              child: SafeArea(
+                child: PrimaryButton(
+                  text: state.isSaved ? 'إزالة من المهتم بها' : 'إضافة إلى المهتم بها',
+                  icon: state.isSaved ? Icons.bookmark : Icons.bookmark_border,
+                  isOutlined: state.isSaved,
+                  onPressed: () {
+                    if (currentUserId.isNotEmpty) {
+                      context
+                          .read<EventDetailsCubit>()
+                          .toggleSave(currentUserId);
+                    } else {
+                      context.showSnackBar(
+                        'يرجى تسجيل الدخول لحفظ الفعاليات',
+                        isError: true,
+                      );
+                    }
+                  },
+                ),
               ),
             );
           }

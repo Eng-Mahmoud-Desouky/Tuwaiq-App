@@ -346,7 +346,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                     child: Text(
-                      'متابع',
+                      'إلغاء المتابعه',
                       style: AppTextStyles.labelLg.copyWith(
                         color: AppColors.onSurfaceVariant,
                       ),
@@ -375,6 +375,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       'متابعة',
                       style: AppTextStyles.labelLg.copyWith(
                         fontWeight: FontWeight.bold,
+                        color: AppColors.background,
                       ),
                     ),
                   );

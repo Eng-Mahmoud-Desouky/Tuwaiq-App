@@ -5,6 +5,7 @@ import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_bar_avatar.dart';
 import '../../../events/domain/entities/event_entity.dart';
+import '../../../events/presentation/widgets/event_interest_button.dart';
 import '../cubit/explore_cubit.dart';
 import '../cubit/explore_state.dart';
 
@@ -484,6 +485,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             color: AppColors.primary,
                           ),
                         ),
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: EventInterestButton(
+                      eventId: event.id,
+                      creatorId: event.creatorId,
+                    ),
+                  ),
                 ],
               ),
             ),

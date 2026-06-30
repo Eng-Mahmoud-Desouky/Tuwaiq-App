@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/theme/app_text_styles.dart';
@@ -261,7 +262,7 @@ class _SocialConnectionsScreenState extends State<SocialConnectionsScreen>
   }
 
   void _navigateToProfile(BuildContext context, String userId) {
-    Navigator.pushNamed(context, AppRoutes.profile, arguments: userId);
+    context.push(AppRoutes.profile, extra: userId);
   }
 
   void _toggleFollow(
