@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_bar_avatar.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../posts/presentation/cubits/post_feed/post_feed_cubit.dart';
 import '../../../posts/presentation/cubits/post_feed/post_feed_state.dart';
@@ -54,25 +55,34 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.logout, color: AppColors.primary),
-          onPressed: () {
-            context.read<AuthCubit>().signOut();
-            context.go(AppRoutes.signIn);
-          },
+        leading: const AppBarAvatar(),
+        title: const Text(
+          r'$CRATCH',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w900,
+            fontSize: 22,
+            letterSpacing: 1.2,
+          ),
         ),
-        title: const Text('الرئيسية', style: AppTextStyles.titleSm),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.person, color: AppColors.primary),
+            icon: const Icon(Icons.logout, color: AppColors.secondary),
             onPressed: () {
-              context.push(AppRoutes.profile);
+              context.read<AuthCubit>().signOut();
+              context.go(AppRoutes.signIn);
             },
           ),
         ],
+        shape: const Border(
+          bottom: BorderSide(
+            color: AppColors.outline,
+            width: 0.5,
+          ),
+        ),
       ),
       body: BlocBuilder<PostFeedCubit, PostFeedState>(
         builder: (context, state) {

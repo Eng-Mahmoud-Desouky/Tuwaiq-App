@@ -71,7 +71,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 height: 250,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.primary.withOpacity(0.04),
+                  color: AppColors.primary.withOpacity(0.12),
                 ),
                 child: ClipOval(
                   child: Center(
@@ -80,7 +80,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       height: 150,
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white,
+                        color: Colors.transparent,
                       ),
                     ),
                   ),
@@ -95,7 +95,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 height: 200,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.secondary.withOpacity(0.04),
+                  color: AppColors.primary.withOpacity(0.08),
                 ),
               ),
             ),
@@ -115,15 +115,10 @@ class _SignInScreenState extends State<SignInScreen> {
                           const SizedBox(height: 20),
                           // Top Center Logo
                           Center(
-                            child: Image.network(
-                              'https://lh3.googleusercontent.com/aida-public/AB6AXuA19htGz-3Us5OscjrB29ogEmjcJjfsqzOxZHgkscv3auDe3g0zZajjl2WKcFvmqsg_FPQ3LzUEvTs4dMvQx7iEoZnzQ2AmNzh8l8B37xbXvpah8bZqUS4ySPHzty4ROmxqbcItUTHSq77XFulJq-tuGDO-c71JXAbdqdvHh49cZ0D8zAB-Su4ui7nExAlrlfZe-t2kbAtpAT3NL1EGiA_Oab1cjpNc_4zBviATGKbJ9-vMrPgL80BjMiKxyKPnqQko5XGsOUlG-KI',
-                              height: 96,
+                            child: Image.asset(
+                              'assets/images/logo.png',
+                              height: 120,
                               fit: BoxFit.contain,
-                              errorBuilder: (_, __, ___) => const Icon(
-                                Icons.explore,
-                                size: 96,
-                                color: AppColors.secondary,
-                              ),
                             ),
                           ),
                           const SizedBox(height: 32),

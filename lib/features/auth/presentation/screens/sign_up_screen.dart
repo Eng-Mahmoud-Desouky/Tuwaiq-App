@@ -105,7 +105,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'مرحباً بك في عالم طويق الحصري',
+                  'مرحباً بك في عالم SCRATCH الحصري',
                   style: AppTextStyles.bodyLg.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
@@ -134,24 +134,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.arrow_forward, color: AppColors.primary),
+            icon: const Icon(Icons.arrow_forward, color: Colors.white),
             onPressed: () => context.pop(),
           ),
         ],
         title: Center(
-          child: Image.network(
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuA19htGz-3Us5OscjrB29ogEmjcJjfsqzOxZHgkscv3auDe3g0zZajjl2WKcFvmqsg_FPQ3LzUEvTs4dMvQx7iEoZnzQ2AmNzh8l8B37xbXvpah8bZqUS4ySPHzty4ROmxqbcItUTHSq77XFulJq-tuGDO-c71JXAbdqdvHh49cZ0D8zAB-Su4ui7nExAlrlfZe-t2kbAtpAT3NL1EGiA_Oab1cjpNc_4zBviATGKbJ9-vMrPgL80BjMiKxyKPnqQko5XGsOUlG-KI',
+          child: Image.asset(
+            'assets/images/logo.png',
             height: 32,
             fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) =>
-                const Text('طويق', style: AppTextStyles.titleSm),
           ),
         ),
         leading: const SizedBox(width: 48), // Match balance
@@ -187,7 +185,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'انضم إلى مجتمع طويق',
+                        'انضم إلى مجتمع SCRATCH',
                         textAlign: TextAlign.right,
                         style: AppTextStyles.bodySm.copyWith(
                           color: AppColors.onSurfaceVariant,

@@ -75,11 +75,11 @@ class _InterestsScreenState extends State<InterestsScreen> {
     final bool canProceed = selectedCount >= 3;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
           if (state is AuthSuccess) {
-            context.showSnackBar('تم حفظ اهتماماتك بنجاح! مرحباً بك في طويق.');
+            context.showSnackBar('تم حفظ اهتماماتك بنجاح! مرحباً بك في SCRATCH.');
             context.go(AppRoutes.home);
           } else if (state is AuthError) {
             context.showSnackBar(state.message, isError: true);

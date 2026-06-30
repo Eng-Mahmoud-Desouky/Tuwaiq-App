@@ -31,18 +31,13 @@ class MainScreen extends StatelessWidget {
       body: navigationShell,
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Color(0x0F000000),
-              blurRadius: 24,
-              offset: Offset(0, -8),
+          color: AppColors.background,
+          border: Border(
+            top: BorderSide(
+              color: AppColors.outline,
+              width: 0.5,
             ),
-          ],
+          ),
         ),
         padding: const EdgeInsets.only(bottom: 16, top: 8),
         child: Row(
@@ -50,12 +45,14 @@ class MainScreen extends StatelessWidget {
           children: [
             _buildNavBarItem(
               icon: Icons.home_outlined,
+              activeIcon: Icons.home,
               label: 'الرئيسية',
               isActive: navigationShell.currentIndex == 0,
               onTap: () => _onTap(context, 0),
             ),
             _buildNavBarItem(
               icon: Icons.explore_outlined,
+              activeIcon: Icons.explore,
               label: 'اكتشف',
               isActive: navigationShell.currentIndex == 1,
               onTap: () => _onTap(context, 1),
@@ -63,32 +60,40 @@ class MainScreen extends StatelessWidget {
             GestureDetector(
               onTap: () => _onTap(context, 2),
               child: Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(10),
                 decoration: const BoxDecoration(
                   color: AppColors.primary,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Color(0x1F000000),
-                      blurRadius: 12,
+                      color: Color(0x3F000000),
+                      blurRadius: 8,
                       offset: Offset(0, 4),
                     ),
                   ],
                 ),
-                child: const Icon(Icons.add, size: 28, color: Colors.white),
+                child: const Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 2, right: 2),
+                      child: Icon(Icons.calendar_today_outlined, size: 22, color: Colors.white),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Icon(Icons.add, size: 12, color: Colors.white, weight: 900),
+                    ),
+                  ],
+                ),
               ),
             ),
             _buildNavBarItem(
               icon: Icons.notifications_outlined,
+              activeIcon: Icons.notifications,
               label: 'التنبيهات',
               isActive: navigationShell.currentIndex == 3,
               onTap: () => _onTap(context, 3),
-            ),
-            _buildNavBarItem(
-              icon: Icons.person,
-              label: 'حسابي',
-              isActive: navigationShell.currentIndex == 4,
-              onTap: () => _onTap(context, 4),
             ),
           ],
         ),
@@ -98,6 +103,7 @@ class MainScreen extends StatelessWidget {
 
   Widget _buildNavBarItem({
     required IconData icon,
+    required IconData activeIcon,
     required String label,
     required bool isActive,
     required VoidCallback onTap,
@@ -108,14 +114,16 @@ class MainScreen extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            icon,
-            color: isActive ? AppColors.primary : AppColors.onSurfaceVariant,
+            isActive ? activeIcon : icon,
+            color: isActive ? AppColors.primary : AppColors.secondary,
+            size: 26,
           ),
           const SizedBox(height: 4),
           Text(
             label,
             style: AppTextStyles.labelSm.copyWith(
-              color: isActive ? AppColors.primary : AppColors.onSurfaceVariant,
+              color: isActive ? AppColors.primary : AppColors.secondary,
+              fontSize: 10,
             ),
           ),
         ],

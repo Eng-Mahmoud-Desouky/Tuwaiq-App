@@ -39,33 +39,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.surfaceContainerLowest,
+        backgroundColor: AppColors.background,
         elevation: 0,
         centerTitle: true,
         leading: isOwnProfile
             ? IconButton(
-                icon: const Icon(Icons.menu, color: AppColors.onSurfaceVariant),
+                icon: const Icon(Icons.logout, color: AppColors.secondary),
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('تسجيل الخروج...'),
-                      action: SnackBarAction(
-                        label: 'نعم',
-                        onPressed: () {
-                          context.read<AuthCubit>().signOut();
-                          context.go(AppRoutes.signIn);
-                        },
-                      ),
-                    ),
-                  );
+                  context.read<AuthCubit>().signOut();
+                  context.go(AppRoutes.signIn);
                 },
               )
-            : const BackButton(color: AppColors.onSurface),
-        title: Text(
+            : const BackButton(color: Colors.white),
+        title: const Text(
           'الملف الشخصي',
-          style: AppTextStyles.titleMd.copyWith(
+          style: TextStyle(
+            color: Colors.white,
             fontWeight: FontWeight.bold,
-            color: AppColors.primary,
+            fontSize: 20,
+          ),
+        ),
+        shape: const Border(
+          bottom: BorderSide(
+            color: AppColors.outline,
+            width: 0.5,
           ),
         ),
       ),
@@ -173,17 +170,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     height: 180,
                     fit: BoxFit.cover,
                   )
-                : Container(
-                    width: double.infinity,
-                    height: 180,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [AppColors.primary, AppColors.secondary],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                  ),
+                : const AnimatedCoverBackground(),
             // Edit Cover Photo icon overlay
             if (isOwnProfile)
               Positioned(
@@ -205,45 +192,61 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ),
-            // Avatar positioned overlapping
+            // Avatar positioned overlapping with premium hexagon shape/border
             Positioned(
               bottom: -50,
               child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColors.background,
-                    width: 4,
-                  ),
-                  boxShadow: const [
+                width: 104,
+                height: 104,
+                decoration: const BoxDecoration(
+                  boxShadow: [
                     BoxShadow(
-                      color: Color(0x0F000000),
+                      color: Color(0x3F000000),
                       blurRadius: 12,
                       offset: Offset(0, 4),
                     ),
                   ],
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
-                  child: profile.avatarUrl != null && profile.avatarUrl!.isNotEmpty
-                      ? Image.network(
-                          profile.avatarUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              _buildDefaultAvatar(profile.fullName),
-                        )
-                      : _buildDefaultAvatar(profile.fullName),
+                child: ClipPath(
+                  clipper: HexagonClipper(),
+                  child: Container(
+                    color: AppColors.tuwaiqGold, // Gold border
+                    padding: const EdgeInsets.all(4),
+                    child: ClipPath(
+                      clipper: HexagonClipper(),
+                      child: Container(
+                        color: AppColors.background,
+                        child: profile.avatarUrl != null && profile.avatarUrl!.isNotEmpty
+                            ? Image.network(
+                                profile.avatarUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    _buildDefaultAvatar(profile.fullName),
+                              )
+                            : _buildDefaultAvatar(profile.fullName),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
           ],
         ),
         const SizedBox(height: 58),
-        Text(
-          profile.fullName,
-          style: AppTextStyles.titleMd.copyWith(color: AppColors.onSurface, fontWeight: FontWeight.bold),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              profile.fullName,
+              style: AppTextStyles.titleMd.copyWith(color: AppColors.onSurface, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(width: 6),
+            const Icon(
+              Icons.verified,
+              color: Colors.blue, // Verified badge in Twitter-like blue color
+              size: 18,
+            ),
+          ],
         ),
         const SizedBox(height: 4),
         Text(
@@ -797,5 +800,93 @@ class _ProfileScreenState extends State<ProfileScreen> {
             currentUserId,
           );
         });
+  }
+}
+
+// Custom Hexagonal Clipper for Premium Profile Avatar
+class HexagonClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    final w = size.width;
+    final h = size.height;
+    path.moveTo(w * 0.5, 0);
+    path.lineTo(w, h * 0.25);
+    path.lineTo(w, h * 0.75);
+    path.lineTo(w * 0.5, h);
+    path.lineTo(0, h * 0.75);
+    path.lineTo(0, h * 0.25);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
+// Premium Animated Gradient Background for Profile Cover
+class AnimatedCoverBackground extends StatefulWidget {
+  const AnimatedCoverBackground({super.key});
+
+  @override
+  State<AnimatedCoverBackground> createState() => _AnimatedCoverBackgroundState();
+}
+
+class _AnimatedCoverBackgroundState extends State<AnimatedCoverBackground> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<Alignment> _topAlignment;
+  late Animation<Alignment> _bottomAlignment;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 6),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _topAlignment = TweenSequence<Alignment>([
+      TweenSequenceItem(tween: AlignmentTween(begin: Alignment.topLeft, end: Alignment.topRight), weight: 1),
+      TweenSequenceItem(tween: AlignmentTween(begin: Alignment.topRight, end: Alignment.bottomRight), weight: 1),
+      TweenSequenceItem(tween: AlignmentTween(begin: Alignment.bottomRight, end: Alignment.bottomLeft), weight: 1),
+      TweenSequenceItem(tween: AlignmentTween(begin: Alignment.bottomLeft, end: Alignment.topLeft), weight: 1),
+    ]).animate(_controller);
+
+    _bottomAlignment = TweenSequence<Alignment>([
+      TweenSequenceItem(tween: AlignmentTween(begin: Alignment.bottomRight, end: Alignment.bottomLeft), weight: 1),
+      TweenSequenceItem(tween: AlignmentTween(begin: Alignment.bottomLeft, end: Alignment.topLeft), weight: 1),
+      TweenSequenceItem(tween: AlignmentTween(begin: Alignment.topLeft, end: Alignment.topRight), weight: 1),
+      TweenSequenceItem(tween: AlignmentTween(begin: Alignment.topRight, end: Alignment.bottomRight), weight: 1),
+    ]).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Container(
+          width: double.infinity,
+          height: 180,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: const [
+                Color(0xFF7B5FF8), // Brand Purple
+                Color(0xFF1E144D), // Dark Purple/Navy
+                Color(0xFF000000), // Pitch Black
+              ],
+              begin: _topAlignment.value,
+              end: _bottomAlignment.value,
+            ),
+          ),
+        );
+      },
+    );
   }
 }

@@ -3,8 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/theme/app_text_styles.dart';
-import '../../../../features/auth/presentation/cubit/auth_cubit.dart';
-import '../../../../features/auth/presentation/cubit/auth_state.dart';
+import '../../../../shared/widgets/app_bar_avatar.dart';
 import '../../../events/domain/entities/event_entity.dart';
 import '../cubit/explore_cubit.dart';
 import '../cubit/explore_state.dart';
@@ -83,11 +82,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = context.watch<AuthCubit>().state;
-    String? userAvatarUrl;
-    if (authState is AuthSuccess) {
-      userAvatarUrl = authState.user.avatarUrl;
-    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -95,37 +89,23 @@ class _ExploreScreenState extends State<ExploreScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         centerTitle: true,
-        title: Text(
-          'طويق',
-          style: AppTextStyles.headlineMd.copyWith(
-            color: AppColors.primary,
-            fontWeight: FontWeight.bold,
+        title: const Text(
+          r'$CRATCH',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w900,
+            fontSize: 22,
+            letterSpacing: 1.2,
           ),
         ),
-        leading: Padding(
-          padding: const EdgeInsets.only(right: 16.0),
-          child: Center(
-            child: CircleAvatar(
-              radius: 18,
-              backgroundColor: AppColors.surfaceContainerLow,
-              backgroundImage: userAvatarUrl != null && userAvatarUrl.isNotEmpty
-                  ? NetworkImage(userAvatarUrl)
-                  : null,
-              child: userAvatarUrl == null || userAvatarUrl.isEmpty
-                  ? const Icon(Icons.person, size: 20, color: AppColors.outline)
-                  : null,
-            ),
+        leading: const AppBarAvatar(),
+        actions: const [],
+        shape: const Border(
+          bottom: BorderSide(
+            color: AppColors.outline,
+            width: 0.5,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none, color: AppColors.onSurface),
-            onPressed: () {
-              // Navigate to alerts tab/screen
-              context.push('/alerts');
-            },
-          ),
-        ],
       ),
       body: RefreshIndicator(
         color: AppColors.primary,
