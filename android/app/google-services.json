@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "692928202441",
+    "project_id": "scratch-14b85",
+    "storage_bucket": "scratch-14b85.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:692928202441:android:7c776a76c674bd5e82ef18",
+        "android_client_info": {
+          "package_name": "com.example.tuwaiq_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC8A8mGANxk9_qZrHhKBWMSCaNApHZtsSE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
