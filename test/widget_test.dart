@@ -38,11 +38,22 @@ import 'package:tuwaiq_app/features/posts/domain/usecases/update_comment_usecase
 
 import 'package:tuwaiq_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:tuwaiq_app/features/auth/domain/entities/user_entity.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:tuwaiq_app/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:tuwaiq_app/features/auth/domain/usecases/sign_up_usecase.dart';
+import 'package:tuwaiq_app/features/auth/domain/usecases/sign_in_usecase.dart';
+import 'package:tuwaiq_app/features/auth/domain/usecases/sign_out_usecase.dart';
+import 'package:tuwaiq_app/features/auth/domain/usecases/forgot_password_usecase.dart';
 import 'package:tuwaiq_app/features/auth/domain/usecases/update_password_usecase.dart';
+import 'package:tuwaiq_app/features/auth/domain/usecases/get_current_user_usecase.dart';
+import 'package:tuwaiq_app/features/auth/domain/usecases/save_user_interests_usecase.dart';
 import 'package:tuwaiq_app/features/notifications/domain/repositories/notifications_repository.dart';
 import 'package:tuwaiq_app/features/notifications/domain/entities/notification_entity.dart';
 import 'package:tuwaiq_app/features/notifications/domain/usecases/get_notifications_usecase.dart';
 import 'package:tuwaiq_app/features/notifications/domain/usecases/mark_notification_as_read_usecase.dart';
+import 'package:tuwaiq_app/features/notifications/domain/usecases/save_fcm_token_usecase.dart';
+import 'package:tuwaiq_app/features/notifications/domain/usecases/delete_fcm_token_usecase.dart';
 
 class FakeAuthRepo implements AuthRepository {
   @override
@@ -144,40 +155,62 @@ class FakeNotificationsRepo implements NotificationsRepository {
 
 void main() {
   testWidgets('App compiles and loads signIn by default', (WidgetTester tester) async {
+    try {
+      await Supabase.initialize(
+        url: 'https://fake.supabase.co',
+        anonKey: 'fakeAnonKey',
+      );
+    } catch (_) {}
+
     final authRepo = FakeAuthRepo();
     final profileRepo = FakeProfileRepo();
     final eventRepo = FakeEventRepo();
     final postRepo = FakePostRepo();
     final notificationsRepo = FakeNotificationsRepo();
 
+    final authCubit = AuthCubit(
+      signUpUseCase: SignUpUseCase(authRepo),
+      signInUseCase: SignInUseCase(authRepo),
+      signOutUseCase: SignOutUseCase(authRepo),
+      forgotPasswordUseCase: ForgotPasswordUseCase(authRepo),
+      updatePasswordUseCase: UpdatePasswordUseCase(authRepo),
+      getCurrentUserUseCase: GetCurrentUserUseCase(authRepo),
+      saveUserInterestsUseCase: SaveUserInterestsUseCase(authRepo),
+      saveFCMTokenUseCase: SaveFCMTokenUseCase(notificationsRepo),
+      deleteFCMTokenUseCase: DeleteFCMTokenUseCase(notificationsRepo),
+    );
+
     await tester.pumpWidget(
-      MyApp(
-        getProfileUseCase: GetProfileUseCase(profileRepo),
-        updateProfileUseCase: UpdateProfileUseCase(profileRepo),
-        getProfileSocialStatsUseCase: GetProfileSocialStatsUseCase(profileRepo),
-        followUserUseCase: FollowUserUseCase(profileRepo),
-        unfollowUserUseCase: UnfollowUserUseCase(profileRepo),
-        getFollowersUseCase: GetFollowersUseCase(profileRepo),
-        getFollowingUseCase: GetFollowingUseCase(profileRepo),
-        createEventUseCase: CreateEventUseCase(eventRepo),
-        getEventUseCase: GetEventUseCase(eventRepo),
-        getAllEventsUseCase: GetAllEventsUseCase(eventRepo),
-        saveEventUseCase: SaveEventUseCase(eventRepo),
-        unsaveEventUseCase: UnsaveEventUseCase(eventRepo),
-        isEventSavedUseCase: IsEventSavedUseCase(eventRepo),
-        getEventsByUserUseCase: GetEventsByUserUseCase(eventRepo),
-        getSavedEventsUseCase: GetSavedEventsUseCase(eventRepo),
-        getPostsFeedUseCase: GetPostsFeedUseCase(postRepo),
-        createPostUseCase: CreatePostUseCase(postRepo),
-        toggleLikeUseCase: ToggleLikeUseCase(postRepo),
-        getCommentsUseCase: GetCommentsUseCase(postRepo),
-        addCommentUseCase: AddCommentUseCase(postRepo),
-        deleteCommentUseCase: DeleteCommentUseCase(postRepo),
-        updateCommentUseCase: UpdateCommentUseCase(postRepo),
-        deletePostUseCase: DeletePostUseCase(postRepo),
-        updatePasswordUseCase: UpdatePasswordUseCase(authRepo),
-        getNotificationsUseCase: GetNotificationsUseCase(notificationsRepo),
-        markNotificationAsReadUseCase: MarkNotificationAsReadUseCase(notificationsRepo),
+      BlocProvider<AuthCubit>(
+        create: (context) => authCubit,
+        child: MyApp(
+          getProfileUseCase: GetProfileUseCase(profileRepo),
+          updateProfileUseCase: UpdateProfileUseCase(profileRepo),
+          getProfileSocialStatsUseCase: GetProfileSocialStatsUseCase(profileRepo),
+          followUserUseCase: FollowUserUseCase(profileRepo),
+          unfollowUserUseCase: UnfollowUserUseCase(profileRepo),
+          getFollowersUseCase: GetFollowersUseCase(profileRepo),
+          getFollowingUseCase: GetFollowingUseCase(profileRepo),
+          createEventUseCase: CreateEventUseCase(eventRepo),
+          getEventUseCase: GetEventUseCase(eventRepo),
+          getAllEventsUseCase: GetAllEventsUseCase(eventRepo),
+          saveEventUseCase: SaveEventUseCase(eventRepo),
+          unsaveEventUseCase: UnsaveEventUseCase(eventRepo),
+          isEventSavedUseCase: IsEventSavedUseCase(eventRepo),
+          getEventsByUserUseCase: GetEventsByUserUseCase(eventRepo),
+          getSavedEventsUseCase: GetSavedEventsUseCase(eventRepo),
+          getPostsFeedUseCase: GetPostsFeedUseCase(postRepo),
+          createPostUseCase: CreatePostUseCase(postRepo),
+          toggleLikeUseCase: ToggleLikeUseCase(postRepo),
+          getCommentsUseCase: GetCommentsUseCase(postRepo),
+          addCommentUseCase: AddCommentUseCase(postRepo),
+          deleteCommentUseCase: DeleteCommentUseCase(postRepo),
+          updateCommentUseCase: UpdateCommentUseCase(postRepo),
+          deletePostUseCase: DeletePostUseCase(postRepo),
+          updatePasswordUseCase: UpdatePasswordUseCase(authRepo),
+          getNotificationsUseCase: GetNotificationsUseCase(notificationsRepo),
+          markNotificationAsReadUseCase: MarkNotificationAsReadUseCase(notificationsRepo),
+        ),
       ),
     );
   });
