@@ -39,6 +39,10 @@ import 'package:tuwaiq_app/features/posts/domain/usecases/update_comment_usecase
 import 'package:tuwaiq_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:tuwaiq_app/features/auth/domain/entities/user_entity.dart';
 import 'package:tuwaiq_app/features/auth/domain/usecases/update_password_usecase.dart';
+import 'package:tuwaiq_app/features/notifications/domain/repositories/notifications_repository.dart';
+import 'package:tuwaiq_app/features/notifications/domain/entities/notification_entity.dart';
+import 'package:tuwaiq_app/features/notifications/domain/usecases/get_notifications_usecase.dart';
+import 'package:tuwaiq_app/features/notifications/domain/usecases/mark_notification_as_read_usecase.dart';
 
 class FakeAuthRepo implements AuthRepository {
   @override
@@ -127,12 +131,24 @@ class FakePostRepo implements PostRepository {
   Future<void> deletePost(String postId) async {}
 }
 
+class FakeNotificationsRepo implements NotificationsRepository {
+  @override
+  Future<void> saveFCMToken({required String userId, required String token, required String platform}) async {}
+  @override
+  Future<void> deleteFCMToken({required String token}) async {}
+  @override
+  Future<List<NotificationEntity>> getNotifications({required String userId, required int limit, required int offset}) async => [];
+  @override
+  Future<void> markAsRead({required String id}) async {}
+}
+
 void main() {
   testWidgets('App compiles and loads signIn by default', (WidgetTester tester) async {
     final authRepo = FakeAuthRepo();
     final profileRepo = FakeProfileRepo();
     final eventRepo = FakeEventRepo();
     final postRepo = FakePostRepo();
+    final notificationsRepo = FakeNotificationsRepo();
 
     await tester.pumpWidget(
       MyApp(
@@ -160,6 +176,8 @@ void main() {
         updateCommentUseCase: UpdateCommentUseCase(postRepo),
         deletePostUseCase: DeletePostUseCase(postRepo),
         updatePasswordUseCase: UpdatePasswordUseCase(authRepo),
+        getNotificationsUseCase: GetNotificationsUseCase(notificationsRepo),
+        markNotificationAsReadUseCase: MarkNotificationAsReadUseCase(notificationsRepo),
       ),
     );
   });
