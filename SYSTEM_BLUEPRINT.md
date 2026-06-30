@@ -703,6 +703,7 @@ The **Discover / Explore** module (`features/explore`) is a fully interactive pa
 
 ## 13. Change Log
 
+| `1.7.0` | 2026-06-30 | Mahmoud Desouky | Rebranded the app to $CRATCH with metallic silver/slate color scheme and dark card styles. Built dedicated ManageEventsScreen with edit capability and tabs. Restructured GoRouter to support a 5-branch navigation shell, introducing custom vector AddEventIcon using CustomPainter and resolving SnackBar BottomAppBar height layout assertion crashes. Resolved Navigator pop state lock failures. |
 | `1.6.0` | 2026-06-30 | Mahmoud Desouky | Fully implemented Discover/Explore Events page module (features/explore). Built ExploreCubit and ExploreState for managing and locally filtering events lists by category and text search query. Configured GoRouter and main.dart to dynamically register the cubit. Polished the UI to match the Stitch design using a responsive event card grid, a search field, and horizontal scrolling category chips with emojis. |
 | `1.5.0` | 2026-06-28 | Mahmoud Desouky | Implemented Password Recovery / Reset Flow. Built dedicated `UpdatePasswordCubit` and states. Reconfigured deep linking from HTTPS App/Universal links to Custom URL Scheme (`cratch://reset-callback`) for compatibility. Resolved PKCE code exchange race condition by handling `onAuthStateChange` natively inside `AuthCubit` and rendering a fallback loading screen at `/reset-callback`. Prevented infinite redirection loop by calling `signOut()` on back navigation and password update success. Migrated all Auth screens to GoRouter. |
 | `1.4.1` | 2026-06-26 | Mahmoud Desouky | Stabilization and bug fixes for Content Sharing feature: resolved PostgREST PGRST201 ambiguous relationship error by specifying fkey constraint; resolved comment insertion UUID mismatch; fixed double-padding UI keyboard issue; fixed Bloc scoping crash by registering PostFeedCubit globally; fixed CreatePostScreen navigation pop on success. |
@@ -711,6 +712,35 @@ The **Discover / Explore** module (`features/explore`) is a fully interactive pa
 | `1.2.0` | 2026-06-19 | Mahmoud Desouky | Migrated application routing to `go_router` with declarative routing and nested branch navigation (`StatefulShellRoute`). Moved `HomeScreen` to `features/home` and created main navigation bar shell (`MainScreen`). Created stub features (`explore`, `create_content`, `alerts`) and set up centralized redirection gates for authentication status and user interests checklist. |
 | `1.1.0` | 2026-05-31 | Mahmoud Desouky | Implemented Auth & Onboarding feature. Added `interests` text[] to `profiles`, RLS security triggers, deep linking, bloc/Cubit state management, and 6 premium RTL UI screens. |
 | `1.0.0` | 2026-05-20 | Mahmoud Desouky | Initial Blueprint — Tech Stack, User Roles, DB Core (profiles), Clean Architecture, Theming System |
+
+---
+
+## 14. UI Refactoring & Rebranding to $CRATCH & Event Management Layout
+
+### 14.1 Feature Overview
+In this iteration, the application underwent a visual refactoring and rebranding to **$CRATCH**, shifting from standard themes to a premium dark aesthetic with high-contrast metallic details. The navigation structure was also expanded to place "Add Event" as a first-class center action, while keeping the "Event Management" view accessible as a separate tab.
+
+### 14.2 Engineering Decisions & UI Improvements
+1. **Metallic Silver & Slate Gray Theme Migration**:
+   To align with the transparent chrome `$CRATCH` brand logo, the overall color palette was refactored in [app_colors.dart](file:///c:/Users/IT/StudioProjects/tuwaiq_app/lib/shared/theme/app_colors.dart) to define brand metallic shades: `#E2E8F0` (primary silver), `#94A3B8` (slate steel), and absolute black `#000000`. Hardcoded colors throughout the cards and pages were removed.
+2. **Post & Comment Card Visual Polish**:
+   Both [post_card.dart](file:///c:/Users/IT/StudioProjects/tuwaiq_app/lib/features/posts/presentation/widgets/post_card.dart) and [comment_card.dart](file:///c:/Users/IT/StudioProjects/tuwaiq_app/lib/features/posts/presentation/widgets/comment_card.dart) were updated to use `AppColors.surfaceContainerLow` (`#15181C`) as their background and outlined with `AppColors.outline` (`#334155`) borders, creating a cohesive, low-glare dark layout.
+3. **Centered Logo Brand Assets**:
+   Text titles inside the primary AppBars of `HomeScreen`, `ExploreScreen`, `AlertsScreen`, and `PostDetailsScreen` were replaced with `Image.asset('assets/images/logo.png', height: 24, fit: BoxFit.contain)` to reinforce the new brand identity.
+4. **Circular Avatar Constraint Fix**:
+   The avatar rendering inside the AppBar was wrapped in a `Center` widget to discard Flutter's leading AppBar constraints that stretched the circular avatar into an elliptical/oval shape.
+5. **Unified Profile Feed Stream**:
+   The tab-based content filtering inside the Profile screen was removed. Posts and events created by the user are now combined into a unified list, sorted by date (newest first), and rendered in a single stream.
+6. **Bilingual Red Logout Confirmation**:
+   The logout icon was changed to red (`AppColors.error`) and moved to the left actions side of the AppBar in RTL layouts. A custom bilingual confirmation dialog prevents accidental logouts.
+7. **5-Tab Bottom Bar & SnackBar Layout Constraints**:
+   - The navigation shell was restructured into 5 branches: **Home**, **Explore**, **Create Event (Center)**, **Manage Events**, and **Alerts**.
+   - The middle button uses a custom `AddEventIcon` vector widget built with a `CustomPainter` to draw a clean calendar layout with a `+` badge, preventing clutter.
+   - The `Container` of `bottomNavigationBar` inside [main_screen.dart](file:///c:/Users/IT/StudioProjects/tuwaiq_app/lib/features/main/presentation/screens/main_screen.dart) was wrapped in a `BottomAppBar` to provide accurate layout height metrics to the `Scaffold`, resolving rendering crashes when a floating `SnackBar` is displayed.
+8. **Conditional Navigation Logic in CreateEventScreen**:
+   To prevent `!_debugLocked` navigator assertion errors, the back button and submit listener in `CreateEventScreen` dynamically check if `widget.eventToEdit != null`:
+   - If in **edit mode** (pushed to the root navigator), it calls `Navigator.of(context).pop()`.
+   - If in **create mode** (tab root of branch 2), it calls `context.go(AppRoutes.home)` to change tabs safely.
 
 ---
 
