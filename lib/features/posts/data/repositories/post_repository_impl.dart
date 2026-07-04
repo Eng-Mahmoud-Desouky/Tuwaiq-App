@@ -32,16 +32,27 @@ class PostRepositoryImpl implements PostRepository {
   Future<PostEntity> createPost({
     required PostEntity post,
     String? localImagePath,
+    String? localVideoPath,
   }) async {
     String? uploadedImageUrl;
+    String? uploadedVideoUrl;
 
     try {
       if (localImagePath != null && localImagePath.isNotEmpty) {
         // Upload image first
-        uploadedImageUrl = await remoteDataSource.uploadPostImage(
+        uploadedImageUrl = await remoteDataSource.uploadPostMedia(
           postId: post.id,
           userId: post.creatorId,
           localFilePath: localImagePath,
+        );
+      }
+
+      if (localVideoPath != null && localVideoPath.isNotEmpty) {
+        // Upload video next
+        uploadedVideoUrl = await remoteDataSource.uploadPostMedia(
+          postId: post.id,
+          userId: post.creatorId,
+          localFilePath: localVideoPath,
         );
       }
 
@@ -51,6 +62,10 @@ class PostRepositoryImpl implements PostRepository {
         creator: post.creator,
         content: post.content,
         imageUrl: uploadedImageUrl ?? post.imageUrl,
+        videoUrl: uploadedVideoUrl ?? post.videoUrl,
+        mediaType: uploadedVideoUrl != null
+            ? 'video'
+            : (uploadedImageUrl != null ? 'image' : null),
         createdAt: post.createdAt,
         updatedAt: post.updatedAt,
       );
@@ -58,9 +73,12 @@ class PostRepositoryImpl implements PostRepository {
       // Attempt to save post to the database
       return await remoteDataSource.createPost(postModel);
     } catch (e) {
-      // Rollback mechanism: If database insertion failed but an image was uploaded, delete it
+      // Rollback mechanism: If database insertion failed but media was uploaded, delete it
       if (uploadedImageUrl != null) {
-        await remoteDataSource.deletePostImage(uploadedImageUrl);
+        await remoteDataSource.deletePostMedia(uploadedImageUrl);
+      }
+      if (uploadedVideoUrl != null) {
+        await remoteDataSource.deletePostMedia(uploadedVideoUrl);
       }
       rethrow;
     }

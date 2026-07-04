@@ -12,6 +12,7 @@ import '../../../profile/domain/entities/user_profile.dart';
 import '../cubits/create_post/create_post_cubit.dart';
 import '../cubits/create_post/create_post_state.dart';
 import '../cubits/post_feed/post_feed_cubit.dart';
+import '../widgets/post_video_player.dart';
 
 class CreatePostScreen extends StatefulWidget {
   const CreatePostScreen({super.key});
@@ -54,9 +55,13 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     }
 
     final content = _contentController.text.trim();
-    if (content.isEmpty) {
+    final createCubit = context.read<CreatePostCubit>();
+    final hasMedia = (createCubit.state.imagePath != null && createCubit.state.imagePath!.isNotEmpty) ||
+                     (createCubit.state.videoPath != null && createCubit.state.videoPath!.isNotEmpty);
+
+    if (content.isEmpty && !hasMedia) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('لا يمكن نشر منشور فارغ')),
+        const SnackBar(content: Text('الرجاء كتابة نص أو إرفاق صورة/فيديو لنشر المنشور')),
       );
       return;
     }
@@ -77,11 +82,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       interests: authState.user.interests,
     );
 
-    context.read<CreatePostCubit>().submitPost(
-          content: content,
-          creatorId: authState.user.id,
-          creator: userProfile,
-        );
+    createCubit.submitPost(
+      content: content,
+      creatorId: authState.user.id,
+      creator: userProfile,
+    );
   }
 
   @override
@@ -176,7 +181,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                         
                         const SizedBox(height: 8),
                         
-                        // Custom Character Counter
+                        // Custom Character Counter & Media Pickers
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -186,17 +191,33 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                 color: _charCount > _maxChars ? AppColors.error : AppColors.secondary,
                               ),
                             ),
-                            if (state.imagePath == null)
-                              TextButton.icon(
-                                onPressed: isLoading
-                                    ? null
-                                    : () => context.read<CreatePostCubit>().selectImage(),
-                                icon: const Icon(Icons.image_outlined, color: AppColors.primary),
-                                label: Text(
-                                  'إضافة صورة',
-                                  style: AppTextStyles.labelLg.copyWith(color: AppColors.primary),
-                                ),
+                            if (state.imagePath == null && state.videoPath == null) ...[
+                              Row(
+                                children: [
+                                  TextButton.icon(
+                                    onPressed: isLoading
+                                        ? null
+                                        : () => context.read<CreatePostCubit>().selectImage(),
+                                    icon: const Icon(Icons.image_outlined, color: AppColors.primary),
+                                    label: Text(
+                                      'إضافة صورة',
+                                      style: AppTextStyles.labelLg.copyWith(color: AppColors.primary),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  TextButton.icon(
+                                    onPressed: isLoading
+                                        ? null
+                                        : () => context.read<CreatePostCubit>().selectVideo(),
+                                    icon: const Icon(Icons.videocam_outlined, color: AppColors.primary),
+                                    label: Text(
+                                      'إضافة فيديو',
+                                      style: AppTextStyles.labelLg.copyWith(color: AppColors.primary),
+                                    ),
+                                  ),
+                                ],
                               ),
+                            ],
                           ],
                         ),
 
@@ -225,6 +246,44 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                     onPressed: isLoading
                                         ? null
                                         : () => context.read<CreatePostCubit>().removeImage(),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+
+                        // Video Preview (if selected)
+                        if (state.videoPath != null) ...[
+                          const SizedBox(height: 16),
+                          Stack(
+                            alignment: Alignment.topRight,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  width: double.infinity,
+                                  height: 220,
+                                  color: Colors.black,
+                                  child: PostVideoPlayer(
+                                    videoUrl: state.videoPath!,
+                                    isLocal: true,
+                                    autoPlay: false,
+                                    startMuted: true,
+                                    loop: false,
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: CircleAvatar(
+                                  backgroundColor: Colors.black.withOpacity(0.6),
+                                  child: IconButton(
+                                    icon: const Icon(Icons.close, color: Colors.white),
+                                    onPressed: isLoading
+                                        ? null
+                                        : () => context.read<CreatePostCubit>().removeVideo(),
                                   ),
                                 ),
                               ),

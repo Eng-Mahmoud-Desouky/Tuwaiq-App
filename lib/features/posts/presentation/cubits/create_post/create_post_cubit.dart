@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
@@ -31,13 +32,52 @@ class CreatePostCubit extends Cubit<CreatePostState> {
       emit(CreatePostError(
         message: 'حدث خطأ أثناء اختيار الصورة: ${e.toString()}',
         imagePath: state.imagePath,
+        videoPath: state.videoPath,
+      ));
+    }
+  }
+
+  /// Selects a video from the gallery.
+  /// Enforces client-side size validation (< 30MB).
+  Future<void> selectVideo() async {
+    try {
+      final XFile? video = await _picker.pickVideo(
+        source: ImageSource.gallery,
+      );
+
+      if (video != null) {
+        final file = File(video.path);
+        final sizeBytes = await file.length();
+        const maxSizeBytes = 30 * 1024 * 1024; // 30MB
+
+        if (sizeBytes > maxSizeBytes) {
+          emit(CreatePostError(
+            message: 'حجم الفيديو يتجاوز الحد الأقصى المسموح به (30 ميجابايت)',
+            imagePath: state.imagePath,
+            videoPath: state.videoPath,
+          ));
+          return;
+        }
+
+        emit(CreatePostVideoSelected(videoPath: video.path));
+      }
+    } catch (e) {
+      emit(CreatePostError(
+        message: 'حدث خطأ أثناء اختيار الفيديو: ${e.toString()}',
+        imagePath: state.imagePath,
+        videoPath: state.videoPath,
       ));
     }
   }
 
   /// Removes the selected image path from the state.
   void removeImage() {
-    emit(const CreatePostInitial(imagePath: null));
+    emit(const CreatePostInitial(imagePath: null, videoPath: null));
+  }
+
+  /// Removes the selected video path from the state.
+  void removeVideo() {
+    emit(const CreatePostInitial(imagePath: null, videoPath: null));
   }
 
   /// Submits the post.
@@ -46,15 +86,20 @@ class CreatePostCubit extends Cubit<CreatePostState> {
     required String creatorId,
     required UserProfile creator,
   }) async {
-    if (content.trim().isEmpty) {
+    final trimmedContent = content.trim();
+    final hasImage = state.imagePath != null && state.imagePath!.isNotEmpty;
+    final hasVideo = state.videoPath != null && state.videoPath!.isNotEmpty;
+
+    if (trimmedContent.isEmpty && !hasImage && !hasVideo) {
       emit(CreatePostError(
-        message: 'لا يمكن مشاركة منشور فارغ',
+        message: 'الرجاء كتابة نص أو إرفاق صورة/فيديو لنشر المنشور',
         imagePath: state.imagePath,
+        videoPath: state.videoPath,
       ));
       return;
     }
 
-    emit(CreatePostLoading(imagePath: state.imagePath));
+    emit(CreatePostLoading(imagePath: state.imagePath, videoPath: state.videoPath));
 
     try {
       final postId = const Uuid().v4();
@@ -63,7 +108,7 @@ class CreatePostCubit extends Cubit<CreatePostState> {
         id: postId,
         creatorId: creatorId,
         creator: creator,
-        content: content.trim(),
+        content: trimmedContent.isEmpty ? null : trimmedContent,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -71,13 +116,19 @@ class CreatePostCubit extends Cubit<CreatePostState> {
       final createdPost = await createPostUseCase(
         post: postEntity,
         localImagePath: state.imagePath,
+        localVideoPath: state.videoPath,
       );
 
-      emit(CreatePostSuccess(post: createdPost, imagePath: state.imagePath));
+      emit(CreatePostSuccess(
+        post: createdPost,
+        imagePath: state.imagePath,
+        videoPath: state.videoPath,
+      ));
     } catch (e) {
       emit(CreatePostError(
         message: 'فشل نشر المنشور: ${e.toString()}',
         imagePath: state.imagePath,
+        videoPath: state.videoPath,
       ));
     }
   }

@@ -9,6 +9,7 @@ import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
 import '../../domain/entities/post_entity.dart';
 import '../cubits/post_feed/post_feed_cubit.dart';
+import 'post_video_player.dart';
 
 class PostCard extends StatelessWidget {
   final PostEntity post;
@@ -93,7 +94,7 @@ class PostCard extends StatelessWidget {
   }
 
   void _showEditDialog(BuildContext context) {
-    final controller = TextEditingController(text: post.content);
+    final controller = TextEditingController(text: post.content ?? '');
     showDialog(
       context: context,
       builder: (dialogContext) {
@@ -337,16 +338,28 @@ class PostCard extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 12),
-            // Post Content
-            Text(
-              post.content,
-              style: AppTextStyles.bodyMd.copyWith(
-                color: AppColors.onSurface,
+            if (post.content != null && post.content!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(
+                post.content!,
+                style: AppTextStyles.bodyMd.copyWith(
+                  color: AppColors.onSurface,
+                ),
               ),
-            ),
-            // Post Image (Optional)
-            if (post.imageUrl != null && post.imageUrl!.isNotEmpty) ...[
+            ],
+            // Post Media (Optional Video or Image)
+            if (post.mediaType == 'video' && post.videoUrl != null && post.videoUrl!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: PostVideoPlayer(
+                  videoUrl: post.videoUrl!,
+                  isLocal: false,
+                  autoPlay: true,
+                  startMuted: true,
+                ),
+              ),
+            ] else if (post.imageUrl != null && post.imageUrl!.isNotEmpty) ...[
               const SizedBox(height: 12),
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),

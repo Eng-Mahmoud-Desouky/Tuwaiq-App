@@ -6,8 +6,10 @@ class PostModel extends PostEntity {
     required super.id,
     required super.creatorId,
     required super.creator,
-    required super.content,
+    super.content,
     super.imageUrl,
+    super.mediaType,
+    super.videoUrl,
     required super.createdAt,
     required super.updatedAt,
     super.likeCount = 0,
@@ -44,8 +46,10 @@ class PostModel extends PostEntity {
       id: json['id'] as String,
       creatorId: json['creator_id'] as String,
       creator: creator,
-      content: json['content'] as String? ?? '',
+      content: json['content'] as String?,
       imageUrl: json['image_url'] as String?,
+      mediaType: json['media_type'] as String?,
+      videoUrl: json['video_url'] as String?,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String).toLocal()
           : DateTime.now(),
@@ -66,6 +70,8 @@ class PostModel extends PostEntity {
       'creator_id': creatorId,
       'content': content,
       'image_url': imageUrl,
+      'media_type': mediaType,
+      'video_url': videoUrl,
     };
   }
 

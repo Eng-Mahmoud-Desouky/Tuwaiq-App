@@ -29,13 +29,13 @@ abstract class PostRemoteDataSource {
 
   Future<PostModel> updatePost(String postId, String content);
 
-  Future<String> uploadPostImage({
+  Future<String> uploadPostMedia({
     required String postId,
     required String userId,
     required String localFilePath,
   });
 
-  Future<void> deletePostImage(String imageUrl);
+  Future<void> deletePostMedia(String mediaUrl);
 }
 
 class PostRemoteDataSourceImpl implements PostRemoteDataSource {
@@ -171,19 +171,24 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
 
   @override
   Future<void> deletePost(String postId) async {
-    // Delete the post row and request the deleted row's image_url
+    // Delete the post row and request the deleted row's image_url and video_url
     final response = await _client
         .from('posts')
         .delete()
         .eq('id', postId)
-        .select('image_url')
+        .select('image_url, video_url')
         .single();
 
     final imageUrl = response['image_url'] as String?;
+    final videoUrl = response['video_url'] as String?;
 
     // If an image was associated, delete it from storage to prevent leaks
     if (imageUrl != null && imageUrl.isNotEmpty) {
-      await deletePostImage(imageUrl);
+      await deletePostMedia(imageUrl);
+    }
+    // If a video was associated, delete it from storage to prevent leaks
+    if (videoUrl != null && videoUrl.isNotEmpty) {
+      await deletePostMedia(videoUrl);
     }
   }
 
@@ -203,7 +208,7 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
   }
 
   @override
-  Future<String> uploadPostImage({
+  Future<String> uploadPostMedia({
     required String postId,
     required String userId,
     required String localFilePath,
@@ -222,11 +227,11 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
   }
 
   @override
-  Future<void> deletePostImage(String imageUrl) async {
+  Future<void> deletePostMedia(String mediaUrl) async {
     try {
       // Extract the relative storage path inside the 'posts' bucket
       // Example public URL: https://.../storage/v1/object/public/posts/userId/fileName.jpg
-      final path = imageUrl.split('/public/posts/').last;
+      final path = mediaUrl.split('/public/posts/').last;
       await _client.storage.from('posts').remove([path]);
     } catch (_) {
       // Fail silently to prevent deletion process block if storage cleanup fails

@@ -6,8 +6,10 @@ class PostEntity extends Equatable {
   final String id;
   final String creatorId;
   final UserProfile creator;
-  final String content;
+  final String? content;
   final String? imageUrl;
+  final String? mediaType;
+  final String? videoUrl;
   final DateTime createdAt;
   final DateTime updatedAt;
   final int likeCount;
@@ -18,8 +20,10 @@ class PostEntity extends Equatable {
     required this.id,
     required this.creatorId,
     required this.creator,
-    required this.content,
+    this.content,
     this.imageUrl,
+    this.mediaType,
+    this.videoUrl,
     required this.createdAt,
     required this.updatedAt,
     this.likeCount = 0,
@@ -33,6 +37,8 @@ class PostEntity extends Equatable {
     UserProfile? creator,
     String? content,
     String? imageUrl,
+    String? mediaType,
+    String? videoUrl,
     DateTime? createdAt,
     DateTime? updatedAt,
     int? likeCount,
@@ -45,6 +51,8 @@ class PostEntity extends Equatable {
       creator: creator ?? this.creator,
       content: content ?? this.content,
       imageUrl: imageUrl ?? this.imageUrl,
+      mediaType: mediaType ?? this.mediaType,
+      videoUrl: videoUrl ?? this.videoUrl,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       likeCount: likeCount ?? this.likeCount,
@@ -60,6 +68,8 @@ class PostEntity extends Equatable {
         creator,
         content,
         imageUrl,
+        mediaType,
+        videoUrl,
         createdAt,
         updatedAt,
         likeCount,

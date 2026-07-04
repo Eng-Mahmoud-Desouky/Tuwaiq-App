@@ -127,7 +127,12 @@ class FakePostRepo implements PostRepository {
     String? creatorId,
   }) async => [];
   @override
-  Future<PostEntity> createPost({required PostEntity post, String? localImagePath}) async => post;
+  Future<PostEntity> createPost({
+    required PostEntity post,
+    String? localImagePath,
+    String? localVideoPath,
+  }) async =>
+      post;
   @override
   Future<void> toggleLike({required String postId, required String userId, required bool isCurrentlyLiked}) async {}
   @override

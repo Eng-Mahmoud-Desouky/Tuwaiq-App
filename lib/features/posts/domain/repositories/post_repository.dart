@@ -11,10 +11,11 @@ abstract class PostRepository {
     String? creatorId,
   });
 
-  /// Creates a new post, with an optional local image file path.
+  /// Creates a new post, with optional local image or video file paths.
   Future<PostEntity> createPost({
     required PostEntity post,
     String? localImagePath,
+    String? localVideoPath,
   });
 
   /// Toggles the like status of a post.

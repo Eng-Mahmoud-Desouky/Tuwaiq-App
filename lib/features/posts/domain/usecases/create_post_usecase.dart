@@ -9,7 +9,12 @@ class CreatePostUseCase {
   Future<PostEntity> call({
     required PostEntity post,
     String? localImagePath,
+    String? localVideoPath,
   }) {
-    return repository.createPost(post: post, localImagePath: localImagePath);
+    return repository.createPost(
+      post: post,
+      localImagePath: localImagePath,
+      localVideoPath: localVideoPath,
+    );
   }
 }
