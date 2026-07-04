@@ -1,5 +1,5 @@
 # 📐 System Blueprint — Tuwaiq App
-**Version:** 1.8.0 | **Status:** Active | **Last Updated:** 2026-06-30
+**Version:** 1.9.0 | **Status:** Active | **Last Updated:** 2026-07-04
 
 ---
 
@@ -16,9 +16,10 @@
 10. [Content Sharing & Interaction Feature & Engineering Decisions](#10-content-sharing--interaction-feature--engineering-decisions)
 11. [Password Recovery & Reset Flow & Engineering Decisions](#11-password-recovery--reset-flow--engineering-decisions)
 12. [Discover (Explore) Events Feature & Engineering Decisions](#12-discover-explore-events-feature--engineering-decisions)
-13. [UI Refactoring & Rebranding to $CRATCH & Event Management Layout](#14-ui-refactoring--rebranding-to-scratch--event-management-layout)
-14. [Push Notifications & Deep Linking Flow & Engineering Decisions](#15-push-notifications--deep-linking-flow--engineering-decisions)
-15. [Change Log](#13-change-log)
+13. [UI Refactoring & Rebranding to $CRATCH & Event Management Layout](#13-ui-refactoring--rebranding-to-scratch--event-management-layout)
+14. [Push Notifications & Deep Linking Flow & Engineering Decisions](#14-push-notifications--deep-linking-flow--engineering-decisions)
+15. [Day 1 MVP Pivots & Enhancements](#15-day-1-mvp-pivots--enhancements)
+16. [Change Log](#16-change-log)
 
 ---
 
@@ -830,10 +831,43 @@ Key pages and components:
 
 ---
 
-## 15. Change Log
+## 15. Day 1 MVP Pivots & Enhancements
+
+### 15.1 Bypass Email Confirmation
+* **Requirement**: Completely remove any constraints, authentication states, or routes related to email confirmation. Successful sign up must transition immediately to `AuthSuccess` and route to `/interests` or `/home`.
+* **Engineering Action**:
+  - Deleted `EmailConfirmationScreen` and the `/email-confirmation` route from the application.
+  - Modified standard `SignUpScreen` to route directly to `/interests` or `/home` upon successful auth.
+  - Removed `AuthEmailNotConfirmed` state from `AuthCubit` and `SignInScreen` redirects.
+
+### 15.2 Hide/Disable Event Features in UI
+* **Requirement**: Preserve backend/schema event code for future updates, but completely hide event features from this launch version's UI.
+* **Engineering Action**:
+  - Restructured `PostFeedCubit` to query only posts and completely removed local event-mixing and variables (such as `_allEvents` and `_mixPostsAndEvents`).
+  - Removed `EventCardWidget` rendering inside `HomeScreen` feed.
+  - Cleaned up `ExploreScreen` to focus strictly on searching posts or platform content without fetching/rendering events.
+  - Kept `/events/:id` route in `GoRouter` configuration to prevent deep link crash (gracefully redirecting to `/home`).
+
+### 15.3 Post Editing Flow
+* **Requirement**: Allow owners to edit post text.
+* **Engineering Action**:
+  - Added `updatePost` in `PostRemoteDataSource`, `PostRepository`, and `PostRepositoryImpl` implementing Supabase database update queries.
+  - Created `UpdatePostUseCase`.
+  - Added optimistic `updatePost` method to `PostFeedCubit`.
+  - Updated context popup menu on `PostCard` to add "تعديل" (Edit) option, triggering a dark-themed edit dialog box.
+
+### 15.4 UX & Performance Refinements
+* **Direct Messages Back Navigation**: Added a leading `IconButton` to the Appbar of `DmsPlaceholderScreen` navigating to `AppRoutes.home` to avoid navigation locking.
+* **Instant Comment Deletion**: Adjusted `PostCommentsCubit` to execute deletion and updates during submit success states without needing DB reload cycles. Added `ValueKey` to `CommentCard` list to force instant rendering on list updates.
+* **Create Post Styling**: Styled the container card inside `CreatePostScreen` to `AppColors.surfaceContainerLow` with `AppColors.outline` thin borders, correcting theme inconsistency.
+
+---
+
+## 16. Change Log
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
+| `1.9.0` | 2026-07-04 | Mahmoud Desouky / Antigravity | Implemented Day 1 MVP pivots and UX refinements: bypassed email confirmation flow entirely (deleted /email-confirmation screen); disabled event features from the user interface (removed event mixing in PostFeedCubit, HomeScreen, and ExploreScreen); added DM Screen back button; resolved comment deletion latency with cubic states & list keys; added inline post editing CRUD flow; updated CreatePostScreen container theme to match dark design. |
 | `1.8.0` | 2026-06-30 | Mahmoud Desouky | Designed and built a complete Push Notification & Deep Linking system (Sprint 3 / Phase 1 to 5). Created database tables (user_tokens, notifications) and triggers on comments, event updates, and milestone-based likes. Deployed and integrated the TypeScript Deno Edge Function with native RS256 token exchange. Implemented Flutter NotificationService and Clean Architecture notifications module with Cubit state management. Bound taps to GoRouter deep linking and fixed analyzer/test failures. |
 | `1.7.0` | 2026-06-30 | Mahmoud Desouky | Rebranded the app to $CRATCH with metallic silver/slate color scheme and dark card styles. Built dedicated ManageEventsScreen with edit capability and tabs. Restructured GoRouter to support a 5-branch navigation shell, introducing custom vector AddEventIcon using CustomPainter and resolving SnackBar BottomAppBar height layout assertion crashes. Resolved Navigator pop state lock failures. |
 | `1.6.0` | 2026-06-30 | Mahmoud Desouky | Fully implemented Discover/Explore Events page module (features/explore). Built ExploreCubit and ExploreState for managing and locally filtering events lists by category and text search query. Configured GoRouter and main.dart to dynamically register the cubit. Polished the UI to match the Stitch design using a responsive event card grid, a search field, and horizontal scrolling category chips with emojis. |
