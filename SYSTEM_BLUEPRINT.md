@@ -1,5 +1,5 @@
 # 📐 System Blueprint — Tuwaiq App
-**Version:** 1.9.0 | **Status:** Active | **Last Updated:** 2026-07-04
+**Version:** 2.0.0 | **Status:** Active | **Last Updated:** 2026-07-04
 
 ---
 
@@ -19,7 +19,8 @@
 13. [UI Refactoring & Rebranding to $CRATCH & Event Management Layout](#13-ui-refactoring--rebranding-to-scratch--event-management-layout)
 14. [Push Notifications & Deep Linking Flow & Engineering Decisions](#14-push-notifications--deep-linking-flow--engineering-decisions)
 15. [Day 1 MVP Pivots & Enhancements](#15-day-1-mvp-pivots--enhancements)
-16. [Change Log](#16-change-log)
+16. [Day 2 Video Support & Engineering Decisions](#16-day-2-video-support--engineering-decisions)
+17. [Change Log](#17-change-log)
 
 ---
 
@@ -863,10 +864,35 @@ Key pages and components:
 
 ---
 
-## 16. Change Log
+## 16. Day 2 Video Support & Engineering Decisions
+
+### 16.1 Feature Overview
+To establish complete media support, we implemented video selection, validation, and rendering throughout the Posts flow.
+- **Supabase Storage**: Configured allowed MIME types to support video files (`video/mp4`, `video/quicktime`, etc.) and increased the file size limit to **30MB**. Implemented RLS policies restricting insertion/deletion exclusively to the user's specific folder path (`posts/{user_id}/fileName`).
+- **Post Creation**: Extended `CreatePostScreen` and `CreatePostCubit` to support gallery video picking, file size verification, and either/or selection (clearing image path when video is selected, and vice versa). Enforced rule that post content can only be empty if media (image/video) is attached.
+- **Performant Video Playback**: Integrated a custom, responsive `PostVideoPlayer` rendering network videos inside `PostCard` (HomeScreen, PostDetailsScreen, ProfileScreen) and local files during post preview.
+
+### 16.2 Engineering & Mobile Hardware Decisions
+1. **OOM & VRAM Codec Exhaustion Protection**:
+   Mobile OS platforms severely cap the number of active hardware video decoders (typically 6-10 decoders). Simply pausing videos on scroll still leaves their decoders allocated in VRAM, causing eventual OOM app crashes.
+   - **Solution**: We wrapped `PostVideoPlayer` in a `VisibilityDetector`. If visibility drops to `0%` (fully scrolled out of the viewport), the `VideoPlayerController` is immediately and completely `disposed` and set to `null` to release decoders. A lightweight dark placeholder card is displayed instead. The controller is re-initialized asynchronously only when the card comes back into view (`> 30%` visibility).
+2. **Multi-Autoplay FPS Stutter Mitigation**:
+   Initializing and buffering multiple video streams concurrently when scrolling list feeds blocks the Dart UI thread, causing severe frame drops (stutter).
+   - **Solution**: Playback is only allowed to start auto-playing if the post visibility crosses a high threshold of `> 70%`. If it drops below `70%`, the video is immediately paused, ensuring only a single video plays on screen at a time.
+3. **App Lifecycle Ghost Audio Prevention**:
+   Tapping Home or backgrounding the app while a video is playing causes sound to continue playing in the background.
+   - **Solution**: Mixed `WidgetsBindingObserver` into the state lifecycle and overrode `didChangeAppLifecycleState` to force pause video playback when the app state changes to `paused` or `inactive`.
+4. **Storage Leak Rollbacks**:
+   If video uploading to Supabase Storage succeeds but the subsequent Postgres `INSERT` operation fails, the uploaded file is orphaned in the bucket, accumulating storage costs.
+   - **Solution**: Structured `PostRepositoryImpl.createPost` with a try-catch block. In the event of a database insert exception, a rollback cleanup is triggered immediately, executing `deletePostMedia()` on the uploaded storage paths before rethrowing the error. Additionally, deleting a post executes a dual select-and-delete cleanup for both `image_url` and `video_url` paths in storage.
+
+---
+
+## 17. Change Log
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
+| `2.0.0` | 2026-07-04 | Mahmoud Desouky | Fully implemented Day 2 Video Support: increased posts bucket limit to 30MB, added video formats, and wrote strictly locked RLS folder policies. Added client-size validation and either/or media constraints. Integrated OOM-safe, lifecycle-aware PostVideoPlayer playing at >70% visibility, auto-muting, completely disposing at 0% visibility, and auto-pausing on backgrounding. Created db upload rollback hooks to prevent storage leaks. |
 | `1.9.0` | 2026-07-04 | Mahmoud Desouky | Implemented Day 1 MVP pivots and UX refinements: bypassed email confirmation flow entirely (deleted /email-confirmation screen); disabled event features from the user interface (removed event mixing in PostFeedCubit, HomeScreen, and ExploreScreen); added DM Screen back button; resolved comment deletion latency with cubic states & list keys; added inline post editing CRUD flow; updated CreatePostScreen container theme to match dark design. |
 | `1.8.0` | 2026-06-30 | Mahmoud Desouky | Designed and built a complete Push Notification & Deep Linking system (Sprint 3 / Phase 1 to 5). Created database tables (user_tokens, notifications) and triggers on comments, event updates, and milestone-based likes. Deployed and integrated the TypeScript Deno Edge Function with native RS256 token exchange. Implemented Flutter NotificationService and Clean Architecture notifications module with Cubit state management. Bound taps to GoRouter deep linking and fixed analyzer/test failures. |
 | `1.7.0` | 2026-06-30 | Mahmoud Desouky | Rebranded the app to $CRATCH with metallic silver/slate color scheme and dark card styles. Built dedicated ManageEventsScreen with edit capability and tabs. Restructured GoRouter to support a 5-branch navigation shell, introducing custom vector AddEventIcon using CustomPainter and resolving SnackBar BottomAppBar height layout assertion crashes. Resolved Navigator pop state lock failures. |
