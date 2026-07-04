@@ -140,6 +140,8 @@ class FakePostRepo implements PostRepository {
   Future<CommentEntity> updateComment({required String commentId, required String content}) async => throw UnimplementedError();
   @override
   Future<void> deletePost(String postId) async {}
+  @override
+  Future<PostEntity> updatePost({required String postId, required String content}) async => throw UnimplementedError();
 }
 
 class FakeNotificationsRepo implements NotificationsRepository {

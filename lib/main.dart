@@ -73,6 +73,7 @@ import 'features/posts/domain/usecases/add_comment_usecase.dart';
 import 'features/posts/domain/usecases/delete_post_usecase.dart';
 import 'features/posts/domain/usecases/delete_comment_usecase.dart';
 import 'features/posts/domain/usecases/update_comment_usecase.dart';
+import 'features/posts/domain/usecases/update_post_usecase.dart';
 import 'features/posts/presentation/cubits/post_feed/post_feed_cubit.dart';
 
 void main() async {
@@ -147,6 +148,7 @@ void main() async {
   final deleteCommentUseCase = DeleteCommentUseCase(postRepository);
   final updateCommentUseCase = UpdateCommentUseCase(postRepository);
   final deletePostUseCase = DeletePostUseCase(postRepository);
+  final updatePostUseCase = UpdatePostUseCase(postRepository);
 
   // Notifications
   final notificationsRemoteDataSource = NotificationsRemoteDataSourceImpl(supabaseClient);
@@ -178,6 +180,7 @@ void main() async {
             toggleLikeUseCase: toggleLikeUseCase,
             deletePostUseCase: deletePostUseCase,
             getAllEventsUseCase: getAllEventsUseCase,
+            updatePostUseCase: updatePostUseCase,
           )..loadPosts(),
         ),
       ],

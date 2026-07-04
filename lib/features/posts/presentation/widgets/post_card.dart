@@ -92,6 +92,80 @@ class PostCard extends StatelessWidget {
     );
   }
 
+  void _showEditDialog(BuildContext context) {
+    final controller = TextEditingController(text: post.content);
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: AppColors.surfaceContainerLow,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: AppColors.outline, width: 0.5),
+          ),
+          title: const Text(
+            'تعديل المنشور',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.right,
+          ),
+          content: TextField(
+            controller: controller,
+            maxLines: 5,
+            maxLength: 2000,
+            style: const TextStyle(color: Colors.white),
+            textAlign: TextAlign.right,
+            textDirection: TextDirection.rtl,
+            decoration: InputDecoration(
+              hintText: 'تعديل محتوى المنشور...',
+              hintStyle: const TextStyle(color: Colors.white38),
+              filled: true,
+              fillColor: AppColors.background,
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: AppColors.outline, width: 0.5),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: AppColors.primary, width: 1),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text(
+                'إلغاء',
+                style: TextStyle(color: AppColors.secondary),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: () {
+                final newContent = controller.text.trim();
+                if (newContent.isNotEmpty) {
+                  context.read<PostFeedCubit>().updatePost(
+                        postId: post.id,
+                        content: newContent,
+                      );
+                }
+                Navigator.of(dialogContext).pop();
+              },
+              child: const Text(
+                'حفظ',
+                style: TextStyle(color: Colors.black),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = context.read<AuthCubit>().state;
@@ -231,9 +305,21 @@ class PostCard extends StatelessWidget {
                     onSelected: (value) {
                       if (value == 'delete') {
                         _showDeleteConfirmation(context);
+                      } else if (value == 'edit') {
+                        _showEditDialog(context);
                       }
                     },
                     itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit_outlined, size: 18, color: AppColors.onSurface),
+                            SizedBox(width: 8),
+                            Text('تعديل', style: TextStyle(fontSize: 13)),
+                          ],
+                        ),
+                      ),
                       const PopupMenuItem(
                         value: 'delete',
                         child: Row(
@@ -242,7 +328,7 @@ class PostCard extends StatelessWidget {
                             SizedBox(width: 8),
                             Text(
                               'حذف',
-                              style: TextStyle(color: AppColors.error),
+                              style: TextStyle(color: AppColors.error, fontSize: 13),
                             ),
                           ],
                         ),

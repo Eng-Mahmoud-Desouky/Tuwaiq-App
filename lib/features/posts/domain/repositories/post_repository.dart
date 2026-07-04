@@ -44,4 +44,10 @@ abstract class PostRepository {
 
   /// Deletes a post and cleans up associated image storage.
   Future<void> deletePost(String postId);
+
+  /// Updates a post's text content.
+  Future<PostEntity> updatePost({
+    required String postId,
+    required String content,
+  });
 }

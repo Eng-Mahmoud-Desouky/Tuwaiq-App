@@ -33,9 +33,18 @@ class PostCommentsCubit extends Cubit<PostCommentsState> {
   /// Deletes a comment.
   Future<void> deleteComment(String commentId) async {
     final currentState = state;
-    if (currentState is! PostCommentsLoaded) return;
+    List<CommentEntity> currentComments = [];
 
-    final currentComments = currentState.comments;
+    if (currentState is PostCommentsLoaded) {
+      currentComments = currentState.comments;
+    } else if (currentState is PostCommentSubmitSuccess) {
+      currentComments = currentState.comments;
+    } else if (currentState is PostCommentSubmitting) {
+      currentComments = currentState.comments;
+    } else {
+      return;
+    }
+
     // Optimistically update UI
     final updatedComments = currentComments.where((c) => c.id != commentId).toList();
     emit(PostCommentsLoaded(comments: updatedComments));
@@ -55,14 +64,22 @@ class PostCommentsCubit extends Cubit<PostCommentsState> {
     required String content,
   }) async {
     final currentState = state;
-    if (currentState is! PostCommentsLoaded) return;
+    List<CommentEntity> currentComments = [];
+
+    if (currentState is PostCommentsLoaded) {
+      currentComments = currentState.comments;
+    } else if (currentState is PostCommentSubmitSuccess) {
+      currentComments = currentState.comments;
+    } else if (currentState is PostCommentSubmitting) {
+      currentComments = currentState.comments;
+    } else {
+      return;
+    }
 
     if (content.trim().isEmpty) {
       emit(const PostCommentsError(message: 'لا يمكن تعديل التعليق إلى نص فارغ'));
       return;
     }
-
-    final currentComments = currentState.comments;
 
     try {
       final updatedComment = await updateCommentUseCase(

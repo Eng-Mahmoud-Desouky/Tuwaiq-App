@@ -122,4 +122,12 @@ class PostRepositoryImpl implements PostRepository {
   Future<void> deletePost(String postId) async {
     await remoteDataSource.deletePost(postId);
   }
+
+  @override
+  Future<PostEntity> updatePost({
+    required String postId,
+    required String content,
+  }) async {
+    return await remoteDataSource.updatePost(postId, content);
+  }
 }

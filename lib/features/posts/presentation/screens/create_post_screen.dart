@@ -103,8 +103,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop();
+            if (context.canPop()) {
+              context.pop();
             } else {
               context.go(AppRoutes.home);
             }
@@ -123,8 +123,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             
             // Pop the screen safely using mounted check guard
             if (mounted) {
-              if (Navigator.of(context).canPop()) {
-                Navigator.of(context).pop();
+              if (context.canPop()) {
+                context.pop();
               } else {
                 context.go(AppRoutes.home);
               }
@@ -148,15 +148,12 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.onSecondaryContainer
+                      color: AppColors.surfaceContainerLow,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x08000000),
-                          blurRadius: 16,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
+                      border: Border.all(
+                        color: AppColors.outline,
+                        width: 0.5,
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,

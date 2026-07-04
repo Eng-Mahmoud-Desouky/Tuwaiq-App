@@ -281,6 +281,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
                               itemBuilder: (context, index) {
                                 final comment = comments[index];
                                 return CommentCard(
+                                  key: ValueKey(comment.id),
                                   comment: comment,
                                   currentUserId: currentUserId,
                                   onDelete: () => _showDeleteCommentDialog(comment),

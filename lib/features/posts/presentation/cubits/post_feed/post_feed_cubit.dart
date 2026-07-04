@@ -5,8 +5,8 @@ import '../../../domain/entities/post_entity.dart';
 import '../../../domain/usecases/get_posts_feed_usecase.dart';
 import '../../../domain/usecases/toggle_like_usecase.dart';
 import '../../../domain/usecases/delete_post_usecase.dart';
-import '../../../../events/domain/entities/event_entity.dart';
 import '../../../../events/domain/usecases/get_all_events_usecase.dart';
+import '../../../domain/usecases/update_post_usecase.dart';
 import 'post_feed_state.dart';
 
 class PostFeedCubit extends Cubit<PostFeedState> {
@@ -14,60 +14,31 @@ class PostFeedCubit extends Cubit<PostFeedState> {
   final ToggleLikeUseCase toggleLikeUseCase;
   final DeletePostUseCase deletePostUseCase;
   final GetAllEventsUseCase getAllEventsUseCase;
+  final UpdatePostUseCase updatePostUseCase;
 
   static const int _limit = 10;
   final Map<String, Timer> _likeDebouncers = {};
   final Map<String, bool> _originalLikeStates = {};
 
-  List<EventEntity> _allEvents = [];
-  int _eventIndex = 0;
 
   PostFeedCubit({
     required this.getPostsFeedUseCase,
     required this.toggleLikeUseCase,
     required this.deletePostUseCase,
     required this.getAllEventsUseCase,
+    required this.updatePostUseCase,
   }) : super(const PostFeedInitial());
 
-  List<dynamic> _mixPostsAndEvents(List<PostEntity> postsBatch, List<EventEntity> events, {required bool isFirstLoad}) {
-    if (isFirstLoad) {
-      _eventIndex = 0;
-    }
-    
-    final List<dynamic> mixed = [];
-    int postCountInSegment = 0;
-    
-    for (final post in postsBatch) {
-      mixed.add(post);
-      postCountInSegment++;
-      
-      // Every 2 posts, insert an event if we have any left
-      if (postCountInSegment == 2) {
-        postCountInSegment = 0;
-        if (events.isNotEmpty && _eventIndex < events.length) {
-          mixed.add(events[_eventIndex]);
-          _eventIndex++;
-        }
-      }
-    }
-    return mixed;
-  }
+
 
   /// Initial fetch of posts feed.
   Future<void> loadPosts() async {
     emit(const PostFeedLoading());
     try {
-      final postsFuture = getPostsFeedUseCase(limit: _limit);
-      final eventsFuture = getAllEventsUseCase();
-
-      final results = await Future.wait([postsFuture, eventsFuture]);
-      final posts = results[0] as List<PostEntity>;
-      _allEvents = results[1] as List<EventEntity>;
-
-      final mixed = _mixPostsAndEvents(posts, _allEvents, isFirstLoad: true);
+      final posts = await getPostsFeedUseCase(limit: _limit);
 
       emit(PostFeedLoaded(
-        posts: mixed,
+        posts: posts,
         hasReachedMax: posts.length < _limit,
       ));
     } catch (e) {
@@ -91,14 +62,12 @@ class PostFeedCubit extends Cubit<PostFeedState> {
         lastPostId: lastPost.id,
       );
 
-      final mixedMore = _mixPostsAndEvents(morePosts, _allEvents, isFirstLoad: false);
-
       emit(PostFeedLoaded(
-        posts: currentState.posts + mixedMore,
+        posts: currentState.posts + morePosts,
         hasReachedMax: morePosts.length < _limit,
       ));
     } catch (_) {
-      // Fail silently on pagination error to keep feed active
+      // Keep state as is on pagination failure
     }
   }
 
@@ -200,6 +169,32 @@ class PostFeedCubit extends Cubit<PostFeedState> {
         posts: updatedPosts,
         hasReachedMax: currentState.hasReachedMax,
       ));
+    }
+  }
+
+  /// Updates a post's content in the feed.
+  Future<void> updatePost({
+    required String postId,
+    required String content,
+  }) async {
+    final currentState = state;
+    if (currentState is! PostFeedLoaded) return;
+
+    final currentPosts = List<dynamic>.from(currentState.posts);
+    final index = currentPosts.indexWhere((p) => p is PostEntity && p.id == postId);
+    if (index == -1) return;
+
+    final originalPost = currentPosts[index] as PostEntity;
+    final updatedPost = originalPost.copyWith(content: content, updatedAt: DateTime.now());
+    currentPosts[index] = updatedPost;
+    emit(currentState.copyWith(posts: currentPosts));
+
+    try {
+      await updatePostUseCase(postId: postId, content: content);
+    } catch (_) {
+      // Revert on error
+      currentPosts[index] = originalPost;
+      emit(currentState.copyWith(posts: currentPosts));
     }
   }
 

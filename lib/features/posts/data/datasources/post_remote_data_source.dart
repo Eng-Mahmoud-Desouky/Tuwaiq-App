@@ -27,6 +27,8 @@ abstract class PostRemoteDataSource {
 
   Future<void> deletePost(String postId);
 
+  Future<PostModel> updatePost(String postId, String content);
+
   Future<String> uploadPostImage({
     required String postId,
     required String userId,
@@ -183,6 +185,21 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     if (imageUrl != null && imageUrl.isNotEmpty) {
       await deletePostImage(imageUrl);
     }
+  }
+
+  @override
+  Future<PostModel> updatePost(String postId, String content) async {
+    final response = await _client
+        .from('posts')
+        .update({
+          'content': content,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', postId)
+        .select('*, profiles:profiles!posts_creator_id_fkey(*), post_likes(count), post_comments(count)')
+        .single();
+
+    return PostModel.fromJson(response);
   }
 
   @override
