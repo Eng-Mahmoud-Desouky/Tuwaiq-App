@@ -69,7 +69,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  void _showSuccessOverlay(String email) {
+  void _showSuccessOverlay({required int interestsCount}) {
     showGeneralDialog(
       context: context,
       barrierDismissible: false,
@@ -122,11 +122,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
       if (mounted) {
         // Dismiss dialog
         context.pop();
-        // Go to Email Confirmation
-        context.pushReplacement(
-          AppRoutes.emailConfirmation,
-          extra: email,
-        );
+        if (interestsCount >= 3) {
+          context.go(AppRoutes.home);
+        } else {
+          context.go(AppRoutes.interests);
+        }
       }
     });
   }
@@ -156,10 +156,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
       ),
       body: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
-          if (state is AuthEmailNotConfirmed) {
-            _showSuccessOverlay(state.email);
-          } else if (state is AuthSuccess) {
-            _showSuccessOverlay(state.user.email);
+          if (state is AuthSuccess) {
+            _showSuccessOverlay(interestsCount: state.user.interests.length);
           } else if (state is AuthError) {
             context.showSnackBar(state.message, isError: true);
           }

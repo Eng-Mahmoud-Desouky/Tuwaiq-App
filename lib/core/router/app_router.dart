@@ -5,9 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants/app_routes.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../features/auth/presentation/cubit/auth_state.dart';
-import '../../features/auth/presentation/screens/email_confirmation_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/interests_screen.dart';
+import '../../features/dms/presentation/screens/dms_placeholder_screen.dart';
 import '../../features/auth/presentation/screens/sign_in_screen.dart';
 import '../../features/auth/presentation/screens/sign_up_screen.dart';
 import '../../features/auth/presentation/screens/update_password_screen.dart';
@@ -32,7 +32,6 @@ import '../../features/main/presentation/screens/main_screen.dart';
 import '../../features/explore/presentation/screens/explore_screen.dart';
 import '../../features/explore/presentation/cubit/explore_cubit.dart';
 import '../../features/events/presentation/screens/create_event.dart';
-import '../../features/events/presentation/screens/manage_events_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
 import '../../features/notifications/presentation/cubit/notifications_cubit.dart';
 import '../../features/notifications/domain/usecases/get_notifications_usecase.dart';
@@ -51,8 +50,6 @@ import '../../features/profile/presentation/cubit/profile_posts_cubit.dart';
 import '../../features/profile/presentation/cubit/profile_events_cubit.dart';
 import '../../features/profile/presentation/cubit/profile_saved_events_cubit.dart';
 import '../../features/events/presentation/cubit/create_event_cubit.dart';
-import '../../features/events/presentation/cubit/event_details_cubit.dart';
-import '../../features/events/presentation/screens/event_details.dart';
 import '../../features/posts/domain/entities/post_entity.dart';
 import '../../features/posts/domain/usecases/create_post_usecase.dart';
 import '../../features/posts/domain/usecases/get_posts_feed_usecase.dart';
@@ -145,10 +142,6 @@ class AppRouter {
           return isAuthScreen ? null : AppRoutes.signIn;
         }
 
-        if (authState is AuthEmailNotConfirmed) {
-          return AppRoutes.emailConfirmation;
-        }
-
         if (authState is AuthSuccess) {
           // Bypass redirect to home during password recovery flow
           final isResetFlow = state.matchedLocation == AppRoutes.updatePassword ||
@@ -198,11 +191,8 @@ class AppRouter {
           ),
         ),
         GoRoute(
-          path: AppRoutes.emailConfirmation,
-          builder: (context, state) {
-            final email = state.extra as String? ?? '';
-            return EmailConfirmationScreen(email: email);
-          },
+          path: AppRoutes.dms,
+          builder: (context, state) => const DmsPlaceholderScreen(),
         ),
         GoRoute(
           path: AppRoutes.interests,
@@ -210,19 +200,7 @@ class AppRouter {
         ),
         GoRoute(
           path: AppRoutes.eventDetails,
-          builder: (context, state) {
-            final eventId = state.pathParameters['id']!;
-            final event = state.extra as EventEntity?;
-            return BlocProvider(
-              create: (context) => EventDetailsCubit(
-                getEventUseCase: getEventUseCase,
-                isEventSavedUseCase: isEventSavedUseCase,
-                saveEventUseCase: saveEventUseCase,
-                unsaveEventUseCase: unsaveEventUseCase,
-              ),
-              child: EventDetailsScreen(eventId: eventId, initialEvent: event),
-            );
-          },
+          redirect: (context, state) => AppRoutes.home,
         ),
         GoRoute(
           path: AppRoutes.createPost,
@@ -282,64 +260,19 @@ class AppRouter {
                 ),
               ],
             ),
-            // Explore Branch (1)
+            // Explore/Search Branch (1)
             StatefulShellBranch(
               routes: [
                 GoRoute(
                   path: AppRoutes.explore,
                   builder: (context, state) => BlocProvider(
-                    create: (context) => ExploreCubit(
-                      getAllEventsUseCase: getAllEventsUseCase,
-                    )..loadEvents(),
+                    create: (context) => ExploreCubit(),
                     child: const ExploreScreen(),
                   ),
                 ),
               ],
             ),
-            // Create Event Branch (2)
-            StatefulShellBranch(
-              routes: [
-                GoRoute(
-                  path: AppRoutes.create,
-                  builder: (context, state) => BlocProvider(
-                    create: (context) => CreateEventCubit(
-                      createEventUseCase: createEventUseCase,
-                    ),
-                    child: const CreateEventScreen(),
-                  ),
-                ),
-              ],
-            ),
-            // Manage Events Branch (3)
-            StatefulShellBranch(
-              routes: [
-                GoRoute(
-                  path: AppRoutes.manageEvents,
-                  builder: (context, state) {
-                    final authState = context.read<AuthCubit>().state;
-                    final currentUserId = (authState is AuthSuccess) ? authState.user.id : '';
-                    return MultiBlocProvider(
-                      providers: [
-                        BlocProvider(
-                          create: (context) => ProfileEventsCubit(
-                            getEventsByUserUseCase: getEventsByUserUseCase,
-                            userId: currentUserId,
-                          ),
-                        ),
-                        BlocProvider(
-                          create: (context) => ProfileSavedEventsCubit(
-                            getSavedEventsUseCase: getSavedEventsUseCase,
-                            userId: currentUserId,
-                          ),
-                        ),
-                      ],
-                      child: const ManageEventsScreen(),
-                    );
-                  },
-                ),
-              ],
-            ),
-            // Alerts Branch (4)
+            // Alerts Branch (2)
             StatefulShellBranch(
               routes: [
                 GoRoute(
@@ -356,6 +289,15 @@ class AppRouter {
                       child: const NotificationsScreen(),
                     );
                   },
+                ),
+              ],
+            ),
+            // DMs Branch (3)
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: AppRoutes.dms,
+                  builder: (context, state) => const DmsPlaceholderScreen(),
                 ),
               ],
             ),

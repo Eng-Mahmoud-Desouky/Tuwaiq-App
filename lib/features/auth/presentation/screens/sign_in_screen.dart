@@ -51,11 +51,6 @@ class _SignInScreenState extends State<SignInScreen> {
             } else {
               context.go(AppRoutes.interests);
             }
-          } else if (state is AuthEmailNotConfirmed) {
-            context.push(
-              AppRoutes.emailConfirmation,
-              extra: state.email,
-            );
           } else if (state is AuthError) {
             context.showSnackBar(state.message, isError: true);
           }

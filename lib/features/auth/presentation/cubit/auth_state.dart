@@ -25,14 +25,6 @@ class AuthSuccess extends AuthState {
   List<Object?> get props => [user];
 }
 
-class AuthEmailNotConfirmed extends AuthState {
-  final String email;
-
-  const AuthEmailNotConfirmed(this.email);
-
-  @override
-  List<Object?> get props => [email];
-}
 
 class AuthError extends AuthState {
   final String message;

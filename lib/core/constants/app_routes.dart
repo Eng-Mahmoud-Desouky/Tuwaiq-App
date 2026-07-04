@@ -3,18 +3,18 @@ class AppRoutes {
   static const String signUp = '/sign-up';
   static const String forgotPassword = '/forgot-password';
   static const String updatePassword = '/update-password';
-  static const String emailConfirmation = '/email-confirmation';
   static const String interests = '/interests';
   static const String home = '/home';
   static const String profile = '/profile';
   static const String editProfile = 'edit-profile'; // sub-route
   static const String connections = 'connections'; // sub-route
   static const String explore = '/explore';
-  static const String create = '/create';
   static const String alerts = '/alerts';
   static const String eventDetails = '/events/:id';
-  static const String manageEvents = '/manage-events';
-  static const String editEvent = '/edit-event';
   static const String createPost = '/create-post';
   static const String postDetails = '/posts/:id';
+  static const String dms = '/dms';
+  static const String create = '/create';
+  static const String manageEvents = '/manage-events';
+  static const String editEvent = '/edit-event';
 }

@@ -148,7 +148,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.onSecondaryContainer
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: const [
                         BoxShadow(

@@ -169,27 +169,48 @@ class PostCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                // Name & Username
+                // Name, Username, Dot, Relative Time Inline Layout
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
                     children: [
-                      GestureDetector(
-                        onTap: () {
-                          context.push(AppRoutes.profile, extra: post.creatorId);
-                        },
-                        child: Text(
-                          post.creator.fullName.isNotEmpty
-                              ? post.creator.fullName
-                              : post.creator.username,
-                          style: AppTextStyles.labelLg.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.onSurface,
+                      Flexible(
+                        child: GestureDetector(
+                          onTap: () {
+                            context.push(AppRoutes.profile, extra: post.creatorId);
+                          },
+                          child: Text(
+                            post.creator.fullName.isNotEmpty
+                                ? post.creator.fullName
+                                : post.creator.username,
+                            style: AppTextStyles.labelLg.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.onSurface,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
                         ),
                       ),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          '@${post.creator.username}',
+                          style: AppTextStyles.labelSm.copyWith(
+                            color: AppColors.secondary,
+                            fontWeight: FontWeight.normal,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
                       Text(
-                        '@${post.creator.username}',
+                        ' • ',
+                        style: AppTextStyles.labelSm.copyWith(
+                          color: AppColors.secondary,
+                        ),
+                      ),
+                      Text(
+                        _formatRelativeTime(post.createdAt),
                         style: AppTextStyles.labelSm.copyWith(
                           color: AppColors.secondary,
                           fontWeight: FontWeight.normal,
@@ -198,30 +219,36 @@ class PostCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                // Timestamp and Delete Action
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      _formatRelativeTime(post.createdAt),
-                      style: AppTextStyles.labelSm.copyWith(
-                        color: AppColors.secondary,
-                        fontWeight: FontWeight.normal,
-                      ),
+                if (isOwner)
+                  PopupMenuButton<String>(
+                    icon: const Icon(
+                      Icons.more_vert,
+                      color: AppColors.secondary,
+                      size: 20,
                     ),
-                    if (isOwner)
-                      IconButton(
-                        constraints: const BoxConstraints(),
-                        padding: const EdgeInsets.only(top: 4),
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          color: AppColors.secondary,
-                          size: 20,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 100),
+                    onSelected: (value) {
+                      if (value == 'delete') {
+                        _showDeleteConfirmation(context);
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete_outline, color: AppColors.error, size: 18),
+                            SizedBox(width: 8),
+                            Text(
+                              'حذف',
+                              style: TextStyle(color: AppColors.error),
+                            ),
+                          ],
                         ),
-                        onPressed: () => _showDeleteConfirmation(context),
                       ),
-                  ],
-                ),
+                    ],
+                  ),
               ],
             ),
             const SizedBox(height: 12),

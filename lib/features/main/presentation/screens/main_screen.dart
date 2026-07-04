@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/theme/app_text_styles.dart';
-import '../../../../shared/widgets/add_event_icon.dart';
 
 class MainScreen extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -10,16 +9,6 @@ class MainScreen extends StatelessWidget {
   const MainScreen({super.key, required this.navigationShell});
 
   void _onTap(BuildContext context, int index) {
-    if (index == 2) {
-      // The add button. We can either navigate to the branch or push a modal.
-      // Assuming it's a branch for now.
-      navigationShell.goBranch(
-        index,
-        initialLocation: index == navigationShell.currentIndex,
-      );
-      return;
-    }
-
     navigationShell.goBranch(
       index,
       initialLocation: index == navigationShell.currentIndex,
@@ -60,55 +49,11 @@ class MainScreen extends StatelessWidget {
               ),
               Expanded(
                 child: _buildNavBarItem(
-                  icon: Icons.explore_outlined,
-                  activeIcon: Icons.explore,
-                  label: 'اكتشف',
+                  icon: Icons.search,
+                  activeIcon: Icons.search,
+                  label: 'بحث',
                   isActive: navigationShell.currentIndex == 1,
                   onTap: () => _onTap(context, 1),
-                ),
-              ),
-              Expanded(
-                child: Center(
-                  child: GestureDetector(
-                    onTap: () => _onTap(context, 2),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: navigationShell.currentIndex == 2
-                            ? AppColors.primary
-                            : AppColors.surfaceContainerLow,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: navigationShell.currentIndex == 2
-                              ? AppColors.primary
-                              : AppColors.outline,
-                          width: 0.5,
-                        ),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x3F000000),
-                            blurRadius: 8,
-                            offset: Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                      child: AddEventIcon(
-                        color: navigationShell.currentIndex == 2
-                            ? Colors.black
-                            : AppColors.secondary,
-                        size: 24,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: _buildNavBarItem(
-                  icon: Icons.calendar_month_outlined,
-                  activeIcon: Icons.calendar_month,
-                  label: 'إداره الافينتات',
-                  isActive: navigationShell.currentIndex == 3,
-                  onTap: () => _onTap(context, 3),
                 ),
               ),
               Expanded(
@@ -116,8 +61,17 @@ class MainScreen extends StatelessWidget {
                   icon: Icons.notifications_outlined,
                   activeIcon: Icons.notifications,
                   label: 'التنبيهات',
-                  isActive: navigationShell.currentIndex == 4,
-                  onTap: () => _onTap(context, 4),
+                  isActive: navigationShell.currentIndex == 2,
+                  onTap: () => _onTap(context, 2),
+                ),
+              ),
+              Expanded(
+                child: _buildNavBarItem(
+                  icon: Icons.mail_outlined,
+                  activeIcon: Icons.mail,
+                  label: 'رسايل',
+                  isActive: navigationShell.currentIndex == 3,
+                  onTap: () => _onTap(context, 3),
                 ),
               ),
             ],
