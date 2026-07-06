@@ -1,5 +1,5 @@
 # 📐 System Blueprint — Tuwaiq App
-**Version:** 2.0.0 | **Status:** Active | **Last Updated:** 2026-07-04
+**Version:** 2.1.0 | **Status:** Active | **Last Updated:** 2026-07-06
 
 ---
 
@@ -20,7 +20,8 @@
 14. [Push Notifications & Deep Linking Flow & Engineering Decisions](#14-push-notifications--deep-linking-flow--engineering-decisions)
 15. [Day 1 MVP Pivots & Enhancements](#15-day-1-mvp-pivots--enhancements)
 16. [Day 2 Video Support & Engineering Decisions](#16-day-2-video-support--engineering-decisions)
-17. [Change Log](#17-change-log)
+17. [Day 3 Profile Redesign & Unified Search Hub](#17-day-3-profile-redesign--unified-search-hub)
+18. [Change Log](#18-change-log)
 
 ---
 
@@ -888,10 +889,40 @@ To establish complete media support, we implemented video selection, validation,
 
 ---
 
-## 17. Change Log
+## 17. Day 3 Profile Redesign & Unified Search Hub
+
+### 17.1 Profile Redesign (Twitter-style Layout)
+* **Requirement**: Overhaul the user profile page to match a modern Twitter-style layout, featuring a full-bleed cover banner, overlapping avatar, follower metrics inline, verified status badge, and a clean two-tab feed (**Posts** and **Likes**).
+* **Engineering Action**:
+  - Implemented `NestedScrollView` to combine the scroll behavior of the profile header and tab views smoothly.
+  - Wired a dynamic cover banner with `CachedNetworkImage` (memory cache bounded to `800x400` to prevent OOM) and a beautiful multi-gradient animated metallic fallback if no cover is set.
+  - Designed an overlapping circular avatar (memory cache bounded to `250x250`) with a thick border, alongside a dynamic follow action button.
+  - Added inline followers/following counts with responsive numbers formatting (e.g. `12.5k`).
+  - Added verified status check on the profile model (`isVerified`) to display a verification badge next to usernames.
+  - Implemented a two-tab `TabBar` (Posts, Likes) with scroll notifications mapping infinite list paginations.
+
+### 17.2 Unified Search Hub (Explore Hub)
+* **Requirement**: Refactor the Explore Screen to act as a unified, global discovery hub where users search posts or platform accounts.
+* **FTS Performance Constraint**: Do NOT use `.ilike('content', '%$query%')` on posts search to avoid slow full-table scans. Instead, utilize Supabase's Full Text Search capability: `.textSearch('content', query)`. (Short strings like username/fullName continue using `.or('username.ilike.%$query%,full_name.ilike.%$query%')`).
+* **Engineering Action**:
+  - Created `SearchPostsUseCase` and `SearchProfilesUseCase`.
+  - Refactored `ExploreCubit` to hold unified search states with a 500ms input debouncer to protect database resources from API spam.
+  - Implemented pagination scroll listeners on both tabs (cursor-based for posts, offset-based for accounts).
+  - Developed custom account search result card items with responsive avatar caches.
+
+### 17.3 Double-Tap Navigation Protection
+* **Requirement**: Repeated taps on the comments button/navigation links in posts stacks multiple details screen instances, causing back navigation loops.
+* **Engineering Action**:
+  - Declared a static `_lastNavigateTime` and `_safelyPush` helper inside `PostCard`.
+  - Enforced an 800ms cooldown window on push routing, completely preventing multiple screen pushes from rapid user taps.
+
+---
+
+## 18. Change Log
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
+| `2.1.0` | 2026-07-06 | Mahmoud Desouky | Completed Day 3 scope: implemented Twitter-style Profile Redesign (NestedScrollView, cover banner cache, overlapping avatar, inline follows, verified badges, Posts/Likes tabs); refactored ExploreScreen into a Unified Search Hub using Supabase Full-Text Search (FTS) for posts content and debounced search inputs. Added safety double-tap navigation checks on PostCard. |
 | `2.0.0` | 2026-07-04 | Mahmoud Desouky | Fully implemented Day 2 Video Support: increased posts bucket limit to 30MB, added video formats, and wrote strictly locked RLS folder policies. Added client-size validation and either/or media constraints. Integrated OOM-safe, lifecycle-aware PostVideoPlayer playing at >70% visibility, auto-muting, completely disposing at 0% visibility, and auto-pausing on backgrounding. Created db upload rollback hooks to prevent storage leaks. |
 | `1.9.0` | 2026-07-04 | Mahmoud Desouky | Implemented Day 1 MVP pivots and UX refinements: bypassed email confirmation flow entirely (deleted /email-confirmation screen); disabled event features from the user interface (removed event mixing in PostFeedCubit, HomeScreen, and ExploreScreen); added DM Screen back button; resolved comment deletion latency with cubic states & list keys; added inline post editing CRUD flow; updated CreatePostScreen container theme to match dark design. |
 | `1.8.0` | 2026-06-30 | Mahmoud Desouky | Designed and built a complete Push Notification & Deep Linking system (Sprint 3 / Phase 1 to 5). Created database tables (user_tokens, notifications) and triggers on comments, event updates, and milestone-based likes. Deployed and integrated the TypeScript Deno Edge Function with native RS256 token exchange. Implemented Flutter NotificationService and Clean Architecture notifications module with Cubit state management. Bound taps to GoRouter deep linking and fixed analyzer/test failures. |
