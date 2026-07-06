@@ -19,6 +19,18 @@ class PostCard extends StatelessWidget {
 
   const PostCard({super.key, required this.post});
 
+  static DateTime? _lastNavigateTime;
+
+  static void _safelyPush(BuildContext context, String route, {Object? extra}) {
+    final now = DateTime.now();
+    if (_lastNavigateTime != null &&
+        now.difference(_lastNavigateTime!) < const Duration(milliseconds: 800)) {
+      return;
+    }
+    _lastNavigateTime = now;
+    context.push(route, extra: extra);
+  }
+
   String _formatRelativeTime(DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
@@ -197,7 +209,7 @@ class PostCard extends StatelessWidget {
                 // Avatar
                 GestureDetector(
                   onTap: () {
-                    context.push(AppRoutes.profile, extra: post.creatorId);
+                    _safelyPush(context, AppRoutes.profile, extra: post.creatorId);
                   },
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(999),
@@ -254,7 +266,7 @@ class PostCard extends StatelessWidget {
                       Flexible(
                         child: GestureDetector(
                           onTap: () {
-                            context.push(AppRoutes.profile, extra: post.creatorId);
+                            _safelyPush(context, AppRoutes.profile, extra: post.creatorId);
                           },
                           child: Text(
                             post.creator.fullName.isNotEmpty
@@ -459,7 +471,8 @@ class PostCard extends StatelessWidget {
                 // Comment Button
                 InkWell(
                   onTap: () {
-                    context.push(
+                    _safelyPush(
+                      context,
                       AppRoutes.postDetails.replaceAll(':id', post.id),
                       extra: post,
                     );
