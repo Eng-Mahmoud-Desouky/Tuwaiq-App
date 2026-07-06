@@ -1,5 +1,5 @@
 # 📐 System Blueprint — Tuwaiq App
-**Version:** 2.1.0 | **Status:** Active | **Last Updated:** 2026-07-06
+**Version:** 2.2.0 | **Status:** Active | **Last Updated:** 2026-07-06
 
 ---
 
@@ -21,7 +21,8 @@
 15. [Day 1 MVP Pivots & Enhancements](#15-day-1-mvp-pivots--enhancements)
 16. [Day 2 Video Support & Engineering Decisions](#16-day-2-video-support--engineering-decisions)
 17. [Day 3 Profile Redesign & Unified Search Hub](#17-day-3-profile-redesign--unified-search-hub)
-18. [Change Log](#18-change-log)
+18. [Admin Panel System & Architecture](#18-admin-panel-system--architecture)
+19. [Change Log](#19-change-log)
 
 ---
 
@@ -55,12 +56,13 @@
 
 ## 3. User Roles
 
-The MVP operates with two roles only. No guest or admin roles in this phase.
+The mobile app operates with two roles only. An administrator role has been introduced specifically for the **Scratch Admin Panel** to manage users and moderate content.
 
 | Role | Description | Access |
 | :--- | :--- | :--- |
 | `anon` | Unauthenticated state (before login) | No access to app features |
-| `authenticated` | Logged-in user | Full access to all MVP features |
+| `authenticated` | Logged-in user | Full access to all MVP mobile app features |
+| `admin` | Administrator (designated by `is_admin = true` in profiles) | Full access to the Scratch Admin Panel dashboard and features |
 
 > **Note on `anon` key:** The Flutter app always uses the Supabase `anon` key to connect to the API. This is not a user role — it's a connection credential. The actual user role is determined by the JWT token after login.
 
@@ -216,6 +218,8 @@ Stores all additional user data beyond authentication.
 | `created_at` | `timestamptz` | DEFAULT now() | Account creation timestamp |
 | `updated_at` | `timestamptz` | DEFAULT now() | Last profile update |
 | `interests` | `text[]` | NULLABLE | User-selected event and cultural interests |
+| `is_verified` | `boolean` | DEFAULT false | Account verification status (blue badge indicator) |
+| `is_admin` | `boolean` | DEFAULT false | Administrator privilege flag (allows Admin Panel access) |
 
 **Relationship:** `profiles.id` → `auth.users.id` (1-to-1, Foreign Key)
 
@@ -918,10 +922,61 @@ To establish complete media support, we implemented video selection, validation,
 
 ---
 
-## 18. Change Log
+## 18. Admin Panel System & Architecture
+
+### 18.1 Overview
+The **Scratch Admin Panel** (`scratch_admin_panel`) is a premium administrative portal built to manage users, verify profiles, and moderate community content (posts and comments) across the $CRATCH ecosystem. 
+
+### 18.2 Tech Stack
+* **Framework:** Flutter Web/Desktop & Mobile (Cross-platform support).
+* **Database & BaaS:** Supabase (Auth, Postgres DB, and Remote Storage).
+* **State Management:** BLoC / Cubit (`flutter_bloc`).
+* **Routing:** Declarative routing using `go_router` supporting nested sub-navigation screens.
+* **UI styling:** Customized Dark-Mode (Pitch Black background, Silver text, Slate Steel borders) designed to scale on web dashboards and mobile screens.
+
+### 18.3 Authentication & Security Guards
+To prevent unauthorized database queries or screen access, the Admin Panel implements the following client-side and database security measures:
+1. **Admin Verification Gate:** Upon regular authentication (`signIn` on Supabase client), `AuthCubit` immediately queries the `profiles` table for the user's ID to fetch the `is_admin` boolean flag.
+2. **Auto-Signout Enforcement:** If the authenticated profile has `is_admin = false`, the application dispatches an immediate `signOut()` call to terminate the session, transitions to `AuthError` state, and blocks routing to the dashboard.
+3. **GoRouter Redirect Guards:** The router uses `refreshListenable` bound to the `AuthCubit` stream. Any transitions back to unauthenticated states force instant redirections to the `/login` route.
+
+### 18.4 Main Components & Features
+
+#### 1. User Management (`features/users`)
+* **Responsive Layout:** Dynamically adjusts styling:
+  * **Desktop Viewport (>= 900px):** Renders a structured multi-column table (Name, Username, Role, Verification Status, and Actions).
+  * **Mobile Viewport (< 900px):** Renders a vertical list view of user profile cards with inline admin badges and verified icons.
+* **Search & Filters:** A debounced search field (500ms delay) queries profiles table by username or full name.
+* **Pagination:** Infinite scrolling pagination loads users in ranges to avoid high memory usage.
+* **Control Actions:**
+  * **Edit Profile details:** Administrators can manually edit usernames, full names, and bios.
+  * **Privilege Toggle:** Administrators can grant/revoke admin status (`is_admin` database flag) instantly.
+  * **Verification Toggle:** Administrators can verify accounts (`is_verified` database flag) to display the blue verified badge.
+  * **Delete Account:** Triggers a bilingual warning dialog and calls a Postgres delete query which cascades to remove all user posts, comments, and likes.
+
+#### 2. Post & Comment Moderation (`features/moderation`)
+* **Staggered Masonry Layout:** In desktop viewports, posts are rendered in a multi-column masonry grid (2 columns for mid-range, 3 columns for wide monitors) to optimize space.
+* **Supabase Full Text Search (FTS):** Search inputs utilize `.textSearch('content', query)` to run index-based full text searches in the database rather than slow full-table scans.
+* **Rich Media Support:**
+  * **Images:** Renders post attachments utilizing `CachedNetworkImage` with strict memory size constraints (`400x400` max cache size) to prevent VRAM overflow.
+  * **Videos:** Renders video previews with a play indicator. Tapping launches a custom `VideoPlayerDialog` wrapping `video_player` with controls and timeline progress indicators.
+* **Moderation Actions:**
+  * **Delete Post:** Deletes the post from the DB (cascades to likes/comments) and triggers an asynchronous storage removal call to delete associated files (images/videos) from the `posts` bucket.
+  * **Delete Comment:** Allows administrators to view all post comments in an expandable list and delete individual comments instantly.
+
+#### 3. Dashboard Shell Navigation (`features/dashboard`)
+* **Dual Layout:** 
+  * **Desktop:** Renders a persistent left-sidebar with logo assets, menu links, and a bottom red logout button.
+  * **Mobile:** Renders a native top AppBar and a dual-tab `BottomNavigationBar` (Users, Moderation).
+* **Localization:** Natively supports Arabic RTL layout defaults and IBM Plex Sans Arabic typography.
+
+---
+
+## 19. Change Log
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
+| `2.2.0` | 2026-07-06 | Mahmoud Desouky | Created and integrated the Scratch Admin Panel application: implemented secure administrator authentication (is_admin database checks), responsive user management dashboard with verification and role toggles, post & comment moderation feed utilizing Supabase FTS, and responsive multi-column grid layouts for web/mobile screens. |
 | `2.1.0` | 2026-07-06 | Mahmoud Desouky | Completed Day 3 scope: implemented Twitter-style Profile Redesign (NestedScrollView, cover banner cache, overlapping avatar, inline follows, verified badges, Posts/Likes tabs); refactored ExploreScreen into a Unified Search Hub using Supabase Full-Text Search (FTS) for posts content and debounced search inputs. Added safety double-tap navigation checks on PostCard. |
 | `2.0.0` | 2026-07-04 | Mahmoud Desouky | Fully implemented Day 2 Video Support: increased posts bucket limit to 30MB, added video formats, and wrote strictly locked RLS folder policies. Added client-size validation and either/or media constraints. Integrated OOM-safe, lifecycle-aware PostVideoPlayer playing at >70% visibility, auto-muting, completely disposing at 0% visibility, and auto-pausing on backgrounding. Created db upload rollback hooks to prevent storage leaks. |
 | `1.9.0` | 2026-07-04 | Mahmoud Desouky | Implemented Day 1 MVP pivots and UX refinements: bypassed email confirmation flow entirely (deleted /email-confirmation screen); disabled event features from the user interface (removed event mixing in PostFeedCubit, HomeScreen, and ExploreScreen); added DM Screen back button; resolved comment deletion latency with cubic states & list keys; added inline post editing CRUD flow; updated CreatePostScreen container theme to match dark design. |
