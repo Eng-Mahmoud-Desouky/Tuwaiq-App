@@ -29,6 +29,36 @@ class PostRepositoryImpl implements PostRepository {
   }
 
   @override
+  Future<List<PostEntity>> getLikedPosts({
+    required String userId,
+    required int limit,
+    DateTime? lastLikedAt,
+    String? lastPostId,
+  }) async {
+    return await remoteDataSource.getLikedPosts(
+      userId: userId,
+      limit: limit,
+      lastLikedAt: lastLikedAt,
+      lastPostId: lastPostId,
+    );
+  }
+
+  @override
+  Future<List<PostEntity>> searchPosts({
+    required String query,
+    required int limit,
+    DateTime? lastCreatedAt,
+    String? lastPostId,
+  }) async {
+    return await remoteDataSource.searchPosts(
+      query: query,
+      limit: limit,
+      lastCreatedAt: lastCreatedAt,
+      lastPostId: lastPostId,
+    );
+  }
+
+  @override
   Future<PostEntity> createPost({
     required PostEntity post,
     String? localImagePath,

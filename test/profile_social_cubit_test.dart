@@ -56,6 +56,13 @@ class FakeProfileRepository implements ProfileRepository {
 
   @override
   Future<List<UserProfile>> getFollowing(String userId) async => [];
+
+  @override
+  Future<List<UserProfile>> searchProfiles({
+    required String query,
+    required int limit,
+    required int offset,
+  }) async => [];
 }
 
 void main() {

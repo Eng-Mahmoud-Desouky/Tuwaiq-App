@@ -1,23 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/theme/app_text_styles.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
 import '../../../posts/presentation/widgets/post_card.dart';
-import '../../../events/presentation/widgets/event_card_widget.dart';
 import '../../domain/entities/user_profile.dart';
 import '../cubit/profile_info_cubit.dart';
 import '../cubit/profile_info_state.dart';
 import '../cubit/profile_social_cubit.dart';
 import '../cubit/profile_social_state.dart';
 import '../cubit/profile_posts_cubit.dart';
-import '../cubit/profile_events_cubit.dart';
-import '../cubit/profile_saved_events_cubit.dart';
-import '../../../posts/domain/entities/post_entity.dart';
-import '../../../events/domain/entities/event_entity.dart';
+import '../cubit/profile_likes_cubit.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String userId;
@@ -89,35 +86,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        centerTitle: true,
-        leading: !isOwnProfile
-            ? const BackButton(color: Colors.white)
-            : null,
-        actions: [
-          if (isOwnProfile)
-            IconButton(
-              icon: const Icon(Icons.logout, color: AppColors.error),
-              onPressed: () => _showLogoutConfirmation(context),
-            ),
-        ],
-        title: const Text(
-          'الملف الشخصي',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-        ),
-        shape: const Border(
-          bottom: BorderSide(
-            color: AppColors.outline,
-            width: 0.5,
-          ),
-        ),
-      ),
       body: BlocListener<ProfileSocialCubit, ProfileSocialState>(
         listener: (context, state) {
           if (state is ProfileSocialError) {
@@ -146,33 +114,82 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     currentUserId,
                   );
                   context.read<ProfilePostsCubit>().loadPosts();
-                  context.read<ProfileEventsCubit>().loadEvents();
-                  context.read<ProfileSavedEventsCubit>().loadSavedEvents();
+                  context.read<ProfileLikesCubit>().loadLikes();
                 },
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.only(bottom: 100),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Profile Header with overlapping Cover & Avatar
-                      _buildProfileHeader(
-                        context,
-                        profile,
-                        isOwnProfile,
-                        currentUserId,
-                      ),
-                      const SizedBox(height: 20),
-                      // Social Stats Card
-                      _buildSocialStatsCard(context, profile),
-                      const SizedBox(height: 24),
-                      // Interests
-                      _buildInterestsSection(profile.interests),
-                      const SizedBox(height: 28),
-                      const SizedBox(height: 28),
-                      // Unified Feed (Posts & Events sorted by newest first)
-                      _buildUnifiedFeed(),
-                    ],
+                child: DefaultTabController(
+                  length: 2,
+                  child: NestedScrollView(
+                    headerSliverBuilder: (context, innerBoxIsScrolled) {
+                      return [
+                        SliverAppBar(
+                          backgroundColor: AppColors.background,
+                          elevation: 0,
+                          pinned: true,
+                          centerTitle: true,
+                          leading: !isOwnProfile
+                              ? const BackButton(color: Colors.white)
+                              : null,
+                          actions: [
+                            if (isOwnProfile)
+                              IconButton(
+                                icon: const Icon(Icons.logout, color: AppColors.error),
+                                onPressed: () => _showLogoutConfirmation(context),
+                              ),
+                          ],
+                          title: Text(
+                            profile.fullName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                          shape: const Border(
+                            bottom: BorderSide(
+                              color: AppColors.outline,
+                              width: 0.5,
+                            ),
+                          ),
+                        ),
+                        SliverToBoxAdapter(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _buildCoverImage(profile.coverUrl),
+                              _buildAvatarAndActionsRow(
+                                context,
+                                profile,
+                                isOwnProfile,
+                                currentUserId,
+                              ),
+                              _buildProfileDetails(context, profile),
+                              const SizedBox(height: 16),
+                            ],
+                          ),
+                        ),
+                        SliverPersistentHeader(
+                          pinned: true,
+                          delegate: _SliverTabBarDelegate(
+                            TabBar(
+                              labelColor: AppColors.primary,
+                              unselectedLabelColor: AppColors.secondary,
+                              indicatorColor: AppColors.primary,
+                              indicatorWeight: 2,
+                              tabs: const [
+                                Tab(text: 'المنشورات'),
+                                Tab(text: 'الإعجابات'),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ];
+                    },
+                    body: TabBarView(
+                      children: [
+                        _buildPostsTab(context),
+                        _buildLikesTab(context),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -191,212 +208,181 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileHeader(
+  Widget _buildCoverImage(String? coverUrl) {
+    return coverUrl != null && coverUrl.isNotEmpty
+        ? CachedNetworkImage(
+            imageUrl: coverUrl,
+            width: double.infinity,
+            height: 150,
+            fit: BoxFit.cover,
+            memCacheWidth: 800,
+            memCacheHeight: 400,
+            placeholder: (context, url) => Container(
+              height: 150,
+              color: AppColors.surfaceContainerLow,
+              child: const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
+            ),
+            errorWidget: (context, url, error) => const AnimatedCoverBackground(),
+          )
+        : const AnimatedCoverBackground();
+  }
+
+  Widget _buildAvatarAndActionsRow(
     BuildContext context,
     UserProfile profile,
     bool isOwnProfile,
     String currentUserId,
   ) {
-    return Column(
+    return Stack(
+      clipBehavior: Clip.none,
       children: [
-        Stack(
-          alignment: Alignment.bottomCenter,
-          clipBehavior: Clip.none,
-          children: [
-            // Cover Image banner
-            profile.coverUrl != null && profile.coverUrl!.isNotEmpty
-                ? Image.network(
-                    profile.coverUrl!,
-                    width: double.infinity,
-                    height: 180,
-                    fit: BoxFit.cover,
-                  )
-                : const AnimatedCoverBackground(),
-            // Edit Cover Photo icon overlay
-            if (isOwnProfile)
-              Positioned(
-                top: 16,
-                left: 16,
-                child: GestureDetector(
-                  onTap: () => _navigateToEditProfile(context, profile),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(
-                      color: Colors.black54,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.photo_camera,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ),
+        const SizedBox(height: 50),
+        Positioned(
+          top: -45,
+          right: 16,
+          child: Container(
+            width: 90,
+            height: 90,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.background,
+              border: Border.all(
+                color: AppColors.background,
+                width: 4,
               ),
-            // Avatar positioned overlapping with premium hexagon shape/border
-            Positioned(
-              bottom: -50,
-              child: Container(
-                width: 104,
-                height: 104,
-                decoration: const BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color(0x3F000000),
-                      blurRadius: 12,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black38,
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
                 ),
-                child: ClipPath(
-                  clipper: HexagonClipper(),
-                  child: Container(
-                    color: AppColors.tuwaiqGold, // Gold border
-                    padding: const EdgeInsets.all(4),
-                    child: ClipPath(
-                      clipper: HexagonClipper(),
-                      child: Container(
-                        color: AppColors.background,
-                        child: profile.avatarUrl != null && profile.avatarUrl!.isNotEmpty
-                            ? Image.network(
-                                profile.avatarUrl!,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    _buildDefaultAvatar(profile.fullName),
-                              )
-                            : _buildDefaultAvatar(profile.fullName),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              ],
             ),
-          ],
-        ),
-        const SizedBox(height: 58),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              profile.fullName,
-              style: AppTextStyles.titleMd.copyWith(color: AppColors.onSurface, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(width: 6),
-            const Icon(
-              Icons.verified,
-              color: Colors.blue, // Verified badge in Twitter-like blue color
-              size: 18,
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '@${profile.username}',
-          style: AppTextStyles.bodyMd.copyWith(
-            color: AppColors.onSurfaceVariant,
-          ),
-        ),
-        if (profile.bio != null && profile.bio!.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Text(
-              profile.bio!,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.bodyLg.copyWith(color: AppColors.onSurface),
-            ),
-          ),
-        ],
-        const SizedBox(height: 16),
-        if (isOwnProfile)
-          OutlinedButton(
-            onPressed: () => _navigateToEditProfile(context, profile),
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: AppColors.outline),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-            ),
-            child: Text(
-              'تعديل الملف الشخصي',
-              style: AppTextStyles.labelLg.copyWith(color: AppColors.onSurface),
-            ),
-          )
-        else
-          BlocBuilder<ProfileSocialCubit, ProfileSocialState>(
-            builder: (context, socialState) {
-              if (socialState is ProfileSocialLoaded) {
-                final stats = socialState.stats;
-                if (stats.isFollowing) {
-                  return OutlinedButton(
-                    onPressed: () =>
-                        context.read<ProfileSocialCubit>().toggleFollow(
-                          targetUserId: widget.userId,
-                          currentUserId: currentUserId,
+            child: ClipOval(
+              child: profile.avatarUrl != null && profile.avatarUrl!.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: profile.avatarUrl!,
+                      width: 90,
+                      height: 90,
+                      fit: BoxFit.cover,
+                      memCacheWidth: 250,
+                      memCacheHeight: 250,
+                      placeholder: (context, url) => Container(
+                        color: AppColors.surfaceContainerLow,
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.primary,
+                          ),
                         ),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.outlineVariant),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(999),
                       ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 10,
-                      ),
+                      errorWidget: (context, url, error) =>
+                          _buildDefaultAvatar(profile.fullName),
+                    )
+                  : _buildDefaultAvatar(profile.fullName),
+            ),
+          ),
+        ),
+        Positioned(
+          left: 16,
+          top: 10,
+          child: isOwnProfile
+              ? OutlinedButton(
+                  onPressed: () => _navigateToEditProfile(context, profile),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.outline),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text(
-                      'إلغاء المتابعه',
-                      style: AppTextStyles.labelLg.copyWith(
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                    ),
-                  );
-                } else {
-                  return ElevatedButton(
-                    onPressed: () =>
-                        context.read<ProfileSocialCubit>().toggleFollow(
-                          targetUserId: widget.userId,
-                          currentUserId: currentUserId,
-                        ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 10,
-                      ),
-                    ),
-                    child: Text(
-                      'متابعة',
-                      style: AppTextStyles.labelLg.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.background,
-                      ),
-                    ),
-                  );
-                }
-              }
-              return const SizedBox(
-                height: 38,
-                width: 100,
-                child: Center(
-                  child: SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  ),
+                  child: Text(
+                    'تعديل الملف الشخصي',
+                    style: AppTextStyles.labelLg.copyWith(
+                      color: AppColors.onSurface,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
+                )
+              : BlocBuilder<ProfileSocialCubit, ProfileSocialState>(
+                  builder: (context, socialState) {
+                    if (socialState is ProfileSocialLoaded) {
+                      final stats = socialState.stats;
+                      final isFollowing = stats.isFollowing;
+                      return isFollowing
+                          ? OutlinedButton(
+                              onPressed: () =>
+                                  context.read<ProfileSocialCubit>().toggleFollow(
+                                        targetUserId: widget.userId,
+                                        currentUserId: currentUserId,
+                                      ),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: AppColors.outline),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 6,
+                                ),
+                              ),
+                              child: Text(
+                                'إلغاء المتابعة',
+                                style: AppTextStyles.labelLg.copyWith(
+                                  color: AppColors.onSurface,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            )
+                          : ElevatedButton(
+                              onPressed: () =>
+                                  context.read<ProfileSocialCubit>().toggleFollow(
+                                        targetUserId: widget.userId,
+                                        currentUserId: currentUserId,
+                                      ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: AppColors.onPrimary,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 18,
+                                  vertical: 6,
+                                ),
+                              ),
+                              child: Text(
+                                'متابعة',
+                                style: AppTextStyles.labelLg.copyWith(
+                                  color: AppColors.onPrimary,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            );
+                    }
+                    return const SizedBox(
+                      height: 32,
+                      width: 80,
+                      child: Center(
+                        child: SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
+        ),
       ],
     );
   }
@@ -414,215 +400,210 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildSocialStatsCard(BuildContext context, UserProfile profile) {
+  Widget _buildProfileDetails(BuildContext context, UserProfile profile) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x0F000000),
-              blurRadius: 24,
-              offset: Offset(0, 8),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 16.0),
-        child: BlocBuilder<ProfileSocialCubit, ProfileSocialState>(
-          builder: (context, socialState) {
-            int followersCount = 0;
-            int followingCount = 0;
-
-            if (socialState is ProfileSocialLoaded) {
-              followersCount = socialState.stats.followersCount;
-              followingCount = socialState.stats.followingCount;
-            }
-
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                GestureDetector(
-                  onTap: () => _navigateToConnections(context, profile, 0),
-                  behavior: HitTestBehavior.opaque,
-                  child: Column(
-                    children: [
-                      Text(
-                        _formatNumber(followersCount),
-                        style: AppTextStyles.headlineLgMobile.copyWith(
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'المتابعون',
-                        style: AppTextStyles.labelSm.copyWith(
-                          color: AppColors.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                profile.fullName,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
                 ),
-                Container(
-                  width: 1,
-                  height: 48,
-                  color: AppColors.outlineVariant.withOpacity(0.3),
-                ),
-                GestureDetector(
-                  onTap: () => _navigateToConnections(context, profile, 1),
-                  behavior: HitTestBehavior.opaque,
-                  child: Column(
-                    children: [
-                      Text(
-                        _formatNumber(followingCount),
-                        style: AppTextStyles.headlineLgMobile.copyWith(
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'أتابعهم',
-                        style: AppTextStyles.labelSm.copyWith(
-                          color: AppColors.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
+              ),
+              if (profile.isVerified) ...[
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.verified,
+                  color: Colors.blue,
+                  size: 18,
                 ),
               ],
-            );
-          },
-        ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            '@${profile.username}',
+            style: const TextStyle(
+              color: AppColors.secondary,
+              fontSize: 14,
+            ),
+          ),
+          if (profile.bio != null && profile.bio!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              profile.bio!,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+                height: 1.4,
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          BlocBuilder<ProfileSocialCubit, ProfileSocialState>(
+            builder: (context, socialState) {
+              int followersCount = 0;
+              int followingCount = 0;
+
+              if (socialState is ProfileSocialLoaded) {
+                followersCount = socialState.stats.followersCount;
+                followingCount = socialState.stats.followingCount;
+              }
+
+              return Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => _navigateToConnections(context, profile, 1),
+                    child: Row(
+                      children: [
+                        Text(
+                          _formatNumber(followingCount),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Text(
+                          'أتابعهم',
+                          style: TextStyle(
+                            color: AppColors.secondary,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  GestureDetector(
+                    onTap: () => _navigateToConnections(context, profile, 0),
+                    child: Row(
+                      children: [
+                        Text(
+                          _formatNumber(followersCount),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Text(
+                          'المتابعون',
+                          style: TextStyle(
+                            color: AppColors.secondary,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildInterestsSection(List<String> interests) {
-    if (interests.isEmpty) return const SizedBox.shrink();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24.0),
-          child: Text(
-            'الاهتمامات',
-            style: TextStyle(
-              color: AppColors.onSurfaceVariant,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 40,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            itemCount: interests.length,
-            itemBuilder: (context, index) {
-              final interest = interests[index];
-              final isActive = index < 4; 
-              return Padding(
-                padding: const EdgeInsets.only(left: 8.0), // RTL padding
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isActive
-                        ? AppColors.primary.withOpacity(0.1)
-                        : AppColors.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    interest,
-                    style: AppTextStyles.labelLg.copyWith(
-                      color: isActive
-                          ? AppColors.primary
-                          : AppColors.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              );
+  Widget _buildPostsTab(BuildContext context) {
+    return BlocBuilder<ProfilePostsCubit, ProfilePostsState>(
+      builder: (context, state) {
+        if (state is ProfilePostsLoading) {
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          );
+        } else if (state is ProfilePostsLoaded) {
+          final posts = state.posts;
+          if (posts.isEmpty) {
+            return const Center(
+              child: Text(
+                'لا توجد منشورات حالياً',
+                style: TextStyle(color: AppColors.secondary, fontSize: 14),
+              ),
+            );
+          }
+          return NotificationListener<ScrollNotification>(
+            onNotification: (ScrollNotification scrollInfo) {
+              if (scrollInfo.metrics.pixels >=
+                  scrollInfo.metrics.maxScrollExtent - 200) {
+                context.read<ProfilePostsCubit>().loadMorePosts();
+              }
+              return false;
             },
-          ),
-        ),
-      ],
+            child: ListView.builder(
+              key: const PageStorageKey('profile_posts'),
+              padding: const EdgeInsets.only(top: 8, bottom: 80),
+              itemCount: posts.length,
+              itemBuilder: (context, index) {
+                return PostCard(post: posts[index]);
+              },
+            ),
+          );
+        } else if (state is ProfilePostsError) {
+          return Center(
+            child: Text(
+              state.message,
+              style: const TextStyle(color: AppColors.error),
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 
-  Widget _buildUnifiedFeed() {
-    return BlocBuilder<ProfilePostsCubit, ProfilePostsState>(
-      builder: (context, postsState) {
-        return BlocBuilder<ProfileEventsCubit, ProfileEventsState>(
-          builder: (context, eventsState) {
-            bool isLoading = postsState is ProfilePostsLoading || eventsState is ProfileEventsLoading;
-
-            if (isLoading) {
-              return const Padding(
-                padding: EdgeInsets.all(32.0),
-                child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
-              );
-            }
-
-            List<PostEntity> posts = [];
-            if (postsState is ProfilePostsLoaded) {
-              posts = postsState.posts;
-            }
-
-            List<EventEntity> events = [];
-            if (eventsState is ProfileEventsLoaded) {
-              events = eventsState.events;
-            }
-
-            if (posts.isEmpty && events.isEmpty) {
-              return const Padding(
-                padding: EdgeInsets.all(32.0),
-                child: Center(
-                  child: Text(
-                    'لا توجد منشورات أو فعاليات حالياً',
-                    style: TextStyle(color: AppColors.secondary, fontSize: 14),
-                  ),
-                ),
-              );
-            }
-
-            // Combine and sort by date (newest first)
-            final List<dynamic> combinedList = [...posts, ...events];
-            combinedList.sort((a, b) {
-              final dateA = (a is PostEntity) ? a.createdAt : (a as EventEntity).startDate;
-              final dateB = (b is PostEntity) ? b.createdAt : (b as EventEntity).startDate;
-              return dateB.compareTo(dateA);
-            });
-
-            return ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: combinedList.length,
-              itemBuilder: (context, index) {
-                final item = combinedList[index];
-                if (item is PostEntity) {
-                  return PostCard(post: item);
-                } else {
-                  final event = item as EventEntity;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                    child: EventCardWidget(
-                      event: event,
-                      onTap: () {
-                        context.push('/events/${event.id}', extra: event);
-                      },
-                    ),
-                  );
-                }
-              },
+  Widget _buildLikesTab(BuildContext context) {
+    return BlocBuilder<ProfileLikesCubit, ProfileLikesState>(
+      builder: (context, state) {
+        if (state is ProfileLikesLoading) {
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          );
+        } else if (state is ProfileLikesLoaded) {
+          final posts = state.posts;
+          if (posts.isEmpty) {
+            return const Center(
+              child: Text(
+                'لا توجد إعجابات حالياً',
+                style: TextStyle(color: AppColors.secondary, fontSize: 14),
+              ),
             );
-          },
-        );
+          }
+          return NotificationListener<ScrollNotification>(
+            onNotification: (ScrollNotification scrollInfo) {
+              if (scrollInfo.metrics.pixels >=
+                  scrollInfo.metrics.maxScrollExtent - 200) {
+                context.read<ProfileLikesCubit>().loadMoreLikes();
+              }
+              return false;
+            },
+            child: ListView.builder(
+              key: const PageStorageKey('profile_likes'),
+              padding: const EdgeInsets.only(top: 8, bottom: 80),
+              itemCount: posts.length,
+              itemBuilder: (context, index) {
+                return PostCard(post: posts[index]);
+              },
+            ),
+          );
+        } else if (state is ProfileLikesError) {
+          return Center(
+            child: Text(
+              state.message,
+              style: const TextStyle(color: AppColors.error),
+            ),
+          );
+        }
+        return const SizedBox.shrink();
       },
     );
   }
@@ -646,8 +627,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         currentUserId,
       );
       context.read<ProfilePostsCubit>().loadPosts();
-      context.read<ProfileEventsCubit>().loadEvents();
-      context.read<ProfileSavedEventsCubit>().loadSavedEvents();
+      context.read<ProfileLikesCubit>().loadLikes();
     });
   }
 
@@ -678,28 +658,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-// Custom Hexagonal Clipper for Premium Profile Avatar
-class HexagonClipper extends CustomClipper<Path> {
+class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
+  final TabBar tabBar;
+
+  _SliverTabBarDelegate(this.tabBar);
+
   @override
-  Path getClip(Size size) {
-    final path = Path();
-    final w = size.width;
-    final h = size.height;
-    path.moveTo(w * 0.5, 0);
-    path.lineTo(w, h * 0.25);
-    path.lineTo(w, h * 0.75);
-    path.lineTo(w * 0.5, h);
-    path.lineTo(0, h * 0.75);
-    path.lineTo(0, h * 0.25);
-    path.close();
-    return path;
+  double get minExtent => tabBar.preferredSize.height;
+
+  @override
+  double get maxExtent => tabBar.preferredSize.height;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      color: AppColors.background,
+      child: tabBar,
+    );
   }
 
   @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+  bool shouldRebuild(_SliverTabBarDelegate oldDelegate) {
+    return false;
+  }
 }
 
-// Premium Animated Gradient Background for Profile Cover
 class AnimatedCoverBackground extends StatefulWidget {
   const AnimatedCoverBackground({super.key});
 
@@ -748,12 +732,12 @@ class _AnimatedCoverBackgroundState extends State<AnimatedCoverBackground> with 
       builder: (context, child) {
         return Container(
           width: double.infinity,
-          height: 180,
+          height: 150,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: const [
-                Color(0xFF7B5FF8), // Brand Purple
-                Color(0xFF1E144D), // Dark Purple/Navy
+                Color(0xFF1E293B), // Dark Slate/Metallic
+                Color(0xFF0F172A), // Dark Navy
                 Color(0xFF000000), // Pitch Black
               ],
               begin: _topAlignment.value,

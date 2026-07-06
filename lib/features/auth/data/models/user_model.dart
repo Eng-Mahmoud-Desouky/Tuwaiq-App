@@ -10,6 +10,8 @@ class UserModel extends UserEntity {
     super.bio,
     super.interests = const [],
     super.emailConfirmed = false,
+    super.isVerified = false,
+    super.isAdmin = false,
   });
 
   factory UserModel.fromJson(
@@ -31,6 +33,8 @@ class UserModel extends UserEntity {
       bio: json['bio'] as String?,
       interests: parsedInterests,
       emailConfirmed: emailConfirmed,
+      isVerified: json['is_verified'] as bool? ?? false,
+      isAdmin: json['is_admin'] as bool? ?? false,
     );
   }
 
@@ -42,6 +46,8 @@ class UserModel extends UserEntity {
       'avatar_url': avatarUrl,
       'bio': bio,
       'interests': interests,
+      'is_verified': isVerified,
+      'is_admin': isAdmin,
     };
   }
 
@@ -55,6 +61,8 @@ class UserModel extends UserEntity {
       bio: bio,
       interests: interests,
       emailConfirmed: emailConfirmed,
+      isVerified: isVerified,
+      isAdmin: isAdmin,
     );
   }
 }

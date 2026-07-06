@@ -15,9 +15,10 @@ class PostModel extends PostEntity {
     super.likeCount = 0,
     super.commentCount = 0,
     super.isLikedByCurrentUser = false,
+    super.likedAt,
   });
 
-  factory PostModel.fromJson(Map<String, dynamic> json, {bool isLiked = false}) {
+  factory PostModel.fromJson(Map<String, dynamic> json, {bool isLiked = false, DateTime? likedAt}) {
     final creatorData = json['profiles'];
     final creator = creatorData != null
         ? UserProfileModel.fromJson(creatorData as Map<String, dynamic>).toEntity()
@@ -59,6 +60,7 @@ class PostModel extends PostEntity {
       likeCount: parsedLikes,
       commentCount: parsedComments,
       isLikedByCurrentUser: isLiked,
+      likedAt: likedAt,
     );
   }
 
@@ -73,6 +75,24 @@ class PostModel extends PostEntity {
       'media_type': mediaType,
       'video_url': videoUrl,
     };
+  }
+
+  PostModel copyWithLikedAt(DateTime? likedAt) {
+    return PostModel(
+      id: id,
+      creatorId: creatorId,
+      creator: creator,
+      content: content,
+      imageUrl: imageUrl,
+      mediaType: mediaType,
+      videoUrl: videoUrl,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      likeCount: likeCount,
+      commentCount: commentCount,
+      isLikedByCurrentUser: isLikedByCurrentUser,
+      likedAt: likedAt,
+    );
   }
 
   PostEntity toEntity() {

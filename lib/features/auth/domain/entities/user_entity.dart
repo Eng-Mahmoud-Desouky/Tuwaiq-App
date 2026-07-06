@@ -9,6 +9,8 @@ class UserEntity extends Equatable {
   final String? bio;
   final List<String> interests;
   final bool emailConfirmed;
+  final bool isVerified;
+  final bool isAdmin;
 
   const UserEntity({
     required this.id,
@@ -19,6 +21,8 @@ class UserEntity extends Equatable {
     this.bio,
     this.interests = const [],
     this.emailConfirmed = false,
+    this.isVerified = false,
+    this.isAdmin = false,
   });
 
   UserEntity copyWith({
@@ -30,6 +34,8 @@ class UserEntity extends Equatable {
     String? bio,
     List<String>? interests,
     bool? emailConfirmed,
+    bool? isVerified,
+    bool? isAdmin,
   }) {
     return UserEntity(
       id: id ?? this.id,
@@ -40,6 +46,8 @@ class UserEntity extends Equatable {
       bio: bio ?? this.bio,
       interests: interests ?? this.interests,
       emailConfirmed: emailConfirmed ?? this.emailConfirmed,
+      isVerified: isVerified ?? this.isVerified,
+      isAdmin: isAdmin ?? this.isAdmin,
     );
   }
 
@@ -53,5 +61,7 @@ class UserEntity extends Equatable {
     bio,
     interests,
     emailConfirmed,
+    isVerified,
+    isAdmin,
   ];
 }

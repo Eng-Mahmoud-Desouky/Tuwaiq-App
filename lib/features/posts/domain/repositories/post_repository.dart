@@ -11,6 +11,22 @@ abstract class PostRepository {
     String? creatorId,
   });
 
+  /// Fetches a paginated feed of posts liked by a user.
+  Future<List<PostEntity>> getLikedPosts({
+    required String userId,
+    required int limit,
+    DateTime? lastLikedAt,
+    String? lastPostId,
+  });
+
+  /// Searches for posts by text content using Full Text Search (FTS).
+  Future<List<PostEntity>> searchPosts({
+    required String query,
+    required int limit,
+    DateTime? lastCreatedAt,
+    String? lastPostId,
+  });
+
   /// Creates a new post, with optional local image or video file paths.
   Future<PostEntity> createPost({
     required PostEntity post,

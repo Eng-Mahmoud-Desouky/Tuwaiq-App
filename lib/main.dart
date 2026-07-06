@@ -74,6 +74,9 @@ import 'features/posts/domain/usecases/delete_post_usecase.dart';
 import 'features/posts/domain/usecases/delete_comment_usecase.dart';
 import 'features/posts/domain/usecases/update_comment_usecase.dart';
 import 'features/posts/domain/usecases/update_post_usecase.dart';
+import 'features/posts/domain/usecases/get_liked_posts_usecase.dart';
+import 'features/posts/domain/usecases/search_posts_usecase.dart';
+import 'features/profile/domain/usecases/search_profiles_usecase.dart';
 import 'features/posts/presentation/cubits/post_feed/post_feed_cubit.dart';
 
 void main() async {
@@ -122,6 +125,7 @@ void main() async {
   final unfollowUserUseCase = UnfollowUserUseCase(profileRepository);
   final getFollowersUseCase = GetFollowersUseCase(profileRepository);
   final getFollowingUseCase = GetFollowingUseCase(profileRepository);
+  final searchProfilesUseCase = SearchProfilesUseCase(profileRepository);
 
   // Events
   final eventRemoteDataSource = EventRemoteDataSourceImpl(supabaseClient);
@@ -149,6 +153,8 @@ void main() async {
   final updateCommentUseCase = UpdateCommentUseCase(postRepository);
   final deletePostUseCase = DeletePostUseCase(postRepository);
   final updatePostUseCase = UpdatePostUseCase(postRepository);
+  final getLikedPostsUseCase = GetLikedPostsUseCase(postRepository);
+  final searchPostsUseCase = SearchPostsUseCase(postRepository);
 
   // Notifications
   final notificationsRemoteDataSource = NotificationsRemoteDataSourceImpl(supabaseClient);
@@ -211,6 +217,9 @@ void main() async {
         updatePasswordUseCase: updatePasswordUseCase,
         getNotificationsUseCase: getNotificationsUseCase,
         markNotificationAsReadUseCase: markNotificationAsReadUseCase,
+        searchProfilesUseCase: searchProfilesUseCase,
+        getLikedPostsUseCase: getLikedPostsUseCase,
+        searchPostsUseCase: searchPostsUseCase,
       ),
     ),
   );
@@ -243,6 +252,9 @@ class MyApp extends StatelessWidget {
   final UpdatePasswordUseCase updatePasswordUseCase;
   final GetNotificationsUseCase getNotificationsUseCase;
   final MarkNotificationAsReadUseCase markNotificationAsReadUseCase;
+  final SearchProfilesUseCase searchProfilesUseCase;
+  final GetLikedPostsUseCase getLikedPostsUseCase;
+  final SearchPostsUseCase searchPostsUseCase;
 
   const MyApp({
     super.key,
@@ -272,6 +284,9 @@ class MyApp extends StatelessWidget {
     required this.updatePasswordUseCase,
     required this.getNotificationsUseCase,
     required this.markNotificationAsReadUseCase,
+    required this.searchProfilesUseCase,
+    required this.getLikedPostsUseCase,
+    required this.searchPostsUseCase,
   });
 
   @override
@@ -304,6 +319,9 @@ class MyApp extends StatelessWidget {
       updatePasswordUseCase: updatePasswordUseCase,
       getNotificationsUseCase: getNotificationsUseCase,
       markNotificationAsReadUseCase: markNotificationAsReadUseCase,
+      searchProfilesUseCase: searchProfilesUseCase,
+      getLikedPostsUseCase: getLikedPostsUseCase,
+      searchPostsUseCase: searchPostsUseCase,
     );
 
     return MaterialApp.router(

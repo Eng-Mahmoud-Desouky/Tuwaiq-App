@@ -1,21 +1,21 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../posts/domain/entities/post_entity.dart';
-import '../../../posts/domain/usecases/get_posts_feed_usecase.dart';
+import '../../../posts/domain/usecases/get_liked_posts_usecase.dart';
 
-abstract class ProfilePostsState extends Equatable {
-  const ProfilePostsState();
+abstract class ProfileLikesState extends Equatable {
+  const ProfileLikesState();
   @override
   List<Object?> get props => [];
 }
 
-class ProfilePostsInitial extends ProfilePostsState {}
-class ProfilePostsLoading extends ProfilePostsState {}
-class ProfilePostsLoaded extends ProfilePostsState {
+class ProfileLikesInitial extends ProfileLikesState {}
+class ProfileLikesLoading extends ProfileLikesState {}
+class ProfileLikesLoaded extends ProfileLikesState {
   final List<PostEntity> posts;
   final bool hasReachedMax;
 
-  const ProfilePostsLoaded({
+  const ProfileLikesLoaded({
     required this.posts,
     required this.hasReachedMax,
   });
@@ -23,67 +23,67 @@ class ProfilePostsLoaded extends ProfilePostsState {
   @override
   List<Object?> get props => [posts, hasReachedMax];
 }
-class ProfilePostsError extends ProfilePostsState {
+class ProfileLikesError extends ProfileLikesState {
   final String message;
-  const ProfilePostsError(this.message);
+  const ProfileLikesError(this.message);
 
   @override
   List<Object?> get props => [message];
 }
 
-class ProfilePostsCubit extends Cubit<ProfilePostsState> {
-  final GetPostsFeedUseCase getPostsFeedUseCase;
+class ProfileLikesCubit extends Cubit<ProfileLikesState> {
+  final GetLikedPostsUseCase getLikedPostsUseCase;
   final String userId;
   final int _limit = 10;
 
-  ProfilePostsCubit({
-    required this.getPostsFeedUseCase,
+  ProfileLikesCubit({
+    required this.getLikedPostsUseCase,
     required this.userId,
-  }) : super(ProfilePostsInitial());
+  }) : super(ProfileLikesInitial());
 
-  Future<void> loadPosts() async {
-    emit(ProfilePostsLoading());
+  Future<void> loadLikes() async {
+    emit(ProfileLikesLoading());
     try {
-      final posts = await getPostsFeedUseCase(
+      final posts = await getLikedPostsUseCase(
+        userId: userId,
         limit: _limit,
-        creatorId: userId,
       );
-      emit(ProfilePostsLoaded(
+      emit(ProfileLikesLoaded(
         posts: posts,
         hasReachedMax: posts.length < _limit,
       ));
     } catch (e) {
-      emit(ProfilePostsError(
+      emit(ProfileLikesError(
         e.toString().replaceAll('Exception: ', '').replaceAll('ServerFailure: ', ''),
       ));
     }
   }
 
-  Future<void> loadMorePosts() async {
+  Future<void> loadMoreLikes() async {
     final currentState = state;
-    if (currentState is ProfilePostsLoaded && !currentState.hasReachedMax) {
+    if (currentState is ProfileLikesLoaded && !currentState.hasReachedMax) {
       try {
         final lastPost = currentState.posts.last;
-        final morePosts = await getPostsFeedUseCase(
+        final morePosts = await getLikedPostsUseCase(
+          userId: userId,
           limit: _limit,
-          lastCreatedAt: lastPost.createdAt,
+          lastLikedAt: lastPost.likedAt ?? lastPost.createdAt,
           lastPostId: lastPost.id,
-          creatorId: userId,
         );
 
-        emit(ProfilePostsLoaded(
+        emit(ProfileLikesLoaded(
           posts: List.from(currentState.posts)..addAll(morePosts),
           hasReachedMax: morePosts.length < _limit,
         ));
       } catch (e) {
-        // Keep current state on error
+        // Fail silently to keep UX smooth
       }
     }
   }
 
   void toggleLike(String postId, bool isLiked, int likeCount) {
     final currentState = state;
-    if (currentState is ProfilePostsLoaded) {
+    if (currentState is ProfileLikesLoaded) {
       final updatedPosts = currentState.posts.map((post) {
         if (post.id == postId) {
           return post.copyWith(
@@ -93,7 +93,7 @@ class ProfilePostsCubit extends Cubit<ProfilePostsState> {
         }
         return post;
       }).toList();
-      emit(ProfilePostsLoaded(
+      emit(ProfileLikesLoaded(
         posts: updatedPosts,
         hasReachedMax: currentState.hasReachedMax,
       ));

@@ -47,6 +47,10 @@ import '../../features/events/domain/usecases/is_event_saved_usecase.dart';
 import '../../features/events/domain/usecases/get_events_by_user_usecase.dart';
 import '../../features/events/domain/usecases/get_saved_events_usecase.dart';
 import '../../features/profile/presentation/cubit/profile_posts_cubit.dart';
+import '../../features/profile/presentation/cubit/profile_likes_cubit.dart';
+import '../../features/posts/domain/usecases/get_liked_posts_usecase.dart';
+import '../../features/posts/domain/usecases/search_posts_usecase.dart';
+import '../../features/profile/domain/usecases/search_profiles_usecase.dart';
 import '../../features/profile/presentation/cubit/profile_events_cubit.dart';
 import '../../features/profile/presentation/cubit/profile_saved_events_cubit.dart';
 import '../../features/events/presentation/cubit/create_event_cubit.dart';
@@ -113,6 +117,9 @@ class AppRouter {
     required UpdatePasswordUseCase updatePasswordUseCase,
     required GetNotificationsUseCase getNotificationsUseCase,
     required MarkNotificationAsReadUseCase markNotificationAsReadUseCase,
+    required SearchProfilesUseCase searchProfilesUseCase,
+    required GetLikedPostsUseCase getLikedPostsUseCase,
+    required SearchPostsUseCase searchPostsUseCase,
   }) {
     final routerInstance = GoRouter(
       navigatorKey: _rootNavigatorKey,
@@ -266,7 +273,10 @@ class AppRouter {
                 GoRoute(
                   path: AppRoutes.explore,
                   builder: (context, state) => BlocProvider(
-                    create: (context) => ExploreCubit(),
+                    create: (context) => ExploreCubit(
+                      searchPostsUseCase: searchPostsUseCase,
+                      searchProfilesUseCase: searchProfilesUseCase,
+                    ),
                     child: const ExploreScreen(),
                   ),
                 ),
@@ -337,16 +347,10 @@ class AppRouter {
                           )..loadPosts(),
                         ),
                         BlocProvider(
-                          create: (context) => ProfileEventsCubit(
-                            getEventsByUserUseCase: getEventsByUserUseCase,
+                          create: (context) => ProfileLikesCubit(
+                            getLikedPostsUseCase: getLikedPostsUseCase,
                             userId: finalUserId,
-                          )..loadEvents(),
-                        ),
-                        BlocProvider(
-                          create: (context) => ProfileSavedEventsCubit(
-                            getSavedEventsUseCase: getSavedEventsUseCase,
-                            userId: finalUserId,
-                          )..loadSavedEvents(),
+                          )..loadLikes(),
                         ),
                       ],
                       child: ProfileScreen(userId: finalUserId),

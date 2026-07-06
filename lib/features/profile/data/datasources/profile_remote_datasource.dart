@@ -34,6 +34,12 @@ abstract class ProfileRemoteDataSource {
   Future<List<UserProfileModel>> getFollowers(String userId);
 
   Future<List<UserProfileModel>> getFollowing(String userId);
+
+  Future<List<UserProfileModel>> searchProfiles({
+    required String query,
+    required int limit,
+    required int offset,
+  });
 }
 
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
@@ -205,5 +211,22 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         })
         .whereType<UserProfileModel>()
         .toList();
+  }
+
+  @override
+  Future<List<UserProfileModel>> searchProfiles({
+    required String query,
+    required int limit,
+    required int offset,
+  }) async {
+    final response = await _client
+        .from('profiles')
+        .select()
+        .or('username.ilike.%$query%,full_name.ilike.%$query%')
+        .order('username', ascending: true)
+        .range(offset, offset + limit - 1);
+
+    final list = response as List? ?? const [];
+    return list.map((item) => UserProfileModel.fromJson(item as Map<String, dynamic>)).toList();
   }
 }

@@ -35,6 +35,9 @@ import 'package:tuwaiq_app/features/posts/domain/usecases/add_comment_usecase.da
 import 'package:tuwaiq_app/features/posts/domain/usecases/delete_post_usecase.dart';
 import 'package:tuwaiq_app/features/posts/domain/usecases/delete_comment_usecase.dart';
 import 'package:tuwaiq_app/features/posts/domain/usecases/update_comment_usecase.dart';
+import 'package:tuwaiq_app/features/posts/domain/usecases/get_liked_posts_usecase.dart';
+import 'package:tuwaiq_app/features/posts/domain/usecases/search_posts_usecase.dart';
+import 'package:tuwaiq_app/features/profile/domain/usecases/search_profiles_usecase.dart';
 
 import 'package:tuwaiq_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:tuwaiq_app/features/auth/domain/entities/user_entity.dart';
@@ -94,6 +97,12 @@ class FakeProfileRepo implements ProfileRepository {
   Future<List<UserProfile>> getFollowers(String userId) async => [];
   @override
   Future<List<UserProfile>> getFollowing(String userId) async => [];
+  @override
+  Future<List<UserProfile>> searchProfiles({
+    required String query,
+    required int limit,
+    required int offset,
+  }) async => [];
 }
 
 class FakeEventRepo implements EventRepository {
@@ -147,6 +156,20 @@ class FakePostRepo implements PostRepository {
   Future<void> deletePost(String postId) async {}
   @override
   Future<PostEntity> updatePost({required String postId, required String content}) async => throw UnimplementedError();
+  @override
+  Future<List<PostEntity>> getLikedPosts({
+    required String userId,
+    required int limit,
+    DateTime? lastLikedAt,
+    String? lastPostId,
+  }) async => [];
+  @override
+  Future<List<PostEntity>> searchPosts({
+    required String query,
+    required int limit,
+    DateTime? lastCreatedAt,
+    String? lastPostId,
+  }) async => [];
 }
 
 class FakeNotificationsRepo implements NotificationsRepository {
@@ -217,6 +240,9 @@ void main() {
           updatePasswordUseCase: UpdatePasswordUseCase(authRepo),
           getNotificationsUseCase: GetNotificationsUseCase(notificationsRepo),
           markNotificationAsReadUseCase: MarkNotificationAsReadUseCase(notificationsRepo),
+          searchProfilesUseCase: SearchProfilesUseCase(profileRepo),
+          getLikedPostsUseCase: GetLikedPostsUseCase(postRepo),
+          searchPostsUseCase: SearchPostsUseCase(postRepo),
         ),
       ),
     );

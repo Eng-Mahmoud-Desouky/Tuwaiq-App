@@ -8,6 +8,8 @@ class UserProfile extends Equatable {
   final String? avatarUrl;
   final String? coverUrl;
   final List<String> interests;
+  final bool isVerified;
+  final bool isAdmin;
 
   const UserProfile({
     required this.id,
@@ -17,6 +19,8 @@ class UserProfile extends Equatable {
     this.avatarUrl,
     this.coverUrl,
     this.interests = const [],
+    this.isVerified = false,
+    this.isAdmin = false,
   });
 
   UserProfile copyWith({
@@ -27,6 +31,8 @@ class UserProfile extends Equatable {
     String? avatarUrl,
     String? coverUrl,
     List<String>? interests,
+    bool? isVerified,
+    bool? isAdmin,
   }) {
     return UserProfile(
       id: id ?? this.id,
@@ -36,6 +42,8 @@ class UserProfile extends Equatable {
       avatarUrl: avatarUrl ?? this.avatarUrl,
       coverUrl: coverUrl ?? this.coverUrl,
       interests: interests ?? this.interests,
+      isVerified: isVerified ?? this.isVerified,
+      isAdmin: isAdmin ?? this.isAdmin,
     );
   }
 
@@ -48,5 +56,7 @@ class UserProfile extends Equatable {
     avatarUrl,
     coverUrl,
     interests,
+    isVerified,
+    isAdmin,
   ];
 }

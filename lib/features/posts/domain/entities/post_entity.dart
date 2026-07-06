@@ -15,6 +15,7 @@ class PostEntity extends Equatable {
   final int likeCount;
   final int commentCount;
   final bool isLikedByCurrentUser;
+  final DateTime? likedAt;
 
   const PostEntity({
     required this.id,
@@ -29,6 +30,7 @@ class PostEntity extends Equatable {
     this.likeCount = 0,
     this.commentCount = 0,
     this.isLikedByCurrentUser = false,
+    this.likedAt,
   });
 
   PostEntity copyWith({
@@ -44,6 +46,7 @@ class PostEntity extends Equatable {
     int? likeCount,
     int? commentCount,
     bool? isLikedByCurrentUser,
+    DateTime? likedAt,
   }) {
     return PostEntity(
       id: id ?? this.id,
@@ -58,6 +61,7 @@ class PostEntity extends Equatable {
       likeCount: likeCount ?? this.likeCount,
       commentCount: commentCount ?? this.commentCount,
       isLikedByCurrentUser: isLikedByCurrentUser ?? this.isLikedByCurrentUser,
+      likedAt: likedAt ?? this.likedAt,
     );
   }
 
@@ -75,5 +79,6 @@ class PostEntity extends Equatable {
         likeCount,
         commentCount,
         isLikedByCurrentUser,
+        likedAt,
       ];
 }

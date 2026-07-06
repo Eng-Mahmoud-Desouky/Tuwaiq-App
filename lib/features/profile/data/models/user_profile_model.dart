@@ -9,6 +9,8 @@ class UserProfileModel extends UserProfile {
     super.avatarUrl,
     super.coverUrl,
     super.interests = const [],
+    super.isVerified = false,
+    super.isAdmin = false,
   });
 
   factory UserProfileModel.fromJson(Map<String, dynamic> json) {
@@ -24,6 +26,8 @@ class UserProfileModel extends UserProfile {
       coverUrl: json['cover_url'] as String?,
       bio: json['bio'] as String?,
       interests: parsedInterests,
+      isVerified: json['is_verified'] as bool? ?? false,
+      isAdmin: json['is_admin'] as bool? ?? false,
     );
   }
 
@@ -36,6 +40,8 @@ class UserProfileModel extends UserProfile {
       'avatar_url': avatarUrl,
       'cover_url': coverUrl,
       'interests': interests,
+      'is_verified': isVerified,
+      'is_admin': isAdmin,
     };
   }
 
@@ -48,6 +54,8 @@ class UserProfileModel extends UserProfile {
       avatarUrl: avatarUrl,
       coverUrl: coverUrl,
       interests: interests,
+      isVerified: isVerified,
+      isAdmin: isAdmin,
     );
   }
 }

@@ -28,4 +28,11 @@ abstract class ProfileRepository {
   Future<List<UserProfile>> getFollowers(String userId);
 
   Future<List<UserProfile>> getFollowing(String userId);
+
+  /// Searches for profiles by username or full name.
+  Future<List<UserProfile>> searchProfiles({
+    required String query,
+    required int limit,
+    required int offset,
+  });
 }

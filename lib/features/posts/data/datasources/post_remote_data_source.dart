@@ -11,6 +11,20 @@ abstract class PostRemoteDataSource {
     String? creatorId,
   });
 
+  Future<List<PostModel>> getLikedPosts({
+    required String userId,
+    required int limit,
+    DateTime? lastLikedAt,
+    String? lastPostId,
+  });
+
+  Future<List<PostModel>> searchPosts({
+    required String query,
+    required int limit,
+    DateTime? lastCreatedAt,
+    String? lastPostId,
+  });
+
   Future<PostModel> createPost(PostModel post);
 
   Future<void> insertLike(String postId, String userId);
@@ -73,6 +87,119 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     final postIds = list.map((json) => json['id'] as String).toList();
 
     // Query likes for loaded posts to resolve isLikedByCurrentUser in a single batched query
+    final currentUserId = _client.auth.currentUser?.id;
+    final Set<String> likedPostIds = {};
+
+    if (currentUserId != null && postIds.isNotEmpty) {
+      final likesResponse = await _client
+          .from('post_likes')
+          .select('post_id')
+          .eq('user_id', currentUserId)
+          .inFilter('post_id', postIds);
+
+      final likesList = likesResponse as List? ?? const [];
+      for (final like in likesList) {
+        likedPostIds.add(like['post_id'] as String);
+      }
+    }
+
+    return list.map((json) {
+      final postId = json['id'] as String;
+      final isLiked = likedPostIds.contains(postId);
+      return PostModel.fromJson(json as Map<String, dynamic>, isLiked: isLiked);
+    }).toList();
+  }
+
+  @override
+  Future<List<PostModel>> getLikedPosts({
+    required String userId,
+    required int limit,
+    DateTime? lastLikedAt,
+    String? lastPostId,
+  }) async {
+    var dbQuery = _client
+        .from('post_likes')
+        .select('created_at, posts:posts(*, profiles:profiles!posts_creator_id_fkey(*), post_likes(count), post_comments(count))')
+        .eq('user_id', userId);
+
+    if (lastLikedAt != null) {
+      final lastTimeStr = lastLikedAt.toIso8601String();
+      dbQuery = dbQuery.lt('created_at', lastTimeStr);
+    }
+
+    final response = await dbQuery
+        .order('created_at', ascending: false)
+        .limit(limit);
+
+    final list = response as List? ?? const [];
+    final posts = <PostModel>[];
+    final postIds = <String>[];
+
+    for (final item in list) {
+      final postJson = item['posts'];
+      if (postJson != null) {
+        final postId = postJson['id'] as String;
+        postIds.add(postId);
+      }
+    }
+
+    final currentUserId = _client.auth.currentUser?.id;
+    final Set<String> likedPostIds = {};
+
+    if (currentUserId != null && postIds.isNotEmpty) {
+      final likesResponse = await _client
+          .from('post_likes')
+          .select('post_id')
+          .eq('user_id', currentUserId)
+          .inFilter('post_id', postIds);
+
+      final likesList = likesResponse as List? ?? const [];
+      for (final like in likesList) {
+        likedPostIds.add(like['post_id'] as String);
+      }
+    }
+
+    for (final item in list) {
+      final postJson = item['posts'];
+      if (postJson != null) {
+        final postId = postJson['id'] as String;
+        final isLiked = likedPostIds.contains(postId);
+        final likedAtStr = item['created_at'] as String?;
+        final likedAt = likedAtStr != null ? DateTime.parse(likedAtStr).toLocal() : null;
+        
+        final postModel = PostModel.fromJson(postJson as Map<String, dynamic>, isLiked: isLiked, likedAt: likedAt);
+        posts.add(postModel);
+      }
+    }
+
+    return posts;
+  }
+
+  @override
+  Future<List<PostModel>> searchPosts({
+    required String query,
+    required int limit,
+    DateTime? lastCreatedAt,
+    String? lastPostId,
+  }) async {
+    var dbQuery = _client
+        .from('posts')
+        .select('*, profiles:profiles!posts_creator_id_fkey(*), post_likes(count), post_comments(count)')
+        .textSearch('content', query);
+
+    if (lastCreatedAt != null && lastPostId != null) {
+      final lastTimeStr = lastCreatedAt.toIso8601String();
+      dbQuery = dbQuery.or('created_at.lt.$lastTimeStr,and(created_at.eq.$lastTimeStr,id.lt.$lastPostId)');
+    }
+
+    final response = await dbQuery
+        .order('created_at', ascending: false)
+        .order('id', ascending: false)
+        .limit(limit);
+
+    final list = response as List? ?? const [];
+    final postIds = list.map((json) => json['id'] as String).toList();
+
     final currentUserId = _client.auth.currentUser?.id;
     final Set<String> likedPostIds = {};
 

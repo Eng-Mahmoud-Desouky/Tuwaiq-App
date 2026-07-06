@@ -58,6 +58,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
         avatarUrl: uploadedAvatarUrl ?? profile.avatarUrl,
         coverUrl: uploadedCoverUrl ?? profile.coverUrl,
         interests: profile.interests,
+        isVerified: profile.isVerified,
+        isAdmin: profile.isAdmin,
       );
 
       final updatedModel = await remoteDataSource.updateProfile(model);
@@ -170,6 +172,28 @@ class ProfileRepositoryImpl implements ProfileRepository {
       throw const NetworkFailure();
     } catch (e) {
       throw ServerFailure('حدث خطأ غير متوقع أثناء استرداد المتابَعين: $e');
+    }
+  }
+
+  @override
+  Future<List<UserProfile>> searchProfiles({
+    required String query,
+    required int limit,
+    required int offset,
+  }) async {
+    try {
+      final list = await remoteDataSource.searchProfiles(
+        query: query,
+        limit: limit,
+        offset: offset,
+      );
+      return list.map((m) => m.toEntity()).toList();
+    } on PostgrestException catch (e) {
+      throw ServerFailure('فشل البحث عن الحسابات: ${e.message}');
+    } on SocketException {
+      throw const NetworkFailure();
+    } catch (e) {
+      throw ServerFailure('حدث خطأ غير متوقع أثناء البحث عن الحسابات: $e');
     }
   }
 }

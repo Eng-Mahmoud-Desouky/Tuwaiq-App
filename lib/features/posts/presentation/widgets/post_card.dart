@@ -10,6 +10,9 @@ import '../../../auth/presentation/cubit/auth_state.dart';
 import '../../domain/entities/post_entity.dart';
 import '../cubits/post_feed/post_feed_cubit.dart';
 import 'post_video_player.dart';
+import '../../../profile/presentation/cubit/profile_posts_cubit.dart';
+import '../../../profile/presentation/cubit/profile_likes_cubit.dart';
+import '../../../explore/presentation/cubit/explore_cubit.dart';
 
 class PostCard extends StatelessWidget {
   final PostEntity post;
@@ -406,10 +409,25 @@ class PostCard extends StatelessWidget {
                 // Like Button (Optimistic + Debounced)
                 InkWell(
                   onTap: () {
+                    final newLiked = !post.isLikedByCurrentUser;
+                    final newCount = newLiked ? post.likeCount + 1 : post.likeCount - 1;
+
                     context.read<PostFeedCubit>().toggleLikePost(
                           postId: post.id,
                           userId: currentUserId,
                         );
+
+                    try {
+                      context.read<ProfilePostsCubit>().toggleLike(post.id, newLiked, newCount);
+                    } catch (_) {}
+
+                    try {
+                      context.read<ProfileLikesCubit>().toggleLike(post.id, newLiked, newCount);
+                    } catch (_) {}
+
+                    try {
+                      context.read<ExploreCubit>().toggleLike(post.id, newLiked, newCount);
+                    } catch (_) {}
                   },
                   borderRadius: BorderRadius.circular(20),
                   child: Padding(
