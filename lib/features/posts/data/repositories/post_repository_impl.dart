@@ -178,4 +178,9 @@ class PostRepositoryImpl implements PostRepository {
   }) async {
     return await remoteDataSource.updatePost(postId, content);
   }
+
+  @override
+  Future<PostEntity> getPostById(String postId) async {
+    return await remoteDataSource.getPostById(postId);
+  }
 }

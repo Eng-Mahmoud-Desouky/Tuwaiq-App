@@ -42,7 +42,7 @@ class AuthCubit extends Cubit<AuthState> {
     required this.saveUserInterestsUseCase,
     required this.saveFCMTokenUseCase,
     required this.deleteFCMTokenUseCase,
-  }) : super(const AuthInitial()) {
+  }) : super(const AuthLoading()) {
     _initDeepLinks();
     _initAuthListener();
   }
@@ -212,7 +212,10 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> checkCurrentUser() async {
     try {
-      final user = await getCurrentUserUseCase();
+      final user = await getCurrentUserUseCase().timeout(
+        const Duration(seconds: 6),
+        onTimeout: () => throw TimeoutException('انتهت مهلة التحقق من الجلسة'),
+      );
       if (user != null) {
         // Bypassing email confirmation for development
         emit(AuthSuccess(user));
@@ -264,6 +267,7 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   void _syncFCMToken(String userId) async {
+    if (Platform.environment.containsKey('FLUTTER_TEST')) return;
     _fcmTokenSubscription?.cancel();
     final notificationService = NotificationService();
     final token = await notificationService.getToken();
@@ -297,6 +301,7 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   void _unsyncFCMToken() async {
+    if (Platform.environment.containsKey('FLUTTER_TEST')) return;
     _fcmTokenSubscription?.cancel();
     _fcmTokenSubscription = null;
     final token = await NotificationService().getToken();

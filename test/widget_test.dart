@@ -38,6 +38,7 @@ import 'package:tuwaiq_app/features/posts/domain/usecases/update_comment_usecase
 import 'package:tuwaiq_app/features/posts/domain/usecases/get_liked_posts_usecase.dart';
 import 'package:tuwaiq_app/features/posts/domain/usecases/search_posts_usecase.dart';
 import 'package:tuwaiq_app/features/profile/domain/usecases/search_profiles_usecase.dart';
+import 'package:tuwaiq_app/features/posts/domain/usecases/get_post_usecase.dart';
 
 import 'package:tuwaiq_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:tuwaiq_app/features/auth/domain/entities/user_entity.dart';
@@ -170,6 +171,8 @@ class FakePostRepo implements PostRepository {
     DateTime? lastCreatedAt,
     String? lastPostId,
   }) async => [];
+  @override
+  Future<PostEntity> getPostById(String postId) async => throw UnimplementedError();
 }
 
 class FakeNotificationsRepo implements NotificationsRepository {
@@ -243,6 +246,7 @@ void main() {
           searchProfilesUseCase: SearchProfilesUseCase(profileRepo),
           getLikedPostsUseCase: GetLikedPostsUseCase(postRepo),
           searchPostsUseCase: SearchPostsUseCase(postRepo),
+          getPostUseCase: GetPostUseCase(postRepo),
         ),
       ),
     );

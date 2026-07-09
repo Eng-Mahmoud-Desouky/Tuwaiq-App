@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/theme/app_text_styles.dart';
@@ -22,6 +23,13 @@ class PostCard extends StatelessWidget {
   static DateTime? _lastNavigateTime;
 
   static void _safelyPush(BuildContext context, String route, {Object? extra}) {
+    final router = GoRouter.of(context);
+    final currentPath = router.routerDelegate.currentConfiguration.uri.path;
+    final targetPath = Uri.parse(route).path;
+    if (currentPath == targetPath) {
+      return; // Already on this route
+    }
+
     final now = DateTime.now();
     if (_lastNavigateTime != null &&
         now.difference(_lastNavigateTime!) < const Duration(milliseconds: 800)) {
@@ -490,6 +498,35 @@ class PostCard extends StatelessWidget {
                         const SizedBox(width: 6),
                         Text(
                           post.commentCount.toString(),
+                          style: AppTextStyles.labelLg.copyWith(
+                            color: AppColors.secondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Share Button
+                InkWell(
+                  onTap: () {
+                    final shareText = post.content != null && post.content!.isNotEmpty
+                        ? '${post.content}\n\nShared via \$CRATCH'
+                        : 'Check out this post on \$CRATCH';
+                    Share.share(shareText);
+                  },
+                  borderRadius: BorderRadius.circular(20),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.share_outlined,
+                          color: AppColors.secondary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'مشاركة',
                           style: AppTextStyles.labelLg.copyWith(
                             color: AppColors.secondary,
                           ),

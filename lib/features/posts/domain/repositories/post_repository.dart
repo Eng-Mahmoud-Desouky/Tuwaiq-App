@@ -67,4 +67,7 @@ abstract class PostRepository {
     required String postId,
     required String content,
   });
+
+  /// Fetches a single post by ID.
+  Future<PostEntity> getPostById(String postId);
 }

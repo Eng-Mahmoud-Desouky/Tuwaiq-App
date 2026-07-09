@@ -67,6 +67,8 @@ import '../../features/posts/presentation/cubits/create_post/create_post_cubit.d
 import '../../features/posts/presentation/cubits/post_comments/post_comments_cubit.dart';
 import '../../features/posts/presentation/screens/create_post_screen.dart';
 import '../../features/posts/presentation/screens/post_details_screen.dart';
+import '../../features/auth/presentation/screens/splash_screen.dart';
+import '../../features/posts/domain/usecases/get_post_usecase.dart';
 
 class AppRouterRefreshStream extends ChangeNotifier {
   late final StreamSubscription<dynamic> _subscription;
@@ -88,6 +90,14 @@ class AppRouterRefreshStream extends ChangeNotifier {
 class AppRouter {
   static final GlobalKey<NavigatorState> _rootNavigatorKey =
       GlobalKey<NavigatorState>();
+
+  static final List<GlobalKey<NavigatorState>> _branchKeys = [
+    GlobalKey<NavigatorState>(debugLabel: 'homeBranch'),
+    GlobalKey<NavigatorState>(debugLabel: 'exploreBranch'),
+    GlobalKey<NavigatorState>(debugLabel: 'alertsBranch'),
+    GlobalKey<NavigatorState>(debugLabel: 'dmsBranch'),
+    GlobalKey<NavigatorState>(debugLabel: 'profileBranch'),
+  ];
 
   static GoRouter router(
     AuthCubit authCubit, {
@@ -120,10 +130,11 @@ class AppRouter {
     required SearchProfilesUseCase searchProfilesUseCase,
     required GetLikedPostsUseCase getLikedPostsUseCase,
     required SearchPostsUseCase searchPostsUseCase,
+    required GetPostUseCase getPostUseCase,
   }) {
     final routerInstance = GoRouter(
       navigatorKey: _rootNavigatorKey,
-      initialLocation: AppRoutes.signIn,
+      initialLocation: '/',
       refreshListenable: AppRouterRefreshStream(authCubit.stream),
       redirect: (context, state) {
         final authState = authCubit.state;
@@ -161,13 +172,21 @@ class AppRouter {
               state.matchedLocation != AppRoutes.interests) {
             return AppRoutes.interests;
           }
-          if (authState.user.interests.length >= 3 && isAuthScreen) {
-            return AppRoutes.home;
+          if (state.matchedLocation == '/' || isAuthScreen) {
+            if (authState.user.interests.length >= 3) {
+              return AppRoutes.home;
+            } else {
+              return AppRoutes.interests;
+            }
           }
         }
         return null;
       },
       routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, state) => const SplashScreen(),
+        ),
         GoRoute(
           path: AppRoutes.signIn,
           builder: (context, state) => const SignInScreen(),
@@ -233,8 +252,9 @@ class AppRouter {
                 updateCommentUseCase: updateCommentUseCase,
               ),
               child: PostDetailsScreen(
-                eventId: postId,
+                postId: postId,
                 initialPost: post,
+                getPostUseCase: getPostUseCase,
               ),
             );
           },
@@ -256,10 +276,14 @@ class AppRouter {
         // Main Navigation (StatefulShellRoute)
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) {
-            return MainScreen(navigationShell: navigationShell);
+            return MainScreen(
+              navigationShell: navigationShell,
+              branchKeys: _branchKeys,
+            );
           },
           branches: [
             StatefulShellBranch(
+              navigatorKey: _branchKeys[0],
               routes: [
                 GoRoute(
                   path: AppRoutes.home,
@@ -269,6 +293,7 @@ class AppRouter {
             ),
             // Explore/Search Branch (1)
             StatefulShellBranch(
+              navigatorKey: _branchKeys[1],
               routes: [
                 GoRoute(
                   path: AppRoutes.explore,
@@ -284,6 +309,7 @@ class AppRouter {
             ),
             // Alerts Branch (2)
             StatefulShellBranch(
+              navigatorKey: _branchKeys[2],
               routes: [
                 GoRoute(
                   path: AppRoutes.alerts,
@@ -304,6 +330,7 @@ class AppRouter {
             ),
             // DMs Branch (3)
             StatefulShellBranch(
+              navigatorKey: _branchKeys[3],
               routes: [
                 GoRoute(
                   path: AppRoutes.dms,
@@ -313,6 +340,7 @@ class AppRouter {
             ),
             // Profile Branch (4)
             StatefulShellBranch(
+              navigatorKey: _branchKeys[4],
               routes: [
                 GoRoute(
                   path: AppRoutes.profile,
@@ -414,7 +442,7 @@ class AppRouter {
     // Setup FCM / Local Notifications Deep Linking stream listener
     NotificationService().selectNotificationStream.listen((data) {
       final type = data['type'];
-      final targetId = data['target_id'];
+      final targetId = data['target_id']?.toString().trim();
       if (targetId != null && targetId.isNotEmpty) {
         if (type == 'comment' || type == 'like') {
           routerInstance.push('/posts/$targetId');

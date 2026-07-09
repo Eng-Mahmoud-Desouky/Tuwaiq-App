@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:video_player/video_player.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import '../../../../shared/theme/app_colors.dart';
@@ -63,12 +64,24 @@ class _PostVideoPlayerState extends State<PostVideoPlayer> with WidgetsBindingOb
   }
 
   Future<void> _initializeController() async {
-    if (_controller != null) return;
+    if (_controller != null || _hasError) return;
 
     try {
-      final controller = widget.isLocal
-          ? VideoPlayerController.file(File(widget.videoUrl))
-          : VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
+      VideoPlayerController controller;
+
+      if (widget.isLocal) {
+        controller = VideoPlayerController.file(File(widget.videoUrl));
+      } else {
+        // Fetch from disk cache manager
+        final file = await DefaultCacheManager().getSingleFile(widget.videoUrl);
+
+        // Double check after async download gap if we are still mounted and visibility is not 0%
+        if (!mounted || _currentVisibility == 0.0) {
+          return;
+        }
+
+        controller = VideoPlayerController.file(file);
+      }
 
       _controller = controller;
 
@@ -86,6 +99,8 @@ class _PostVideoPlayerState extends State<PostVideoPlayer> with WidgetsBindingOb
         if (widget.autoPlay && _currentVisibility > 70.0) {
           _controller?.play();
         }
+      } else {
+        controller.dispose();
       }
     } catch (e) {
       debugPrint('Error initializing video player: $e');

@@ -50,6 +50,8 @@ abstract class PostRemoteDataSource {
   });
 
   Future<void> deletePostMedia(String mediaUrl);
+
+  Future<PostModel> getPostById(String postId);
 }
 
 class PostRemoteDataSourceImpl implements PostRemoteDataSource {
@@ -363,5 +365,28 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     } catch (_) {
       // Fail silently to prevent deletion process block if storage cleanup fails
     }
+  }
+
+  @override
+  Future<PostModel> getPostById(String postId) async {
+    final response = await _client
+        .from('posts')
+        .select('*, profiles:profiles!posts_creator_id_fkey(*), post_likes(count), post_comments(count)')
+        .eq('id', postId)
+        .single();
+
+    final currentUserId = _client.auth.currentUser?.id;
+    var isLiked = false;
+    if (currentUserId != null) {
+      final likesResponse = await _client
+          .from('post_likes')
+          .select('post_id')
+          .eq('user_id', currentUserId)
+          .eq('post_id', postId);
+      final likesList = likesResponse as List? ?? const [];
+      isLiked = likesList.isNotEmpty;
+    }
+
+    return PostModel.fromJson(response, isLiked: isLiked);
   }
 }

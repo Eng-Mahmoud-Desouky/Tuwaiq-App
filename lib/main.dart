@@ -76,6 +76,7 @@ import 'features/posts/domain/usecases/update_comment_usecase.dart';
 import 'features/posts/domain/usecases/update_post_usecase.dart';
 import 'features/posts/domain/usecases/get_liked_posts_usecase.dart';
 import 'features/posts/domain/usecases/search_posts_usecase.dart';
+import 'features/posts/domain/usecases/get_post_usecase.dart';
 import 'features/profile/domain/usecases/search_profiles_usecase.dart';
 import 'features/posts/presentation/cubits/post_feed/post_feed_cubit.dart';
 
@@ -155,6 +156,7 @@ void main() async {
   final updatePostUseCase = UpdatePostUseCase(postRepository);
   final getLikedPostsUseCase = GetLikedPostsUseCase(postRepository);
   final searchPostsUseCase = SearchPostsUseCase(postRepository);
+  final getPostUseCase = GetPostUseCase(postRepository);
 
   // Notifications
   final notificationsRemoteDataSource = NotificationsRemoteDataSourceImpl(supabaseClient);
@@ -220,6 +222,7 @@ void main() async {
         searchProfilesUseCase: searchProfilesUseCase,
         getLikedPostsUseCase: getLikedPostsUseCase,
         searchPostsUseCase: searchPostsUseCase,
+        getPostUseCase: getPostUseCase,
       ),
     ),
   );
@@ -255,6 +258,7 @@ class MyApp extends StatelessWidget {
   final SearchProfilesUseCase searchProfilesUseCase;
   final GetLikedPostsUseCase getLikedPostsUseCase;
   final SearchPostsUseCase searchPostsUseCase;
+  final GetPostUseCase getPostUseCase;
 
   const MyApp({
     super.key,
@@ -287,6 +291,7 @@ class MyApp extends StatelessWidget {
     required this.searchProfilesUseCase,
     required this.getLikedPostsUseCase,
     required this.searchPostsUseCase,
+    required this.getPostUseCase,
   });
 
   @override
@@ -322,6 +327,7 @@ class MyApp extends StatelessWidget {
       searchProfilesUseCase: searchProfilesUseCase,
       getLikedPostsUseCase: getLikedPostsUseCase,
       searchPostsUseCase: searchPostsUseCase,
+      getPostUseCase: getPostUseCase,
     );
 
     return MaterialApp.router(

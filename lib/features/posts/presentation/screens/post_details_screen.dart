@@ -13,15 +13,18 @@ import '../cubits/post_comments/post_comments_state.dart';
 import '../cubits/post_feed/post_feed_cubit.dart';
 import '../widgets/comment_card.dart';
 import '../widgets/post_card.dart';
+import '../../domain/usecases/get_post_usecase.dart';
 
 class PostDetailsScreen extends StatefulWidget {
-  final String eventId; // Using dynamic ID from path matching
+  final String postId;
   final PostEntity? initialPost;
+  final GetPostUseCase getPostUseCase;
 
   const PostDetailsScreen({
     super.key,
-    required this.eventId,
+    required this.postId,
     this.initialPost,
+    required this.getPostUseCase,
   });
 
   @override
@@ -33,11 +36,38 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
   final ScrollController _scrollController = ScrollController();
   static const int _maxChars = 500;
 
+  PostEntity? _post;
+  bool _isLoadingPost = false;
+  String? _errorMessage;
+
   @override
   void initState() {
     super.initState();
+    _post = widget.initialPost;
+    if (_post == null) {
+      _fetchPost();
+    }
     // Load comments on open
-    context.read<PostCommentsCubit>().loadComments(widget.eventId);
+    context.read<PostCommentsCubit>().loadComments(widget.postId);
+  }
+
+  Future<void> _fetchPost() async {
+    setState(() {
+      _isLoadingPost = true;
+      _errorMessage = null;
+    });
+    try {
+      final fetchedPost = await widget.getPostUseCase(widget.postId);
+      setState(() {
+        _post = fetchedPost;
+        _isLoadingPost = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'حدث خطأ أثناء تحميل المنشور';
+        _isLoadingPost = false;
+      });
+    }
   }
 
   @override
@@ -59,7 +89,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
     }
 
     context.read<PostCommentsCubit>().addComment(
-          postId: widget.eventId,
+          postId: widget.postId,
           content: content,
         );
   }
@@ -88,7 +118,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
           TextButton(
             onPressed: () {
               context.read<PostCommentsCubit>().deleteComment(comment.id);
-              context.read<PostFeedCubit>().onCommentDeleted(widget.eventId);
+              context.read<PostFeedCubit>().onCommentDeleted(widget.postId);
               Navigator.pop(ctx);
             },
             child: const Text('حذف', style: TextStyle(color: AppColors.error)),
@@ -141,18 +171,43 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
     final authState = context.watch<AuthCubit>().state;
     final currentUserId = (authState is AuthSuccess) ? authState.user.id : '';
 
-    // If initialPost is not passed via GoRouter extra, we can show a loader or simple back navigation
-    final post = widget.initialPost;
-    if (post == null) {
+    if (_isLoadingPost) {
       return Scaffold(
+        backgroundColor: AppColors.background,
         appBar: AppBar(
-          title: const Text('تفاصيل المنشور', style: AppTextStyles.titleSm),
+          backgroundColor: AppColors.background,
+          elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.primary),
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => context.go(AppRoutes.home),
           ),
         ),
-        body: const Center(child: Text('المنشور غير موجود')),
+        body: const Center(
+          child: CircularProgressIndicator(
+            color: AppColors.primary,
+          ),
+        ),
+      );
+    }
+
+    final post = _post;
+    if (post == null) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          backgroundColor: AppColors.background,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => context.go(AppRoutes.home),
+          ),
+        ),
+        body: Center(
+          child: Text(
+            _errorMessage ?? 'المنشور غير موجود',
+            style: AppTextStyles.labelLg.copyWith(color: AppColors.secondary),
+          ),
+        ),
       );
     }
 
@@ -195,7 +250,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
                   _commentController.clear();
                   
                   // Increment comment count in parent feed cubit
-                  context.read<PostFeedCubit>().onCommentAdded(widget.eventId);
+                  context.read<PostFeedCubit>().onCommentAdded(widget.postId);
                   
                   // Scroll to bottom to show new comment
                   WidgetsBinding.instance.addPostFrameCallback((_) {
