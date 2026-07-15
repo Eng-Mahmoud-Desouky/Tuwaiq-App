@@ -1,5 +1,5 @@
 # 📐 System Blueprint — Tuwaiq App
-**Version:** 2.2.0 | **Status:** Active | **Last Updated:** 2026-07-06
+**Version:** 2.3.0 | **Status:** Active | **Last Updated:** 2026-07-15
 
 ---
 
@@ -781,8 +781,9 @@ In this iteration, the application underwent a visual refactoring and rebranding
    To align with the transparent chrome `$CRATCH` brand logo, the overall color palette was refactored in [app_colors.dart](file:///c:/Users/IT/StudioProjects/tuwaiq_app/lib/shared/theme/app_colors.dart) to define brand metallic shades: `#E2E8F0` (primary silver), `#94A3B8` (slate steel), and absolute black `#000000`. Hardcoded colors throughout the cards and pages were removed.
 2. **Post & Comment Card Visual Polish**:
    Both [post_card.dart](file:///c:/Users/IT/StudioProjects/tuwaiq_app/lib/features/posts/presentation/widgets/post_card.dart) and [comment_card.dart](file:///c:/Users/IT/StudioProjects/tuwaiq_app/lib/features/posts/presentation/widgets/comment_card.dart) were updated to use `AppColors.surfaceContainerLow` (`#15181C`) as their background and outlined with `AppColors.outline` (`#334155`) borders, creating a cohesive, low-glare dark layout.
-3. **Centered Logo Brand Assets**:
-   Text titles inside the primary AppBars of `HomeScreen`, `ExploreScreen`, `AlertsScreen`, and `PostDetailsScreen` were replaced with `Image.asset('assets/images/logo.png', height: 24, fit: BoxFit.contain)` to reinforce the new brand identity.
+3. **Centered Logo Brand Assets & App Icons**:
+   - The AppBars of `HomeScreen`, `ExploreScreen`, `NotificationsScreen`, `PostDetailsScreen`, `ManageEventsScreen`, `DmsPlaceholderScreen`, and `AlertsScreen`, as well as the `SplashScreen` and Auth views, now utilize the new `$CRATCH` logo `logo_black_bg.jpg` (height 42, `BoxFit.contain`) to blend seamlessly with the pitch-black layout theme.
+   - The launcher icons configuration was migrated in `pubspec.yaml` to point to the new brand assets (`logo_black_bg.jpg` for launcher icons, and `logo.jpg` as the adaptive foreground), and generated successfully.
 4. **Circular Avatar Constraint Fix**:
    The avatar rendering inside the AppBar was wrapped in a `Center` widget to discard Flutter's leading AppBar constraints that stretched the circular avatar into an elliptical/oval shape.
 5. **Unified Profile Feed Stream**:
@@ -867,6 +868,12 @@ Key pages and components:
 * **Instant Comment Deletion**: Adjusted `PostCommentsCubit` to execute deletion and updates during submit success states without needing DB reload cycles. Added `ValueKey` to `CommentCard` list to force instant rendering on list updates.
 * **Create Post Styling**: Styled the container card inside `CreatePostScreen` to `AppColors.surfaceContainerLow` with `AppColors.outline` thin borders, correcting theme inconsistency.
 
+### 15.5 Username Validation Constraint Loosening
+* **Requirement**: Remove the minimum character length restriction for username inputs during registration.
+* **Engineering Action**:
+  - Modified `Validators.validateUsername` inside [validators.dart](file:///c:/Users/IT/StudioProjects/tuwaiq_app/lib/core/utils/validators.dart) to remove the 3-character minimum length validation check.
+  - Kept other validators intact: verifying the field is not empty, and checking format validity using the alphanumeric and underscores regex `^[a-zA-Z0-9_]+$`.
+
 ---
 
 ## 16. Day 2 Video Support & Engineering Decisions
@@ -890,6 +897,9 @@ To establish complete media support, we implemented video selection, validation,
 4. **Storage Leak Rollbacks**:
    If video uploading to Supabase Storage succeeds but the subsequent Postgres `INSERT` operation fails, the uploaded file is orphaned in the bucket, accumulating storage costs.
    - **Solution**: Structured `PostRepositoryImpl.createPost` with a try-catch block. In the event of a database insert exception, a rollback cleanup is triggered immediately, executing `deletePostMedia()` on the uploaded storage paths before rethrowing the error. Additionally, deleting a post executes a dual select-and-delete cleanup for both `image_url` and `video_url` paths in storage.
+5. **Feed Media Dimension Unification via AspectRatio**:
+   - To unify display sizes of photos and videos in the post feed without causing UI letterboxing or disproportionate scaling, both `PostVideoPlayer` and `CachedNetworkImage` inside `PostCard` are wrapped in `AspectRatio` constraints with a fixed ratio of `16 / 9`.
+   - Hardcoded heights (e.g. `height: 220`) were removed from images and placeholder/error containers, forcing all post media elements to scale responsively and identically across different screen widths.
 
 ---
 
@@ -976,6 +986,7 @@ To prevent unauthorized database queries or screen access, the Admin Panel imple
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
+| `2.3.0` | 2026-07-15 | Mahmoud Desouky | Updated brand logo assets to JPG format, regenerated iOS/Android launcher icons, and replaced logo references in all AppBars and Splash Screen. Removed 3-character minimum length restriction in username validators. Wrapped feed video players and images in AspectRatio (16:9) to unify their layout size. |
 | `2.2.0` | 2026-07-06 | Mahmoud Desouky | Created and integrated the Scratch Admin Panel application: implemented secure administrator authentication (is_admin database checks), responsive user management dashboard with verification and role toggles, post & comment moderation feed utilizing Supabase FTS, and responsive multi-column grid layouts for web/mobile screens. |
 | `2.1.0` | 2026-07-06 | Mahmoud Desouky | Completed Day 3 scope: implemented Twitter-style Profile Redesign (NestedScrollView, cover banner cache, overlapping avatar, inline follows, verified badges, Posts/Likes tabs); refactored ExploreScreen into a Unified Search Hub using Supabase Full-Text Search (FTS) for posts content and debounced search inputs. Added safety double-tap navigation checks on PostCard. |
 | `2.0.0` | 2026-07-04 | Mahmoud Desouky | Fully implemented Day 2 Video Support: increased posts bucket limit to 30MB, added video formats, and wrote strictly locked RLS folder policies. Added client-size validation and either/or media constraints. Integrated OOM-safe, lifecycle-aware PostVideoPlayer playing at >70% visibility, auto-muting, completely disposing at 0% visibility, and auto-pausing on backgrounding. Created db upload rollback hooks to prevent storage leaks. |
