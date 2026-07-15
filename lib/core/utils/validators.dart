@@ -47,9 +47,6 @@ class Validators {
       return 'يرجى إدخال اسم المستخدم';
     }
     final usernameTrim = value.trim().replaceAll('@', '');
-    if (usernameTrim.length < 3) {
-      return 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل';
-    }
     final usernameRegExp = RegExp(r'^[a-zA-Z0-9_]+$');
     if (!usernameRegExp.hasMatch(usernameTrim)) {
       return 'اسم المستخدم يمكن أن يحتوي فقط على أحرف وأرقام وشرطة سفلية';

@@ -15,7 +15,7 @@ class AlertsScreen extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
         title: Image.asset(
-          'assets/images/logo_without_name.png',
+          'assets/images/logo_black_bg.jpg',
           height: 42,
           fit: BoxFit.contain,
         ),

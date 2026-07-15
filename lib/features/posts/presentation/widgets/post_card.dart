@@ -375,44 +375,47 @@ class PostCard extends StatelessWidget {
               const SizedBox(height: 12),
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: PostVideoPlayer(
-                  videoUrl: post.videoUrl!,
-                  isLocal: false,
-                  autoPlay: true,
-                  startMuted: true,
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: PostVideoPlayer(
+                    videoUrl: post.videoUrl!,
+                    isLocal: false,
+                    autoPlay: true,
+                    startMuted: true,
+                  ),
                 ),
               ),
             ] else if (post.imageUrl != null && post.imageUrl!.isNotEmpty) ...[
               const SizedBox(height: 12),
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: CachedNetworkImage(
-                  imageUrl: post.imageUrl!,
-                  width: double.infinity,
-                  height: 220,
-                  fit: BoxFit.cover,
-                  // Enforce strict memory caching rules to prevent OOM
-                  memCacheWidth: 400,
-                  memCacheHeight: 400,
-                  placeholder: (context, url) => Container(
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: CachedNetworkImage(
+                    imageUrl: post.imageUrl!,
                     width: double.infinity,
-                    height: 220,
-                    color: AppColors.secondary.withOpacity(0.1),
-                    child: const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.primary,
+                    fit: BoxFit.cover,
+                    // Enforce strict memory caching rules to prevent OOM
+                    memCacheWidth: 400,
+                    memCacheHeight: 400,
+                    placeholder: (context, url) => Container(
+                      width: double.infinity,
+                      color: AppColors.secondary.withOpacity(0.1),
+                      child: const Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    width: double.infinity,
-                    height: 220,
-                    color: AppColors.secondary.withOpacity(0.1),
-                    child: const Center(
-                      child: Icon(
-                        Icons.broken_image_outlined,
-                        color: AppColors.secondary,
-                        size: 40,
+                    errorWidget: (context, url, error) => Container(
+                      width: double.infinity,
+                      color: AppColors.secondary.withOpacity(0.1),
+                      child: const Center(
+                        child: Icon(
+                          Icons.broken_image_outlined,
+                          color: AppColors.secondary,
+                          size: 40,
+                        ),
                       ),
                     ),
                   ),
