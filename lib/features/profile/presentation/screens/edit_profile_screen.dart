@@ -7,6 +7,7 @@ import '../../../../shared/theme/app_text_styles.dart';
 import '../../domain/entities/user_profile.dart';
 import '../cubit/profile_info_cubit.dart';
 import '../cubit/profile_info_state.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -346,6 +347,61 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   const SizedBox(height: 24),
                   // Interests tags
                   _buildInterestsSection(),
+                  const SizedBox(height: 32),
+                  // Danger Zone (Delete Account)
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceContainerLowest,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x0F000000),
+                          blurRadius: 24,
+                          offset: Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text(
+                          'منطقة خطرة',
+                          style: TextStyle(
+                            color: AppColors.error,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.right,
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'حذف حسابك نهائياً سيؤدي إلى حذف جميع البيانات والمنشورات المرتبطة بك فوراً من النظام.',
+                          style: AppTextStyles.bodySm,
+                          textAlign: TextAlign.right,
+                        ),
+                        const SizedBox(height: 16),
+                        OutlinedButton(
+                          onPressed: () => _showDeleteAccountConfirmation(context),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.error,
+                            side: const BorderSide(color: AppColors.error),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          child: const Text(
+                            'حذف الحساب نهائياً',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -587,6 +643,56 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showDeleteAccountConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: AppColors.surfaceContainerLowest,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'حذف الحساب نهائياً',
+            style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.right,
+          ),
+          content: const Text(
+            'هل أنت متأكد من رغبتك في حذف حسابك نهائياً؟ هذا الإجراء سيقوم بحذف جميع منشوراتك، تعليقاتك، وبياناتك الشخصية فوراً ولا يمكن التراجع عنه.',
+            style: TextStyle(color: AppColors.onSurfaceVariant),
+            textAlign: TextAlign.right,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text(
+                'إلغاء',
+                style: TextStyle(color: AppColors.onSurfaceVariant),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.error,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: () {
+                Navigator.of(dialogContext).pop(); // pop dialog
+                Navigator.of(context).pop(); // pop edit profile screen
+                context.read<AuthCubit>().deleteAccount();
+              },
+              child: const Text(
+                'حذف الحساب',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

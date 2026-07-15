@@ -23,6 +23,8 @@ abstract class AuthRemoteDataSource {
     required String userId,
     required List<String> interests,
   });
+
+  Future<void> deleteAccount();
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -158,5 +160,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('id', userId);
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    await _client.rpc('delete_user_account');
   }
 }

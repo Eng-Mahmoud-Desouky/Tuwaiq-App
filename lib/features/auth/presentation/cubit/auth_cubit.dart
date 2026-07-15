@@ -11,9 +11,11 @@ import '../../domain/usecases/forgot_password_usecase.dart';
 import '../../domain/usecases/update_password_usecase.dart';
 import '../../domain/usecases/get_current_user_usecase.dart';
 import '../../domain/usecases/save_user_interests_usecase.dart';
+import '../../domain/usecases/delete_account_usecase.dart';
 import '../../../notifications/domain/usecases/save_fcm_token_usecase.dart';
 import '../../../notifications/domain/usecases/delete_fcm_token_usecase.dart';
 import '../../../../core/services/notification_service.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
@@ -26,6 +28,7 @@ class AuthCubit extends Cubit<AuthState> {
   final SaveUserInterestsUseCase saveUserInterestsUseCase;
   final SaveFCMTokenUseCase saveFCMTokenUseCase;
   final DeleteFCMTokenUseCase deleteFCMTokenUseCase;
+  final DeleteAccountUseCase deleteAccountUseCase;
 
   final AppLinks _appLinks = AppLinks();
   StreamSubscription<Uri>? _linkSubscription;
@@ -42,6 +45,7 @@ class AuthCubit extends Cubit<AuthState> {
     required this.saveUserInterestsUseCase,
     required this.saveFCMTokenUseCase,
     required this.deleteFCMTokenUseCase,
+    required this.deleteAccountUseCase,
   }) : super(const AuthLoading()) {
     _initDeepLinks();
     _initAuthListener();
@@ -170,6 +174,41 @@ class AuthCubit extends Cubit<AuthState> {
       emit(const AuthInitial());
     } catch (e) {
       emit(AuthError(e.toString()));
+    }
+  }
+
+  Future<void> deleteAccount() async {
+    emit(const AuthLoading());
+    try {
+      // 1. Delete FCM Token if user is logged in
+      final currentState = state;
+      if (currentState is AuthSuccess) {
+        try {
+          final fcmToken = await FirebaseMessaging.instance.getToken();
+          if (fcmToken != null) {
+            await deleteFCMTokenUseCase(token: fcmToken);
+          }
+        } catch (e) {
+          print("Failed to delete FCM token during account deletion: $e");
+        }
+      }
+
+      // 2. Perform DB deletion
+      await deleteAccountUseCase();
+      
+      // 3. Clear auth state
+      emit(const AuthInitial());
+    } catch (e) {
+      emit(
+        AuthError(
+          e
+              .toString()
+              .replaceAll('Failure:', '')
+              .replaceAll('AuthFailure:', '')
+              .replaceAll('Exception:', '')
+              .trim(),
+        ),
+      );
     }
   }
 

@@ -45,6 +45,14 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>يطلب التطبيق صلاحية الوصول إلى الكاميرا لالتقاط صور الملف الشخصي وتصوير المنشورات.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>يطلب التطبيق صلاحية الوصول إلى معرض الصور لرفع صورة الملف الشخصي ومشاركة الصور في المنشورات.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>يطلب التطبيق صلاحية حفظ الصور في المعرض لحفظ منشوراتك المفضلة.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>يطلب التطبيق صلاحية الوصول إلى الميكروفون لتسجيل الصوت مع الفيديوهات.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

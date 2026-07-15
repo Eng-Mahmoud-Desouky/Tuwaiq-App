@@ -126,6 +126,21 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  @override
+  Future<void> deleteAccount() async {
+    try {
+      await remoteDataSource.deleteAccount();
+    } on AuthException catch (e) {
+      throw AuthFailure(_mapAuthErrorMessage(e.message, e.statusCode));
+    } on PostgrestException catch (e) {
+      throw ServerFailure('فشل حذف حساب المستخدم: ${e.message}');
+    } on SocketException {
+      throw const NetworkFailure();
+    } catch (e) {
+      throw ServerFailure('حدث خطأ غير متوقع أثناء حذف الحساب: $e');
+    }
+  }
+
   String _mapAuthErrorMessage(String message, String? statusCode) {
     final msg = message.toLowerCase();
     if (msg.contains('invalid login credentials') ||

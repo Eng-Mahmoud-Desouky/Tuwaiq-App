@@ -52,6 +52,7 @@ import 'package:tuwaiq_app/features/auth/domain/usecases/forgot_password_usecase
 import 'package:tuwaiq_app/features/auth/domain/usecases/update_password_usecase.dart';
 import 'package:tuwaiq_app/features/auth/domain/usecases/get_current_user_usecase.dart';
 import 'package:tuwaiq_app/features/auth/domain/usecases/save_user_interests_usecase.dart';
+import 'package:tuwaiq_app/features/auth/domain/usecases/delete_account_usecase.dart';
 import 'package:tuwaiq_app/features/notifications/domain/repositories/notifications_repository.dart';
 import 'package:tuwaiq_app/features/notifications/domain/entities/notification_entity.dart';
 import 'package:tuwaiq_app/features/notifications/domain/usecases/get_notifications_usecase.dart';
@@ -76,6 +77,8 @@ class FakeAuthRepo implements AuthRepository {
   Future<UserEntity?> getCurrentUser() async => null;
   @override
   Future<void> saveUserInterests({required String userId, required List<String> interests}) async {}
+  @override
+  Future<void> deleteAccount() async {}
 }
 
 class FakeProfileRepo implements ProfileRepository {
@@ -211,6 +214,7 @@ void main() {
       saveUserInterestsUseCase: SaveUserInterestsUseCase(authRepo),
       saveFCMTokenUseCase: SaveFCMTokenUseCase(notificationsRepo),
       deleteFCMTokenUseCase: DeleteFCMTokenUseCase(notificationsRepo),
+      deleteAccountUseCase: DeleteAccountUseCase(authRepo),
     );
 
     await tester.pumpWidget(

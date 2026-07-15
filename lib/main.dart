@@ -33,6 +33,7 @@ import 'features/auth/domain/usecases/forgot_password_usecase.dart';
 import 'features/auth/domain/usecases/update_password_usecase.dart';
 import 'features/auth/domain/usecases/get_current_user_usecase.dart';
 import 'features/auth/domain/usecases/save_user_interests_usecase.dart';
+import 'features/auth/domain/usecases/delete_account_usecase.dart';
 
 // Profile Feature Imports
 // Domain
@@ -110,6 +111,7 @@ void main() async {
   final updatePasswordUseCase = UpdatePasswordUseCase(authRepository);
   final getCurrentUserUseCase = GetCurrentUserUseCase(authRepository);
   final saveUserInterestsUseCase = SaveUserInterestsUseCase(authRepository);
+  final deleteAccountUseCase = DeleteAccountUseCase(authRepository);
 
   // Profile
   final profileRemoteDataSource = ProfileRemoteDataSourceImpl(supabaseClient);
@@ -180,6 +182,7 @@ void main() async {
             saveUserInterestsUseCase: saveUserInterestsUseCase,
             saveFCMTokenUseCase: saveFCMTokenUseCase,
             deleteFCMTokenUseCase: deleteFCMTokenUseCase,
+            deleteAccountUseCase: deleteAccountUseCase,
           )..checkCurrentUser(),
         ),
         BlocProvider<PostFeedCubit>(

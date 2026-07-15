@@ -22,4 +22,6 @@ abstract class AuthRepository {
     required String userId,
     required List<String> interests,
   });
+
+  Future<void> deleteAccount();
 }
