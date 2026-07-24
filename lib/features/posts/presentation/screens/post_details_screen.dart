@@ -218,7 +218,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
         elevation: 0,
         centerTitle: true,
         title: Image.asset(
-          'assets/images/logo_black_bg.jpg',
+          'assets/images/logo.png',
           height: 42,
           fit: BoxFit.contain,
         ),

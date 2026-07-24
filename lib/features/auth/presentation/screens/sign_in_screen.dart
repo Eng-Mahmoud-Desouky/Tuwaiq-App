@@ -111,7 +111,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           // Top Center Logo
                           Center(
                             child: Image.asset(
-                              'assets/images/logo_black_bg.jpg',
+                              'assets/images/logo.png',
                               height: 120,
                               fit: BoxFit.contain,
                             ),

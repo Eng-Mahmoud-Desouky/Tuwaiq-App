@@ -261,17 +261,12 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                             children: [
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
-                                child: Container(
-                                  width: double.infinity,
-                                  height: 220,
-                                  color: Colors.black,
-                                  child: PostVideoPlayer(
-                                    videoUrl: state.videoPath!,
-                                    isLocal: true,
-                                    autoPlay: false,
-                                    startMuted: true,
-                                    loop: false,
-                                  ),
+                                child: PostVideoPlayer(
+                                  videoUrl: state.videoPath!,
+                                  isLocal: true,
+                                  autoPlay: false,
+                                  startMuted: true,
+                                  loop: false,
                                 ),
                               ),
                               Positioned(

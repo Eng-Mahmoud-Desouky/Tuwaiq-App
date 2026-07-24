@@ -375,14 +375,11 @@ class PostCard extends StatelessWidget {
               const SizedBox(height: 12),
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: PostVideoPlayer(
-                    videoUrl: post.videoUrl!,
-                    isLocal: false,
-                    autoPlay: true,
-                    startMuted: true,
-                  ),
+                child: PostVideoPlayer(
+                  videoUrl: post.videoUrl!,
+                  isLocal: false,
+                  autoPlay: true,
+                  startMuted: true,
                 ),
               ),
             ] else if (post.imageUrl != null && post.imageUrl!.isNotEmpty) ...[

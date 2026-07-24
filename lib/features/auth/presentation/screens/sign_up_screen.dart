@@ -147,7 +147,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ],
         title: Center(
           child: Image.asset(
-            'assets/images/logo_black_bg.jpg',
+            'assets/images/logo.png',
             height: 32,
             fit: BoxFit.contain,
           ),
