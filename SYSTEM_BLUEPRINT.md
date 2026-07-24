@@ -1,5 +1,5 @@
 # 📐 System Blueprint — Tuwaiq App
-**Version:** 2.3.0 | **Status:** Active | **Last Updated:** 2026-07-15
+**Version:** 2.4.0 | **Status:** Active | **Last Updated:** 2026-07-24
 
 ---
 
@@ -897,9 +897,13 @@ To establish complete media support, we implemented video selection, validation,
 4. **Storage Leak Rollbacks**:
    If video uploading to Supabase Storage succeeds but the subsequent Postgres `INSERT` operation fails, the uploaded file is orphaned in the bucket, accumulating storage costs.
    - **Solution**: Structured `PostRepositoryImpl.createPost` with a try-catch block. In the event of a database insert exception, a rollback cleanup is triggered immediately, executing `deletePostMedia()` on the uploaded storage paths before rethrowing the error. Additionally, deleting a post executes a dual select-and-delete cleanup for both `image_url` and `video_url` paths in storage.
-5. **Feed Media Dimension Unification via AspectRatio**:
-   - To unify display sizes of photos and videos in the post feed without causing UI letterboxing or disproportionate scaling, both `PostVideoPlayer` and `CachedNetworkImage` inside `PostCard` are wrapped in `AspectRatio` constraints with a fixed ratio of `16 / 9`.
-   - Hardcoded heights (e.g. `height: 220`) were removed from images and placeholder/error containers, forcing all post media elements to scale responsively and identically across different screen widths.
+5. **Native Aspect Ratio Video Display**:
+   - Removed the fixed `16 / 9` outer `AspectRatio` wrapper in `PostCard` and the fixed `height: 220` container constraint in `CreatePostScreen`.
+   - `PostVideoPlayer` now calculates and renders the dynamic native aspect ratio of the loaded video (`_controller.value.aspectRatio`), preserving vertical (9:16), square (1:1), and widescreen video ratios without letterboxing, stretching, or distortion.
+
+### 16.3 Brand Logo Asset & Launcher Icon Separation
+- **Transparent RGBA Logo (`assets/images/logo.png`)**: Generated a high-resolution, background-removed PNG asset (`RGBA`) for all in-app screens (AppBars, Splash, Auth screens). Replacing legacy JPEG assets ensures the metallic silver/chrome logo displays natively over dark background themes without box/square artifacts.
+- **App Launcher Icon (`assets/images/logo_black_bg.jpg`)**: Kept `assets/images/logo_black_bg.jpg` strictly isolated for system launcher icon generation (`flutter_launcher_icons` in `pubspec.yaml`).
 
 ---
 
@@ -986,6 +990,7 @@ To prevent unauthorized database queries or screen access, the Admin Panel imple
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
+| `2.4.0` | 2026-07-24 | Mahmoud Desouky | Generated transparent RGBA logo asset (`assets/images/logo.png`) and updated all 10 in-app screens/AppBars to render cleanly on dark theme without background artifacts. Isolated `logo_black_bg.jpg` exclusively for system app launcher icons (`flutter_launcher_icons`). Fixed video post display in `PostCard` and `CreatePostScreen` by removing fixed 16:9 and height constraints, allowing `PostVideoPlayer` to render with true native video aspect ratios (`_controller.value.aspectRatio`). |
 | `2.3.0` | 2026-07-15 | Mahmoud Desouky | Updated brand logo assets to JPG format, regenerated iOS/Android launcher icons, and replaced logo references in all AppBars and Splash Screen. Removed 3-character minimum length restriction in username validators. Wrapped feed video players and images in AspectRatio (16:9) to unify their layout size. |
 | `2.2.0` | 2026-07-06 | Mahmoud Desouky | Created and integrated the Scratch Admin Panel application: implemented secure administrator authentication (is_admin database checks), responsive user management dashboard with verification and role toggles, post & comment moderation feed utilizing Supabase FTS, and responsive multi-column grid layouts for web/mobile screens. |
 | `2.1.0` | 2026-07-06 | Mahmoud Desouky | Completed Day 3 scope: implemented Twitter-style Profile Redesign (NestedScrollView, cover banner cache, overlapping avatar, inline follows, verified badges, Posts/Likes tabs); refactored ExploreScreen into a Unified Search Hub using Supabase Full-Text Search (FTS) for posts content and debounced search inputs. Added safety double-tap navigation checks on PostCard. |
